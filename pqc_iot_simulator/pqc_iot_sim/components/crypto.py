@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field, asdict
 from typing import Any
+import base64
 import hashlib
 import json
 import os
@@ -93,8 +94,14 @@ class CryptoManager:
         if kem is not None:
             self.kem = kem
 
-        if signature is not None:
+        if signature is not None and pqc_signature is None:
             self.pqc_signature = signature
+
+            self.logger.log(
+                "Parametro 'signature' esta obsoleto; use 'pqc_signature'.",
+                level="WARNING",
+                component="CryptoManager"
+            )
 
         if pqc_signature is not None:
             self.pqc_signature = pqc_signature
@@ -183,7 +190,8 @@ class CryptoManager:
             metadata=metadata,
             original_size_bytes=original_size,
             protected_size_bytes=protected_size,
-            overhead_bytes=overhead
+            overhead_bytes=overhead,
+            encryption_data=encryption_data
         )
 
         result = CryptoResult(
@@ -273,7 +281,8 @@ class CryptoManager:
             metadata=metadata,
             original_size_bytes=original_size,
             protected_size_bytes=protected_size,
-            overhead_bytes=overhead
+            overhead_bytes=overhead,
+            encryption_data=encryption_data
         )
 
         result = CryptoResult(
@@ -391,7 +400,8 @@ class CryptoManager:
             metadata=metadata,
             original_size_bytes=original_size,
             protected_size_bytes=protected_size,
-            overhead_bytes=overhead
+            overhead_bytes=overhead,
+            encryption_data=encryption_data
         )
 
         result = CryptoResult(
@@ -564,6 +574,8 @@ class CryptoManager:
 
         return {
             "algorithm": "AES GCM",
+            "nonce": base64.b64encode(nonce).decode("ascii"),
+            "ciphertext": base64.b64encode(ciphertext).decode("ascii"),
             "nonce_size": len(nonce),
             "ciphertext_size": len(ciphertext),
             "tag_size": tag_size,
@@ -588,12 +600,16 @@ class CryptoManager:
         metadata: dict[str, Any],
         original_size_bytes: int,
         protected_size_bytes: int,
-        overhead_bytes: int
+        overhead_bytes: int,
+        encryption_data: dict[str, Any]
     ):
         return {
             "crypto_mode": mode,
             "crypto_backend": backend,
             "encrypted": True,
+            "ciphertext": encryption_data.get("ciphertext"),
+            "nonce": encryption_data.get("nonce"),
+            "tag_size": encryption_data.get("tag_size"),
             "payload_original_sha256": hashlib.sha256(
                 self._serialize_payload(payload)
             ).hexdigest(),

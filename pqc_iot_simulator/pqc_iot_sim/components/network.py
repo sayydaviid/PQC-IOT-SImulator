@@ -41,9 +41,20 @@ class Network:
         self,
         name: str = "default_network",
         logger: Logger | None = None,
-        verbose: bool = True
+        verbose: bool = True,
+        log_level: str = "info"
     ):
+        valid_log_levels = ["silent", "info", "debug"]
+
+        if log_level not in valid_log_levels:
+            raise ValueError(
+                f"Nivel de log invalido: {log_level}. "
+                f"Use um destes: {valid_log_levels}"
+            )
+
         self.name = name
+        self.log_level = log_level
+
         self.config = NetworkConfig()
         self.topology_data = TopologyData()
         self.graph = nx.Graph()
@@ -60,24 +71,94 @@ class Network:
             logger=self.logger
         )
 
-        self.logger.log(
-            "Rede criada",
-            data={"name": self.name},
-            component="Network"
+        self._log_info(
+            f"Rede {self.name} criada e pronta para configuracao"
         )
+
+    def _crypto_label(self, crypto_mode: str | None):
+        labels = {
+            "classical": "classica",
+            "hybrid": "hibrida",
+            "pqc": "pos quantica"
+        }
+
+        if crypto_mode is None:
+            return "nao definida"
+
+        return labels.get(crypto_mode, crypto_mode)
+
+    def _format_path(self, path: list[str]):
+        if not path:
+            return "sem caminho"
+
+        return " para ".join(path)
+
+    def _format_count(self, value: int, singular: str, plural: str):
+        if value == 1:
+            return f"{value} {singular}"
+
+        return f"{value} {plural}"
+
+    def set_log_level(self, level: str):
+        valid_levels = ["silent", "info", "debug"]
+
+        if level not in valid_levels:
+            raise ValueError(
+                f"Nivel de log invalido: {level}. "
+                f"Use um destes: {valid_levels}"
+            )
+
+        self.log_level = level
+        return self
+
+    def _log_info(
+        self,
+        message: str,
+        data: dict[str, Any] | None = None,
+        component: str = "Network"
+    ):
+        if self.log_level in ["info", "debug"]:
+            self.logger.log(
+                message,
+                data=data or {},
+                component=component
+            )
+
+    def _log_debug(
+        self,
+        message: str,
+        data: dict[str, Any] | None = None,
+        component: str = "Network"
+    ):
+        if self.log_level == "debug":
+            self.logger.log(
+                message,
+                data=data or {},
+                component=component
+            )
+
+    def _log_error(
+        self,
+        message: str,
+        data: dict[str, Any] | None = None,
+        component: str = "Network"
+    ):
+        if self.log_level != "silent":
+            self.logger.log(
+                message,
+                data=data or {},
+                component=component
+            )
 
     def set_runtime_engine(self, engine: Any):
         self.engine = engine
         self.runtime_engine = engine
 
-        self.logger.log(
-            "Engine de runtime conectada a Network",
-            data={
-                "engine": getattr(engine, "name", None),
-                "engine_type": getattr(engine, "engine_type", None),
-                "is_running": engine.is_running() if hasattr(engine, "is_running") else None
-            },
-            component="Network"
+        engine_name = getattr(engine, "name", None) or "sem nome"
+        engine_type = getattr(engine, "engine_type", None) or "tipo nao informado"
+
+        self._log_info(
+            f"Engine de runtime {engine_name} conectada a rede, tipo: {engine_type}"
         )
 
         return self
@@ -121,27 +202,21 @@ class Network:
                     destination
                 )
 
-            self.logger.log(
-                "Metricas reais de link coletadas",
-                data={
-                    "source": source,
-                    "destination": destination,
-                    "link_metrics": link_metrics
-                },
-                component="Network"
+            latency = link_metrics.get("latency_ms") if isinstance(link_metrics, dict) else None
+            loss = link_metrics.get("packet_loss_percent") if isinstance(link_metrics, dict) else None
+
+            self._log_debug(
+                (
+                    f"Metricas reais de link coletadas entre {source} e {destination}, "
+                    f"latencia: {latency} ms, perda de pacotes: {loss}%"
+                )
             )
 
             return link_metrics
 
         except Exception as exc:
-            self.logger.log(
-                "Falha ao coletar metricas reais de link",
-                data={
-                    "source": source,
-                    "destination": destination,
-                    "error": str(exc)
-                },
-                component="Network"
+            self._log_debug(
+                f"Nao foi possivel coletar metricas reais de link entre {source} e {destination}, erro: {exc}"
             )
 
             return None
@@ -149,10 +224,8 @@ class Network:
     def set_verbose(self, verbose: bool):
         self.logger.set_verbose(verbose)
 
-        self.logger.log(
-            "Modo verbose alterado",
-            data={"verbose": verbose},
-            component="Network"
+        self._log_debug(
+            f"Modo verbose alterado para {verbose}"
         )
 
         return self
@@ -168,23 +241,15 @@ class Network:
 
         self.config.engine = engine_name
 
-        self.logger.log(
-            "Engine definida",
-            data={"engine": engine_name},
-            component="Network"
+        self._log_info(
+            f"Engine configurada: {engine_name}"
         )
 
         return self
 
     def set_ready_topology(self, topology_name: str, *args, **kwargs):
-        self.logger.log(
-            "Iniciando criacao da topologia",
-            data={
-                "topology": topology_name,
-                "args": args,
-                "kwargs": kwargs
-            },
-            component="Network"
+        self._log_debug(
+            f"Preparando topologia {topology_name}"
         )
 
         self.config.topology_name = topology_name
@@ -208,15 +273,12 @@ class Network:
 
         self._sync_graph()
 
-        self.logger.log(
-            "Topologia criada com sucesso",
-            data={
-                "topology": topology_name,
-                "params": params,
-                "nodes": len(self.topology_data.nodes),
-                "links": len(self.topology_data.links)
-            },
-            component="Network"
+        self._log_info(
+            (
+                f"Topologia {topology_name} criada com sucesso, "
+                f"{self._format_count(len(self.topology_data.nodes), 'no', 'nos')} "
+                f"e {self._format_count(len(self.topology_data.links), 'link', 'links')}"
+            )
         )
 
         return self
@@ -246,16 +308,6 @@ class Network:
         for host in self.hosts.values():
             host.set_crypto_mode(mode)
 
-        self.logger.log(
-            "Modo criptografico definido",
-            data={
-                "mode": mode,
-                "params": params,
-                "crypto_config": self.crypto_manager.get_config(),
-                "hosts_updated": len(self.hosts)
-            },
-            component="Network"
-        )
 
         return self
 
@@ -271,13 +323,8 @@ class Network:
             use_pqc_signature=params.get("use_pqc_signature")
         )
 
-        self.logger.log(
-            "Parametros criptograficos atualizados",
-            data={
-                "params": params,
-                "crypto_config": self.crypto_manager.get_config()
-            },
-            component="Network"
+        self._log_info(
+            "Parametros criptograficos atualizados"
         )
 
         return self
@@ -297,15 +344,6 @@ class Network:
         for host in self.hosts.values():
             host.set_protocol(protocol_name)
 
-        self.logger.log(
-            "Protocolo definido",
-            data={
-                "protocol": protocol_name,
-                "params": params,
-                "hosts_updated": len(self.hosts)
-            },
-            component="Network"
-        )
 
         return self
 
@@ -337,10 +375,8 @@ class Network:
 
         self.config.metrics = metrics
 
-        self.logger.log(
-            "Metricas definidas",
-            data={"metrics": metrics},
-            component="Network"
+        self._log_info(
+            f"Metricas configuradas: {', '.join(metrics)}"
         )
 
         return self
@@ -354,10 +390,8 @@ class Network:
         if self.hosts:
             self.hosts[node_id] = self._create_host_from_node(node_id)
 
-        self.logger.log(
-            "No adicionado",
-            data={"node_id": node_id},
-            component="Network"
+        self._log_info(
+            f"No {node_id} adicionado a rede"
         )
 
         return self
@@ -383,13 +417,8 @@ class Network:
             if target not in self.hosts:
                 self.hosts[target] = self._create_host_from_node(target)
 
-        self.logger.log(
-            "Link adicionado",
-            data={
-                "source": source,
-                "target": target
-            },
-            component="Network"
+        self._log_info(
+            f"Link entre {source} e {target} adicionado a rede"
         )
 
         return self
@@ -398,14 +427,8 @@ class Network:
         if not self.topology_data.nodes:
             raise RuntimeError("Defina uma topologia antes de criar os hosts.")
 
-        self.logger.log(
-            "Iniciando criacao dos hosts",
-            data={
-                "total_nodes": len(self.topology_data.nodes),
-                "protocol": self.config.protocol_name,
-                "crypto_mode": self.config.crypto_mode
-            },
-            component="Network"
+        self._log_debug(
+            f"Criando hosts para {len(self.topology_data.nodes)} nos da topologia"
         )
 
         self.hosts = {}
@@ -413,19 +436,17 @@ class Network:
         for node_id in self.topology_data.nodes:
             self.hosts[node_id] = self._create_host_from_node(node_id)
 
-        self.logger.log(
-            "Hosts criados com sucesso",
-            data={
-                "hosts": list(self.hosts.keys()),
-                "total_hosts": len(self.hosts)
-            },
-            component="Network"
+        self._log_info(
+            f"{len(self.hosts)} hosts criados com sucesso"
         )
 
         return self
 
     def get_host(self, host_id: str):
         if not self.hosts:
+            self._log_debug(
+                "Hosts ainda nao existiam, criando automaticamente"
+            )
             self.create_hosts()
 
         if host_id not in self.hosts:
@@ -435,27 +456,15 @@ class Network:
 
     def show_hosts(self):
         if not self.hosts:
-            self.logger.log(
-                "Nenhum host criado ainda. Criando hosts automaticamente.",
-                component="Network"
+            self._log_debug(
+                "Hosts ainda nao existiam, criando automaticamente"
             )
-
             self.create_hosts()
 
-        summary = {
+        return {
             host_id: host.get_status()
             for host_id, host in self.hosts.items()
         }
-
-        self.logger.log(
-            "Resumo dos hosts solicitado",
-            data={
-                "total_hosts": len(summary)
-            },
-            component="Network"
-        )
-
-        return summary
 
     def send(
         self,
@@ -479,6 +488,14 @@ class Network:
         if destination not in self.graph.nodes:
             raise KeyError(f"No de destino nao existe no grafo: {destination}")
 
+        self._log_info(
+            (
+                f"Enviando pacote de {source} para {destination}, "
+                f"protocolo: {self.config.protocol_name}, "
+                f"criptografia: {self._crypto_label(self.config.crypto_mode)}"
+            )
+        )
+
         baseline_energy = self.metrics_collector.snapshot_energy(self.hosts)
         timer_start, started_at = self.metrics_collector.start_timer()
 
@@ -496,8 +513,7 @@ class Network:
         if source == destination:
             host = self.get_host(source)
 
-            packet = Packet(
-                source=source,
+            packet = host.send_data(
                 destination=destination,
                 payload=protected_payload,
                 protocol=self.config.protocol_name,
@@ -541,20 +557,8 @@ class Network:
                 link_metrics=link_metrics
             )
 
-            self.logger.log(
-                "Envio local concluido",
-                data={
-                    "source": source,
-                    "destination": destination,
-                    "path": [source],
-                    "crypto_mode": crypto_result.mode,
-                    "crypto_backend": crypto_result.backend,
-                    "crypto_overhead_bytes": crypto_result.overhead_bytes,
-                    "crypto_time_seconds": crypto_result.operation_time_seconds,
-                    "crypto_energy_cost": crypto_result.energy_cost,
-                    "link_metrics": link_metrics
-                },
-                component="Network"
+            self._log_info(
+                f"Pacote entregue localmente em {source}"
             )
 
             return send_result
@@ -598,16 +602,8 @@ class Network:
                 }
             )
 
-            self.logger.log(
-                "Envio nao concluido. Caminho inexistente.",
-                data={
-                    "source": source,
-                    "destination": destination,
-                    "crypto_mode": crypto_result.mode,
-                    "crypto_backend": crypto_result.backend,
-                    "link_metrics": link_metrics
-                },
-                component="Network"
+            self._log_error(
+                f"Pacote nao entregue porque nao existe caminho entre {source} e {destination}"
             )
 
             return {
@@ -616,6 +612,8 @@ class Network:
                 "destination": destination,
                 "path": [],
                 "packet": None,
+                "protocol": self.config.protocol_name,
+                "crypto_mode": self.config.crypto_mode,
                 "result": {
                     "reason": "no_path"
                 },
@@ -623,15 +621,8 @@ class Network:
                 "link_metrics": link_metrics
             }
 
-        self.logger.log(
-            "Caminho calculado para envio",
-            data={
-                "source": source,
-                "destination": destination,
-                "path": path,
-                "hops": len(path) - 1
-            },
-            component="Network"
+        self._log_debug(
+            f"Caminho calculado para envio: {self._format_path(path)}"
         )
 
         packet = source_host.send_data(
@@ -683,21 +674,12 @@ class Network:
                     link_metrics=link_metrics
                 )
 
-                self.logger.log(
-                    "Envio concluido",
-                    data={
-                        "source": source,
-                        "destination": destination,
-                        "path": path,
-                        "hops": len(path) - 1,
-                        "crypto_mode": crypto_result.mode,
-                        "crypto_backend": crypto_result.backend,
-                        "crypto_overhead_bytes": crypto_result.overhead_bytes,
-                        "crypto_time_seconds": crypto_result.operation_time_seconds,
-                        "crypto_energy_cost": crypto_result.energy_cost,
-                        "link_metrics": link_metrics
-                    },
-                    component="Network"
+                self._log_info(
+                    (
+                        f"Pacote entregue com sucesso, "
+                        f"saltos: {len(path) - 1}, "
+                        f"caminho: {self._format_path(path)}"
+                    )
                 )
 
                 return send_result
@@ -742,17 +724,8 @@ class Network:
             link_metrics=link_metrics
         )
 
-        self.logger.log(
-            "Envio nao concluido",
-            data={
-                "source": source,
-                "destination": destination,
-                "path": path,
-                "crypto_mode": crypto_result.mode,
-                "crypto_backend": crypto_result.backend,
-                "link_metrics": link_metrics
-            },
-            component="Network"
+        self._log_error(
+            f"Pacote nao entregue, caminho tentado: {self._format_path(path)}"
         )
 
         return send_result
@@ -779,9 +752,8 @@ class Network:
         return self.metrics_collector.export_csv(output_path)
 
     def build(self):
-        self.logger.log(
-            "Iniciando build da rede",
-            component="Network"
+        self._log_debug(
+            "Preparando build da rede"
         )
 
         self._validate_before_build()
@@ -791,54 +763,40 @@ class Network:
 
         self.is_built = True
 
-        self.logger.log(
-            "Build da rede concluido",
-            data={
-                "engine": self.config.engine,
-                "topology": self.config.topology_name,
-                "crypto": self.config.crypto_mode,
-                "protocol": self.config.protocol_name,
-                "hosts": len(self.hosts)
-            },
-            component="Network"
+        self._log_info(
+            (
+                f"Rede pronta para execucao, "
+                f"engine: {self.config.engine}, "
+                f"topologia: {self.config.topology_name}, "
+                f"criptografia: {self._crypto_label(self.config.crypto_mode)}, "
+                f"protocolo: {self.config.protocol_name}, "
+                f"hosts: {len(self.hosts)}"
+            )
         )
 
         return self
 
     def run(self):
-        self.logger.log(
-            "Execucao solicitada",
-            component="Network"
+        self._log_debug(
+            "Execucao solicitada"
         )
 
         if not self.is_built:
             self.build()
 
-        self.logger.log(
-            "Simulacao iniciada",
-            data={
-                "network": self.name,
-                "nodes": len(self.topology_data.nodes),
-                "links": len(self.topology_data.links),
-                "hosts": len(self.hosts)
-            },
-            component="Network"
-        )
-
-        self.logger.log(
-            "Simulacao finalizada",
-            data={"status": "finished"},
-            component="Network"
+        self._log_info(
+            (
+                f"Execucao concluida no modo interno, "
+                f"rede: {self.name}, "
+                f"nos: {len(self.topology_data.nodes)}, "
+                f"links: {len(self.topology_data.links)}, "
+                f"hosts: {len(self.hosts)}"
+            )
         )
 
         return self
 
     def draw(self, output_path: str | None = None, show: bool = True):
-        self.logger.log(
-            "Iniciando desenho da topologia",
-            component="Network"
-        )
-
         if not self.topology_data.nodes:
             raise RuntimeError("Nenhuma topologia foi definida.")
 
@@ -920,16 +878,12 @@ class Network:
             path.parent.mkdir(parents=True, exist_ok=True)
             plt.savefig(path, bbox_inches="tight")
 
-            self.logger.log(
-                "Imagem da topologia salva",
-                data={"output_path": output_path},
-                component="Network"
+            self._log_info(
+                f"Imagem da topologia salva em {output_path}"
             )
 
-        self.logger.log(
-            "Desenho OK",
-            data={"output_path": output_path},
-            component="Network"
+        self._log_debug(
+            "Desenho da topologia finalizado"
         )
 
         if show:
@@ -940,7 +894,7 @@ class Network:
         return self
 
     def summary(self):
-        data = {
+        return {
             "name": self.name,
             "engine": self.config.engine,
             "runtime_engine": getattr(self.runtime_engine, "name", None),
@@ -960,19 +914,6 @@ class Network:
             "total_links": len(self.topology_data.links),
             "total_hosts": len(self.hosts)
         }
-
-        self.logger.log(
-            "Resumo da rede solicitado",
-            data={
-                "total_nodes": data["total_nodes"],
-                "total_links": data["total_links"],
-                "total_hosts": data["total_hosts"],
-                "runtime_engine": data["runtime_engine"]
-            },
-            component="Network"
-        )
-
-        return data
 
     def get_logs(self):
         return self.logger.get_events()
@@ -1006,15 +947,12 @@ class Network:
             reason="forward_data"
         )
 
-        self.logger.log(
-            "Pacote encaminhado por no intermediario",
-            data={
-                "host_id": host.host_id,
-                "source": packet.source,
-                "destination": destination,
-                "protocol": packet.protocol,
-                "crypto_mode": packet.crypto_mode
-            },
+        self._log_debug(
+            (
+                f"{host.host_id} encaminhou pacote de {packet.source} "
+                f"para {destination}, protocolo: {packet.protocol}, "
+                f"criptografia: {self._crypto_label(packet.crypto_mode)}"
+            ),
             component=host.host_id
         )
 
@@ -1066,9 +1004,14 @@ class Network:
 
             params.setdefault("rows", 3)
             params.setdefault("cols", 3)
+            params.setdefault("snake_path", False)
 
             params["rows"] = self._validate_positive_int(params["rows"], "rows")
             params["cols"] = self._validate_positive_int(params["cols"], "cols")
+            params["snake_path"] = self._validate_bool(
+                params["snake_path"],
+                "snake_path"
+            )
 
         elif topology_name == "star":
             if len(args) == 1:
@@ -1101,6 +1044,19 @@ class Network:
 
             params.setdefault("nodes", 5)
             params["nodes"] = self._validate_positive_int(params["nodes"], "nodes")
+            params.setdefault("mesh_degree", None)
+
+            if params["mesh_degree"] is not None:
+                params["mesh_degree"] = self._validate_positive_int(
+                    params["mesh_degree"],
+                    "mesh_degree"
+                )
+
+                if params["mesh_degree"] >= params["nodes"]:
+                    params["mesh_degree"] = params["nodes"] - 1
+            else:
+                if params["nodes"] > 12:
+                    params["mesh_degree"] = min(params["nodes"] - 1, 6)
 
         else:
             raise ValueError(f"Topologia nao suportada: {topology_name}")
@@ -1115,7 +1071,8 @@ class Network:
         if topology_name == "grade":
             return self._build_grade_topology(
                 rows=params["rows"],
-                cols=params["cols"]
+                cols=params["cols"],
+                snake_path=params["snake_path"]
             )
 
         if topology_name == "star":
@@ -1131,19 +1088,15 @@ class Network:
 
         if topology_name == "mesh":
             return self._build_mesh_topology(
-                nodes=params["nodes"]
+                nodes=params["nodes"],
+                mesh_degree=params.get("mesh_degree")
             )
 
         raise ValueError(f"Topologia nao suportada: {topology_name}")
 
-    def _build_grade_topology(self, rows: int, cols: int):
-        self.logger.log(
-            "Gerando topologia em grade",
-            data={
-                "rows": rows,
-                "cols": cols
-            },
-            component="Network"
+    def _build_grade_topology(self, rows: int, cols: int, snake_path: bool):
+        self._log_debug(
+            f"Gerando topologia em grade com {rows} linhas e {cols} colunas"
         )
 
         total_slots = rows * cols
@@ -1191,8 +1144,9 @@ class Network:
 
             links_set.add(tuple(sorted((source, target))))
 
-        for current, neighbor in zip(sequence, sequence[1:]):
-            add_grid_link(current, neighbor)
+        if snake_path:
+            for current, neighbor in zip(sequence, sequence[1:]):
+                add_grid_link(current, neighbor)
 
         for row in range(rows):
             for col in range(cols):
@@ -1212,10 +1166,8 @@ class Network:
         )
 
     def _build_star_topology(self, nodes: int):
-        self.logger.log(
-            "Gerando topologia estrela",
-            data={"nodes": nodes},
-            component="Network"
+        self._log_debug(
+            f"Gerando topologia estrela com {nodes} nos IoT"
         )
 
         topology_nodes = []
@@ -1240,13 +1192,8 @@ class Network:
         )
 
     def _build_tree_topology(self, levels: int, children: int):
-        self.logger.log(
-            "Gerando topologia arvore",
-            data={
-                "levels": levels,
-                "children": children
-            },
-            component="Network"
+        self._log_debug(
+            f"Gerando topologia em arvore com {levels} niveis e {children} filhos por no"
         )
 
         nodes = ["server_1", "gateway_1"]
@@ -1274,11 +1221,9 @@ class Network:
             links=links
         )
 
-    def _build_mesh_topology(self, nodes: int):
-        self.logger.log(
-            "Gerando topologia malha",
-            data={"nodes": nodes},
-            component="Network"
+    def _build_mesh_topology(self, nodes: int, mesh_degree: int | None = None):
+        self._log_debug(
+            f"Gerando topologia em malha com {nodes} nos IoT"
         )
 
         topology_nodes = ["gateway_1", "server_1"]
@@ -1289,10 +1234,13 @@ class Network:
             topology_nodes.append(node_id)
             links.append((node_id, "gateway_1"))
 
+        neighbor_limit = nodes - 1 if mesh_degree is None else mesh_degree
+
         for index in range(1, nodes + 1):
             current = f"iot_{index}"
+            max_neighbor = min(nodes, index + neighbor_limit)
 
-            for neighbor_index in range(index + 1, nodes + 1):
+            for neighbor_index in range(index + 1, max_neighbor + 1):
                 neighbor = f"iot_{neighbor_index}"
                 links.append((current, neighbor))
 
@@ -1322,13 +1270,12 @@ class Network:
         for source, target in self.topology_data.links:
             self.graph.add_edge(source, target)
 
-        self.logger.log(
-            "Grafo sincronizado",
-            data={
-                "nodes": self.graph.number_of_nodes(),
-                "edges": self.graph.number_of_edges()
-            },
-            component="Network"
+        self._log_debug(
+            (
+                f"Grafo interno sincronizado, "
+                f"nos: {self.graph.number_of_nodes()}, "
+                f"arestas: {self.graph.number_of_edges()}"
+            )
         )
 
     def _normalize_link(self, source: str, target: str):
@@ -1346,15 +1293,21 @@ class Network:
 
         return value
 
+    def _validate_bool(self, value: Any, param_name: str):
+        if not isinstance(value, bool):
+            raise ValueError(
+                f"Parametro '{param_name}' invalido: {value}. "
+                "Use true ou false."
+            )
+
+        return value
+
     def _validate_before_build(self):
+        defaults_applied = []
+
         if not self.config.engine:
             self.config.engine = "mininet_wifi"
-
-            self.logger.log(
-                "Engine padrao aplicada",
-                data={"engine": self.config.engine},
-                component="Network"
-            )
+            defaults_applied.append(f"engine: {self.config.engine}")
 
         if not self.config.topology_name:
             raise RuntimeError("Defina uma topologia antes de executar a rede.")
@@ -1366,20 +1319,11 @@ class Network:
                 mode=self.config.crypto_mode
             )
 
-            self.logger.log(
-                "Modo criptografico padrao aplicado",
-                data={"crypto": self.config.crypto_mode},
-                component="Network"
-            )
+            defaults_applied.append(f"criptografia: {self._crypto_label(self.config.crypto_mode)}")
 
         if not self.config.protocol_name:
             self.config.protocol_name = "mqtt"
-
-            self.logger.log(
-                "Protocolo padrao aplicado",
-                data={"protocol": self.config.protocol_name},
-                component="Network"
-            )
+            defaults_applied.append(f"protocolo: {self.config.protocol_name}")
 
         if not self.config.metrics:
             self.config.metrics = [
@@ -1392,10 +1336,11 @@ class Network:
                 "link_metrics"
             ]
 
-            self.logger.log(
-                "Metricas padrao aplicadas",
-                data={"metrics": self.config.metrics},
-                component="Network"
+            defaults_applied.append("metricas padrao")
+
+        if defaults_applied:
+            self._log_info(
+                f"Configuracoes padrao aplicadas: {', '.join(defaults_applied)}"
             )
 
     def _ordered_iot_nodes(self):

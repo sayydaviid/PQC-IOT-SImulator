@@ -65,9 +65,51 @@ class MetricsCollector:
         self._transmission_counter = 0
 
         self.logger.log(
-            "MetricsCollector criado",
+            "Coletor de metricas criado e pronto para registrar transmissoes",
             component="MetricsCollector"
         )
+
+    def _status_label(self, status: str | None):
+        labels = {
+            "delivered": "entregue",
+            "not_delivered": "nao entregue",
+            "failed": "falhou"
+        }
+
+        if status is None:
+            return "nao informado"
+
+        return labels.get(status, status)
+
+    def _crypto_label(self, crypto_mode: str | None):
+        labels = {
+            "classical": "classica",
+            "hybrid": "hibrida",
+            "pqc": "pos quantica"
+        }
+
+        if crypto_mode is None:
+            return "nao informado"
+
+        return labels.get(crypto_mode, crypto_mode)
+
+    def _format_number(self, value: Any):
+        if value is None:
+            return "nao informado"
+
+        if isinstance(value, float):
+            value = round(value, 6)
+
+            if value.is_integer():
+                return int(value)
+
+        return value
+
+    def _format_path(self, path: list[str]):
+        if not path:
+            return "sem caminho"
+
+        return " -> ".join(path)
 
     def next_transmission_id(self):
         self._transmission_counter += 1
@@ -83,10 +125,7 @@ class MetricsCollector:
             snapshot[host_id] = float(host.energy)
 
         self.logger.log(
-            "Snapshot de energia criado",
-            data={
-                "hosts": list(snapshot.keys())
-            },
+            f"Snapshot de energia criado para {len(snapshot)} hosts",
             component="MetricsCollector"
         )
 
@@ -321,22 +360,21 @@ class MetricsCollector:
         self.transmissions.append(metric)
 
         self.logger.log(
-            "Metrica de transmissao registrada",
-            data={
-                "transmission_id": metric.transmission_id,
-                "source": metric.source,
-                "destination": metric.destination,
-                "status": metric.status,
-                "hops": metric.hops,
-                "total_energy_consumed": metric.total_energy_consumed,
-                "payload_size_bytes": metric.payload_size_bytes,
-                "crypto_overhead_bytes": metric.crypto_overhead_bytes,
-                "crypto_time_seconds": metric.crypto_time_seconds,
-                "crypto_energy_cost": metric.crypto_energy_cost,
-                "link_latency_ms": metric.link_latency_ms,
-                "link_packet_loss_percent": metric.link_packet_loss_percent,
-                "duration_seconds": metric.duration_seconds
-            },
+            (
+                f"Transmissao {metric.transmission_id} registrada, "
+                f"status: {self._status_label(metric.status)}, "
+                f"origem: {metric.source}, "
+                f"destino: {metric.destination}, "
+                f"saltos: {metric.hops}, "
+                f"protocolo: {metric.protocol or 'nao informado'}, "
+                f"criptografia: {self._crypto_label(metric.crypto_mode)}, "
+                f"energia consumida: {self._format_number(metric.total_energy_consumed)}, "
+                f"overhead criptografico: {metric.crypto_overhead_bytes} bytes, "
+                f"tempo de criptografia: {self._format_number(metric.crypto_time_seconds)}s, "
+                f"latencia: {self._format_number(metric.link_latency_ms)} ms, "
+                f"perda de pacotes: {self._format_number(metric.link_packet_loss_percent)}%, "
+                f"duracao: {self._format_number(metric.duration_seconds)}s"
+            ),
             component="MetricsCollector"
         )
 
@@ -362,8 +400,17 @@ class MetricsCollector:
             protocol = getattr(packet, "protocol", None)
             crypto_mode = getattr(packet, "crypto_mode", None)
 
+        if protocol is None:
+            protocol = send_result.get("protocol")
+
+        if crypto_mode is None:
+            crypto_mode = send_result.get("crypto_mode")
+
+        if crypto_mode is None and isinstance(send_result.get("crypto"), dict):
+            crypto_mode = send_result.get("crypto", {}).get("mode")
+
         crypto = send_result.get("crypto")
-        # Prioriza o link_metrics do parâmetro; caso contrário, tira do send_result
+
         if link_metrics is None:
             link_metrics = send_result.get("link_metrics")
 
@@ -399,15 +446,15 @@ class MetricsCollector:
         data = self.extract_link_data(link_metrics)
 
         self.logger.log(
-            "Metricas reais de link registradas",
-            data={
-                "source": source,
-                "destination": destination,
-                "latency_ms": data["link_latency_ms"],
-                "packet_loss_percent": data["link_packet_loss_percent"],
-                "packets_transmitted": data["link_packets_transmitted"],
-                "packets_received": data["link_packets_received"]
-            },
+            (
+                f"Metricas reais de link registradas, "
+                f"origem: {source}, "
+                f"destino: {destination}, "
+                f"latencia: {self._format_number(data['link_latency_ms'])} ms, "
+                f"perda de pacotes: {self._format_number(data['link_packet_loss_percent'])}%, "
+                f"pacotes transmitidos: {self._format_number(data['link_packets_transmitted'])}, "
+                f"pacotes recebidos: {self._format_number(data['link_packets_received'])}"
+            ),
             component="MetricsCollector"
         )
 
@@ -590,12 +637,6 @@ class MetricsCollector:
             "link_delivery_rate": link_delivery_rate
         }
 
-        self.logger.log(
-            "Resumo de metricas solicitado",
-            data=summary,
-            component="MetricsCollector"
-        )
-
         return summary
 
     def get_energy_by_host(self):
@@ -762,7 +803,7 @@ class MetricsCollector:
         self._transmission_counter = 0
 
         self.logger.log(
-            "Metricas apagadas",
+            "Metricas apagadas e contador de transmissoes reiniciado",
             component="MetricsCollector"
         )
 
@@ -789,8 +830,7 @@ class MetricsCollector:
             )
 
         self.logger.log(
-            "Metricas exportadas em JSON",
-            data={"output_path": output_path},
+            f"Metricas exportadas em JSON no arquivo {output_path}",
             component="MetricsCollector"
         )
 
@@ -885,8 +925,7 @@ class MetricsCollector:
             writer.writerows(rows)
 
         self.logger.log(
-            "Metricas exportadas em CSV",
-            data={"output_path": output_path},
+            f"Metricas exportadas em CSV no arquivo {output_path}",
             component="MetricsCollector"
         )
 

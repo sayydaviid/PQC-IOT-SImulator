@@ -45,6 +45,7 @@ class MininetWiFiEngine(BaseEngine):
         name: str = "mininet_wifi_engine",
         logger: Logger | None = None,
         verbose: bool = True,
+        log_level: str = "info",
         ip_base: str = "10.0.0.",
         ip_prefix: int = 24,
         ssid: str = "pqc_iot_sim",
@@ -67,6 +68,16 @@ class MininetWiFiEngine(BaseEngine):
             logger=logger,
             verbose=verbose
         )
+
+        valid_log_levels = ["silent", "info", "debug"]
+
+        if log_level not in valid_log_levels:
+            raise ValueError(
+                f"Nivel de log invalido: {log_level}. "
+                f"Use um destes: {valid_log_levels}"
+            )
+
+        self.log_level = log_level
 
         self.ip_base = ip_base
         self.ip_prefix = ip_prefix
@@ -111,25 +122,82 @@ class MininetWiFiEngine(BaseEngine):
             association_wait_seconds=self.association_wait_seconds
         )
 
+        self._log_info(
+            (
+                f"Engine Mininet WiFi criada, "
+                f"modo de link: {self.link_mode}, "
+                f"SSID: {self.ssid}"
+            )
+        )
+
+    def set_log_level(self, level: str):
+        valid_levels = ["silent", "info", "debug"]
+
+        if level not in valid_levels:
+            raise ValueError(
+                f"Nivel de log invalido: {level}. "
+                f"Use um destes: {valid_levels}"
+            )
+
+        self.log_level = level
+        return self
+
+    def _log_info(
+        self,
+        message: str,
+        data: dict[str, Any] | None = None,
+        component: str | None = None
+    ):
+        if self.log_level in ["info", "debug"]:
+            self.logger.log(
+                message,
+                data=data or {},
+                component=component or self.name
+            )
+
+    def _log_debug(
+        self,
+        message: str,
+        data: dict[str, Any] | None = None,
+        component: str | None = None
+    ):
+        if self.log_level == "debug":
+            self.logger.log(
+                message,
+                data=data or {},
+                component=component or self.name
+            )
+
+    def _log_error(
+        self,
+        message: str,
+        data: dict[str, Any] | None = None,
+        component: str | None = None
+    ):
+        if self.log_level != "silent":
+            self.logger.log(
+                message,
+                data=data or {},
+                level="ERROR",
+                component=component or self.name
+            )
+
     def set_link_mode(self, link_mode: str):
         self.link_mode = link_mode
         self._validate_link_mode()
 
         self.status.metadata["link_mode"] = self.link_mode
 
-        self.logger.log(
-            "Modo de link alterado",
-            data={"link_mode": self.link_mode},
-            component=self.name
+        self._log_info(
+            f"Modo de link alterado para {self.link_mode}"
         )
 
         return self
 
     def build(self):
         if self.is_built():
-            self.logger.log(
-                "Build ignorado porque a engine ja esta construida",
-                component=self.name
+            self._log_debug(
+                "Build ignorado porque a engine ja estava construida"
             )
 
             return self
@@ -147,14 +215,13 @@ class MininetWiFiEngine(BaseEngine):
 
         setLogLevel("info")
 
-        self.logger.log(
-            "Criando objeto Mininet WiFi",
-            data={
-                "nodes": len(self.engine_nodes),
-                "links": len(self.engine_links),
-                "link_mode": self.link_mode
-            },
-            component=self.name
+        self._log_info(
+            (
+                f"Construindo rede no Mininet WiFi, "
+                f"nos: {len(self.engine_nodes)}, "
+                f"links: {len(self.engine_links)}, "
+                f"modo de link: {self.link_mode}"
+            )
         )
 
         self.net = Mininet_wifi(
@@ -176,25 +243,23 @@ class MininetWiFiEngine(BaseEngine):
 
         self.mark_built()
 
-        self.logger.log(
-            "Mininet WiFi build concluido",
-            data={
-                "stations": self._count_nodes_by_type("iot"),
-                "gateways": self._count_nodes_by_type("gateway"),
-                "servers": self._count_nodes_by_type("server"),
-                "links": len(self.engine_links),
-                "link_mode": self.link_mode
-            },
-            component=self.name
+        self._log_info(
+            (
+                f"Build do Mininet WiFi concluido, "
+                f"stations: {self._count_nodes_by_type('iot')}, "
+                f"gateways: {self._count_nodes_by_type('gateway')}, "
+                f"servidores: {self._count_nodes_by_type('server')}, "
+                f"links: {len(self.engine_links)}, "
+                f"modo de link: {self.link_mode}"
+            )
         )
 
         return self
 
     def start(self):
         if self.is_running():
-            self.logger.log(
-                "Start ignorado porque a engine ja esta em execucao",
-                component=self.name
+            self._log_debug(
+                "Start ignorado porque a engine ja estava em execucao"
             )
 
             return self
@@ -205,9 +270,8 @@ class MininetWiFiEngine(BaseEngine):
         if self.net is None:
             raise RuntimeError("Objeto Mininet WiFi nao foi criado.")
 
-        self.logger.log(
-            "Iniciando Mininet WiFi",
-            component=self.name
+        self._log_info(
+            "Iniciando rede Mininet WiFi"
         )
 
         self.net.build()
@@ -222,16 +286,16 @@ class MininetWiFiEngine(BaseEngine):
 
         self.mark_started()
 
-        self.logger.log(
-            "Mininet WiFi iniciado",
-            data={
-                "running": True,
-                "access_points": [
-                    ap.name
-                    for ap in access_points
-                ]
-            },
-            component=self.name
+        ap_names = [
+            ap.name
+            for ap in access_points
+        ]
+
+        self._log_info(
+            (
+                f"Mininet WiFi iniciado com sucesso, "
+                f"access points ativos: {', '.join(ap_names) if ap_names else 'nenhum'}"
+            )
         )
 
         self._post_start_configuration()
@@ -243,18 +307,16 @@ class MininetWiFiEngine(BaseEngine):
 
     def stop(self):
         if self.net is None:
-            self.logger.log(
-                "Stop ignorado porque nao existe rede Mininet criada",
-                component=self.name
+            self._log_debug(
+                "Stop ignorado porque nao existe rede Mininet criada"
             )
 
             self.mark_stopped()
 
             return self
 
-        self.logger.log(
-            "Parando Mininet WiFi",
-            component=self.name
+        self._log_info(
+            "Parando rede Mininet WiFi"
         )
 
         try:
@@ -263,9 +325,8 @@ class MininetWiFiEngine(BaseEngine):
         finally:
             self.mark_stopped()
 
-            self.logger.log(
-                "Mininet WiFi parado",
-                component=self.name
+            self._log_info(
+                "Mininet WiFi parado com sucesso"
             )
 
         return self
@@ -279,26 +340,14 @@ class MininetWiFiEngine(BaseEngine):
         if node is None:
             raise KeyError(f"No nao encontrado na engine: {node_id}")
 
-        self.logger.log(
-            "Executando comando em no da engine",
-            data={
-                "node_id": node_id,
-                "mininet_name": node.name,
-                "command": command
-            },
-            component=self.name
+        self._log_debug(
+            f"Executando comando no no {node_id}, mininet: {node.name}, comando: {command}"
         )
 
         output = node.cmd(command)
 
-        self.logger.log(
-            "Comando executado",
-            data={
-                "node_id": node_id,
-                "command": command,
-                "output": output.strip()
-            },
-            component=self.name
+        self._log_debug(
+            f"Comando executado no no {node_id}, comando: {command}, saida: {output.strip()}"
         )
 
         return output
@@ -315,9 +364,8 @@ class MininetWiFiEngine(BaseEngine):
                 "CLI do Mininet WiFi nao encontrada nesta versao instalada."
             )
 
-        self.logger.log(
-            "Abrindo CLI do Mininet WiFi",
-            component=self.name
+        self._log_info(
+            "Abrindo CLI do Mininet WiFi"
         )
 
         CLI_wifi(self.net)
@@ -333,72 +381,100 @@ class MininetWiFiEngine(BaseEngine):
         command = f"ping -c {count} {destination_ip}"
 
         return self.run_command(source, command)
-      
+
     def collect_link_metrics(
-          self,
-          source: str,
-          destination: str,
-          count: int = 3
-      ):
-          output = self.ping(
-              source=source,
-              destination=destination,
-              count=count
-          )
+        self,
+        source: str,
+        destination: str,
+        count: int = 3
+    ):
+        output = self.ping(
+            source=source,
+            destination=destination,
+            count=count
+        )
 
-          destination_ip = self.get_ip(destination)
+        destination_ip = self.get_ip(destination)
 
-          metrics = {
-              "source": source,
-              "destination": destination,
-              "destination_ip": destination_ip,
-              "packet_loss_percent": None,
-              "packets_transmitted": None,
-              "packets_received": None,
-              "rtt_min_ms": None,
-              "rtt_avg_ms": None,
-              "rtt_max_ms": None,
-              "rtt_mdev_ms": None,
-              "latency_ms": None,
-              "raw_output": output
-          }
+        metrics = {
+            "source": source,
+            "destination": destination,
+            "destination_ip": destination_ip,
+            "packet_loss_percent": None,
+            "packets_transmitted": None,
+            "packets_received": None,
+            "rtt_min_ms": None,
+            "rtt_avg_ms": None,
+            "rtt_max_ms": None,
+            "rtt_mdev_ms": None,
+            "latency_ms": None,
+            "raw_output": output
+        }
 
-          packets_match = re.search(
-              r"(\d+)\s+packets transmitted,\s+(\d+)\s+received.*?(\d+(?:\.\d+)?)%\s+packet loss",
-              output
-          )
+        packet_patterns = [
+            r"(\d+)\s+packets transmitted,\s+(\d+)\s+received.*?(\d+(?:\.\d+)?)%\s+packet loss",
+            r"(\d+)\s+packets transmitted,\s+(\d+)\s+packets received,\s+(\d+(?:\.\d+)?)%\s+packet loss"
+        ]
 
-          if packets_match:
-              metrics["packets_transmitted"] = int(packets_match.group(1))
-              metrics["packets_received"] = int(packets_match.group(2))
-              metrics["packet_loss_percent"] = float(packets_match.group(3))
+        packets_match = None
 
-          rtt_match = re.search(
-              r"rtt min/avg/max/mdev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)",
-              output
-          )
+        for pattern in packet_patterns:
+            packets_match = re.search(pattern, output)
 
-          if rtt_match:
-              metrics["rtt_min_ms"] = float(rtt_match.group(1))
-              metrics["rtt_avg_ms"] = float(rtt_match.group(2))
-              metrics["rtt_max_ms"] = float(rtt_match.group(3))
-              metrics["rtt_mdev_ms"] = float(rtt_match.group(4))
-              metrics["latency_ms"] = metrics["rtt_avg_ms"]
+            if packets_match:
+                break
 
-          self.logger.log(
-              "Metricas reais de link coletadas",
-              data={
-                  "source": source,
-                  "destination": destination,
-                  "latency_ms": metrics["latency_ms"],
-                  "packet_loss_percent": metrics["packet_loss_percent"],
-                  "packets_transmitted": metrics["packets_transmitted"],
-                  "packets_received": metrics["packets_received"]
-              },
-              component=self.name
-          )
+        if packets_match:
+            metrics["packets_transmitted"] = int(packets_match.group(1))
+            metrics["packets_received"] = int(packets_match.group(2))
+            metrics["packet_loss_percent"] = float(packets_match.group(3))
 
-          return metrics
+        rtt_patterns = [
+            r"rtt min/avg/max/mdev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)",
+            r"round-trip min/avg/max/(?:mdev|stddev) = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)"
+        ]
+
+        rtt_match = None
+
+        for pattern in rtt_patterns:
+            rtt_match = re.search(pattern, output)
+
+            if rtt_match:
+                break
+
+        if rtt_match:
+            metrics["rtt_min_ms"] = float(rtt_match.group(1))
+            metrics["rtt_avg_ms"] = float(rtt_match.group(2))
+            metrics["rtt_max_ms"] = float(rtt_match.group(3))
+            metrics["rtt_mdev_ms"] = float(rtt_match.group(4))
+            metrics["latency_ms"] = metrics["rtt_avg_ms"]
+
+        else:
+            times = re.findall(r"time[=<]([\d.]+)\s*ms", output)
+
+            if times:
+                values = [float(value) for value in times]
+                metrics["rtt_min_ms"] = min(values)
+                metrics["rtt_avg_ms"] = sum(values) / len(values)
+                metrics["rtt_max_ms"] = max(values)
+                metrics["latency_ms"] = metrics["rtt_avg_ms"]
+
+        self._log_info(
+            (
+                f"Metricas reais de link coletadas entre {source} e {destination}, "
+                f"IP destino: {destination_ip}, "
+                f"latencia: {metrics['latency_ms']} ms, "
+                f"perda de pacotes: {metrics['packet_loss_percent']}%, "
+                f"pacotes enviados: {metrics['packets_transmitted']}, "
+                f"pacotes recebidos: {metrics['packets_received']}"
+            )
+        )
+
+        self._log_debug(
+            f"Saida bruta do ping entre {source} e {destination}: {output.strip()}"
+        )
+
+        return metrics
 
     def ping_all(self):
         if not self.is_running():
@@ -407,17 +483,14 @@ class MininetWiFiEngine(BaseEngine):
         if self.net is None:
             raise RuntimeError("A rede Mininet WiFi ainda nao foi criada.")
 
-        self.logger.log(
-            "Executando pingAll",
-            component=self.name
+        self._log_info(
+            "Executando teste geral de conectividade com pingAll"
         )
 
         result = self.net.pingAll()
 
-        self.logger.log(
-            "pingAll concluido",
-            data={"packet_loss": result},
-            component=self.name
+        self._log_info(
+            f"Teste geral de conectividade concluido, perda de pacotes: {result}%"
         )
 
         return result
@@ -443,14 +516,8 @@ class MininetWiFiEngine(BaseEngine):
         if destination_node is None:
             raise KeyError(f"No de destino nao encontrado na engine: {destination}")
 
-        self.logger.log(
-            "Executando iperf",
-            data={
-                "source": source,
-                "destination": destination,
-                "seconds": seconds
-            },
-            component=self.name
+        self._log_info(
+            f"Executando teste de throughput com iperf entre {source} e {destination}, duracao: {seconds}s"
         )
 
         result = self.net.iperf(
@@ -458,14 +525,8 @@ class MininetWiFiEngine(BaseEngine):
             seconds=seconds
         )
 
-        self.logger.log(
-            "iperf concluido",
-            data={
-                "source": source,
-                "destination": destination,
-                "result": result
-            },
-            component=self.name
+        self._log_info(
+            f"Teste iperf concluido entre {source} e {destination}, resultado: {result}"
         )
 
         return result
@@ -511,10 +572,8 @@ class MininetWiFiEngine(BaseEngine):
                 default=str
             )
 
-        self.logger.log(
-            "Mapeamento da engine exportado",
-            data={"output_path": output_path},
-            component=self.name
+        self._log_info(
+            f"Mapeamento da engine exportado em {output_path}"
         )
 
         return self
@@ -553,44 +612,34 @@ class MininetWiFiEngine(BaseEngine):
                 "Modo infrastructure exige pelo menos um servidor na topologia."
             )
 
-        gateway_id = gateway_nodes[0]
-        gateway_engine = self.engine_nodes[gateway_id]
+        for gateway_id in gateway_nodes:
+            gateway_engine = self.engine_nodes[gateway_id]
 
-        for server_id in server_nodes:
-            server_engine = self.engine_nodes[server_id]
+            for server_id in server_nodes:
+                server_engine = self.engine_nodes[server_id]
 
-            engine_link = EngineLink(
-                source=gateway_id,
-                target=server_id,
-                source_mininet=gateway_engine.mininet_name,
-                target_mininet=server_engine.mininet_name,
-                metadata={
-                    "link_mode": "infrastructure",
-                    "original_source": gateway_id,
-                    "original_target": server_id,
-                    "note": "stations se associam ao AP via wireless"
-                }
-            )
-
-            self.engine_links.append(engine_link)
-
-        self.logger.log(
-            "Links de infraestrutura mapeados para engine",
-            data={
-                "gateway": gateway_id,
-                "servers": server_nodes,
-                "links": [
-                    {
-                        "source": link.source,
-                        "target": link.target,
-                        "source_mininet": link.source_mininet,
-                        "target_mininet": link.target_mininet
+                engine_link = EngineLink(
+                    source=gateway_id,
+                    target=server_id,
+                    source_mininet=gateway_engine.mininet_name,
+                    target_mininet=server_engine.mininet_name,
+                    metadata={
+                        "link_mode": "infrastructure",
+                        "original_source": gateway_id,
+                        "original_target": server_id,
+                        "note": "stations se associam ao AP via wireless"
                     }
-                    for link in self.engine_links
-                ],
-                "note": "IoTs nao recebem addLink direto com AP; associacao e wireless."
-            },
-            component=self.name
+                )
+
+                self.engine_links.append(engine_link)
+
+        self._log_debug(
+            (
+                f"Links de infraestrutura mapeados, "
+                f"gateways: {len(gateway_nodes)}, "
+                f"servidores: {len(server_nodes)}, "
+                f"links: {len(self.engine_links)}"
+            )
         )
 
         return self.engine_links
@@ -622,20 +671,8 @@ class MininetWiFiEngine(BaseEngine):
 
             self.engine_links.append(engine_link)
 
-        self.logger.log(
-            "Links logicos mapeados para engine",
-            data={
-                "links": [
-                    {
-                        "source": link.source,
-                        "target": link.target,
-                        "source_mininet": link.source_mininet,
-                        "target_mininet": link.target_mininet
-                    }
-                    for link in self.engine_links
-                ]
-            },
-            component=self.name
+        self._log_debug(
+            f"Links logicos mapeados para a engine, total: {len(self.engine_links)}"
         )
 
         return self.engine_links
@@ -681,19 +718,14 @@ class MininetWiFiEngine(BaseEngine):
             self.mininet_nodes[node_id] = mininet_node
             self.set_runtime_object(node_id, mininet_node)
 
-        self.logger.log(
-            "Nos criados no Mininet WiFi",
-            data={
-                "nodes": {
-                    node_id: {
-                        "mininet_name": node.name,
-                        "type": self.engine_nodes[node_id].node_type,
-                        "ip": self.engine_nodes[node_id].ip
-                    }
-                    for node_id, node in self.mininet_nodes.items()
-                }
-            },
-            component=self.name
+        self._log_info(
+            (
+                f"Nos criados no Mininet WiFi, "
+                f"total: {len(self.mininet_nodes)}, "
+                f"stations: {self._count_nodes_by_type('iot')}, "
+                f"gateways: {self._count_nodes_by_type('gateway')}, "
+                f"servidores: {self._count_nodes_by_type('server')}"
+            )
         )
 
     def _add_station(
@@ -761,9 +793,8 @@ class MininetWiFiEngine(BaseEngine):
         if self.net is None:
             raise RuntimeError("Objeto Mininet WiFi nao foi criado.")
 
-        self.logger.log(
-            "Configurando nos WiFi",
-            component=self.name
+        self._log_debug(
+            "Configurando nos WiFi no Mininet"
         )
 
         self.net.configureWifiNodes()
@@ -786,17 +817,12 @@ class MininetWiFiEngine(BaseEngine):
 
             link_params = self._build_link_params(link)
 
-            self.logger.log(
-                "Criando link no Mininet WiFi",
-                data={
-                    "source": link.source,
-                    "target": link.target,
-                    "source_mininet": link.source_mininet,
-                    "target_mininet": link.target_mininet,
-                    "params": link_params,
-                    "link_mode": self.link_mode
-                },
-                component=self.name
+            self._log_debug(
+                (
+                    f"Criando link no Mininet WiFi entre {link.source} e {link.target}, "
+                    f"modo de link: {self.link_mode}, "
+                    f"parametros: {link_params}"
+                )
             )
 
             created = self._safe_add_link(
@@ -807,18 +833,16 @@ class MininetWiFiEngine(BaseEngine):
 
             created_links.append(
                 {
-                    "source": link.source,
-                    "target": link.target,
-                    "source_mininet": link.source_mininet,
-                    "target_mininet": link.target_mininet,
-                    "created": created
+                    "origem": link.source,
+                    "destino": link.target,
+                    "origem_mininet": link.source_mininet,
+                    "destino_mininet": link.target_mininet,
+                    "criado": created
                 }
             )
 
-        self.logger.log(
-            "Links criados no Mininet WiFi",
-            data={"links": created_links},
-            component=self.name
+        self._log_info(
+            f"{len(created_links)} links criados no Mininet WiFi"
         )
 
     def _safe_add_link(
@@ -837,14 +861,14 @@ class MininetWiFiEngine(BaseEngine):
             return True
 
         except TypeError:
-            self.logger.log(
-                "Criacao de link com parametros falhou. Tentando sem parametros.",
-                data={
-                    "source": getattr(source_node, "name", str(source_node)),
-                    "target": getattr(target_node, "name", str(target_node)),
-                    "params": link_params
-                },
-                component=self.name
+            source_name = getattr(source_node, "name", str(source_node))
+            target_name = getattr(target_node, "name", str(target_node))
+
+            self._log_debug(
+                (
+                    f"Criacao de link com parametros falhou entre {source_name} e {target_name}. "
+                    f"Tentando criar o link sem parametros"
+                )
             )
 
             self.net.addLink(
@@ -902,17 +926,16 @@ class MininetWiFiEngine(BaseEngine):
 
             engine_node.ip = f"{self.ip_base}{ip_number}/{self.ip_prefix}"
 
-        self.logger.log(
-            "IPs atribuidos aos nos da engine",
-            data={
-                node_id: node.ip
-                for node_id, node in self.engine_nodes.items()
-            },
-            component=self.name
+        self._log_debug(
+            f"IPs atribuidos aos nos da engine, total: {len(self.engine_nodes)}"
         )
 
     def _assign_positions(self):
         if not self.auto_set_positions:
+            self._log_debug(
+                "Atribuicao automatica de posicoes ignorada"
+            )
+
             return
 
         rows = self.network.config.topology_params.get("rows")
@@ -939,13 +962,8 @@ class MininetWiFiEngine(BaseEngine):
 
             engine_node.metadata["position"] = f"{x},{y},{z}"
 
-        self.logger.log(
-            "Posicoes atribuidas aos nos da engine",
-            data={
-                node_id: node.metadata.get("position")
-                for node_id, node in self.engine_nodes.items()
-            },
-            component=self.name
+        self._log_debug(
+            f"Posicoes atribuidas aos nos da engine, total: {len(self.engine_nodes)}"
         )
 
     def _post_start_configuration(self):
@@ -955,23 +973,18 @@ class MininetWiFiEngine(BaseEngine):
             self._enable_l2_forwarding_on_access_points()
             self._flush_arp_cache()
 
-            self.logger.log(
-                "Configuracao pos inicio aplicada",
-                data={
-                    "link_mode": self.link_mode,
-                    "note": "Stations associadas ao AP, interfaces WiFi ativadas e fluxo NORMAL aplicado."
-                },
-                component=self.name
+            self._log_info(
+                (
+                    f"Configuracao de conectividade aplicada, "
+                    f"modo de link: {self.link_mode}, "
+                    f"stations associadas aos APs, interfaces WiFi ativadas e encaminhamento L2 configurado"
+                )
             )
 
             return
 
-        self.logger.log(
-            "Configuracao pos inicio ignorada para este modo",
-            data={
-                "link_mode": self.link_mode
-            },
-            component=self.name
+        self._log_debug(
+            f"Configuracao pos inicio ignorada para o modo de link {self.link_mode}"
         )
 
     def _force_wireless_interfaces_up(self):
@@ -991,47 +1004,51 @@ class MininetWiFiEngine(BaseEngine):
 
             actions.append(
                 {
-                    "node_id": node_id,
+                    "no": node_id,
                     "station": station.name,
                     "interface": wlan,
-                    "output": output.strip()
+                    "saida": output.strip()
                 }
             )
 
-        self.logger.log(
-            "Interfaces WiFi das stations ativadas",
-            data={"interfaces": actions},
-            component=self.name
+        self._log_debug(
+            f"Interfaces WiFi das stations ativadas, total: {len(actions)}"
         )
 
     def _associate_stations_to_gateway(self):
         access_points = self._get_access_points()
 
         if not access_points:
-            self.logger.log(
-                "Associacao wireless ignorada porque nenhum AP foi encontrado",
-                component=self.name
+            self._log_error(
+                "Associacao wireless nao foi aplicada porque nenhum access point foi encontrado"
             )
 
             return
 
-        ap = access_points[0]
-        ssid = f"{self.ssid}_{ap.name}"
-
         associated = []
         failed = []
 
-        for node_id, engine_node in self.engine_nodes.items():
-            if engine_node.node_type != "iot":
-                continue
+        iot_nodes = [
+            node_id
+            for node_id, engine_node in self.engine_nodes.items()
+            if engine_node.node_type == "iot"
+        ]
+
+        ap_count = len(access_points)
+
+        for index, node_id in enumerate(iot_nodes):
+            ap = access_points[index % ap_count]
+            ssid = f"{self.ssid}_{ap.name}"
 
             station = self.mininet_nodes.get(node_id)
 
             if station is None:
                 failed.append(
                     {
-                        "node_id": node_id,
-                        "reason": "station_not_found"
+                        "no": node_id,
+                        "ap": ap.name,
+                        "ssid": ssid,
+                        "motivo": "station_not_found"
                     }
                 )
 
@@ -1052,15 +1069,36 @@ class MininetWiFiEngine(BaseEngine):
             else:
                 failed.append(association_result)
 
-        self.logger.log(
-            "Associacao wireless concluida",
-            data={
-                "ap": ap.name,
-                "ssid": ssid,
-                "associated": associated,
-                "failed": failed
-            },
-            component=self.name
+        if failed:
+            self._log_error(
+                (
+                    f"Algumas stations nao conseguiram associar ao AP, "
+                    f"associadas: {len(associated)}, "
+                    f"falhas: {len(failed)}"
+                )
+            )
+
+        else:
+            ap_names = [
+                ap.name
+                for ap in access_points
+            ]
+
+            self._log_info(
+                (
+                    f"Stations associadas aos access points, "
+                    f"stations: {len(associated)}, "
+                    f"APs: {', '.join(ap_names)}, "
+                    f"estrategia: round robin"
+                )
+            )
+
+        self._log_debug(
+            (
+                f"Associacao wireless finalizada, "
+                f"associadas: {len(associated)}, "
+                f"falhas: {len(failed)}"
+            )
         )
 
     def _force_station_connection_to_ap(
@@ -1113,10 +1151,14 @@ class MininetWiFiEngine(BaseEngine):
             "outputs": outputs
         }
 
-        self.logger.log(
-            "Tentativa de associacao wireless executada",
-            data=result,
-            component=self.name
+        self._log_debug(
+            (
+                f"Tentativa de associacao wireless executada para {node_id}, "
+                f"station: {station.name}, "
+                f"AP: {ap.name}, "
+                f"SSID: {ssid}, "
+                f"conectado: {connected}"
+            )
         )
 
         return result
@@ -1128,14 +1170,13 @@ class MininetWiFiEngine(BaseEngine):
             output = node.cmd("ip neigh flush all")
             results[node_id] = output.strip()
 
-        self.logger.log(
-            "Cache ARP apagado nos nos da engine",
-            data=results,
-            component=self.name
+        self._log_debug(
+            f"Cache ARP apagado nos nos da engine, total: {len(results)}"
         )
 
     def _enable_l2_forwarding_on_access_points(self):
         access_points = self._get_access_points()
+        command_results = []
 
         for ap in access_points:
             ap_name = ap.name
@@ -1153,19 +1194,25 @@ class MininetWiFiEngine(BaseEngine):
                     text=True
                 )
 
-                self.logger.log(
-                    "Comando OVS executado",
-                    data={
+                command_results.append(
+                    {
                         "ap": ap_name,
-                        "command": " ".join(command),
-                        "returncode": result.returncode,
+                        "comando": " ".join(command),
+                        "codigo_retorno": result.returncode,
                         "stdout": result.stdout.strip(),
                         "stderr": result.stderr.strip()
-                    },
-                    component=self.name
+                    }
                 )
 
         time.sleep(1)
+
+        self._log_debug(
+            (
+                f"Encaminhamento L2 configurado nos access points, "
+                f"APs: {len(access_points)}, "
+                f"comandos executados: {len(command_results)}"
+            )
+        )
 
     def _validate_link_mode(self):
         if self.link_mode not in self.valid_link_modes:
@@ -1194,13 +1241,12 @@ class MininetWiFiEngine(BaseEngine):
 
     def _check_root_permission(self):
         if hasattr(os, "geteuid") and os.geteuid() != 0:
-            self.logger.log(
-                "Aviso: Mininet WiFi normalmente precisa ser executado com sudo.",
-                data={
-                    "current_uid": os.geteuid()
-                },
-                component=self.name
-            )
+            uid = os.geteuid()
+            message = f"Mininet WiFi precisa ser executado com sudo, UID atual: {uid}"
+
+            self._log_error(message)
+
+            raise PermissionError(message)
 
     def _import_mininet_wifi_modules(self):
         try:

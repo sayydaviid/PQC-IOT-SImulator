@@ -1,0 +1,6 @@
+# Core runtime dependencies for the simulator (excluding system-level Mininet).
+cryptography>=3.4.8
+PyYAML>=5.4.1
+networkx>=2.4
+matplotlib>=3.5.1
+liboqs-python @ git+https://github.com/open-quantum-safe/liboqs-python.git@9ab93b648e0253087f3c627af3674c058ede391b

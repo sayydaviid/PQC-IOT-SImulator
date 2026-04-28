@@ -1,8 +1,11 @@
-from pqc_iot_sim.core.simulation import Simulation
+from pathlib import Path
+
+from pqc_iot_simulator.pqc_iot_sim.core import Simulation
 
 
 def main():
-    simulation = Simulation(config_path="configs/default.yaml")
+    config_path = Path(__file__).resolve().parent / "configs" / "default.yaml"
+    simulation = Simulation(config_path=config_path)
     simulation.run()
 
 

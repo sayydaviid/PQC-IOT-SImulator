@@ -84,7 +84,7 @@ MarkupSafe==2.0.1
 matplotlib==3.5.1
 matplotlib-inline==0.1.3
 mccabe==0.6.1
-mininet @ file:///home/tavares/mininet/mininet-wifi/mininet
+# mininet deve ser instalado a nivel de sistema; nao usar path local aqui
 mininet-wifi==2.7
 monotonic==1.6
 more-itertools==8.10.0

@@ -1,0 +1,42 @@
+simulation:
+  activate_logger: true
+  run_engine: false
+  send_test_message: true
+  collect_link_metrics: false
+  test_source: iot_1
+  test_destination: server_1
+  test_payload:
+    sensor: temperature
+    value: 28.5
+    unit: celsius
+    message: sample payload
+
+network:
+  verbose: true
+  topology:
+    name: grade
+    params:
+      rows: 3
+      cols: 3
+  protocol: mqtt
+  crypto:
+    mode: classical
+    params: {}
+  metrics:
+    - latency
+    - packet_loss
+    - pdr
+    - energy
+    - crypto_time
+    - message_overhead
+    - link_metrics
+
+engine:
+  enabled: false
+  type: mininet_wifi
+  params:
+    default_bw: 10
+    default_delay: 5ms
+    default_loss: 0
+    link_mode: infrastructure
+    open_cli_on_start: false

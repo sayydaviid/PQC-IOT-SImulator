@@ -79,22 +79,28 @@ class BaseEngine(ABC):
         self.runtime_objects: dict[str, Any] = {}
 
         self.logger.log(
-            "Engine criada",
-            data={
-                "name": self.name,
-                "engine_type": self.engine_type
-            },
+            f"Engine {self.name} criada, tipo: {self.engine_type}",
             component=self.name
         )
 
     def configure(self, **params):
         self.status.metadata.update(params)
 
-        self.logger.log(
-            "Engine configurada",
-            data=params,
-            component=self.name
-        )
+        if params:
+            configured_params = ", ".join(
+                f"{key}: {value}"
+                for key, value in params.items()
+            )
+
+            self.logger.log(
+                f"Engine {self.name} configurada, parametros: {configured_params}",
+                component=self.name
+            )
+        else:
+            self.logger.log(
+                f"Engine {self.name} configurada sem parametros adicionais",
+                component=self.name
+            )
 
         return self
 
@@ -111,12 +117,11 @@ class BaseEngine(ABC):
         if not self.network.topology_data.links:
             raise RuntimeError("A Network precisa ter links antes de iniciar a engine.")
 
+        total_nodes = len(self.network.topology_data.nodes)
+        total_links = len(self.network.topology_data.links)
+
         self.logger.log(
-            "Network validada para engine",
-            data={
-                "nodes": len(self.network.topology_data.nodes),
-                "links": len(self.network.topology_data.links)
-            },
+            f"Network validada para a engine, nos: {total_nodes}, links: {total_links}",
             component=self.name
         )
 
@@ -128,11 +133,11 @@ class BaseEngine(ABC):
         self._map_links()
 
         self.logger.log(
-            "Engine preparada",
-            data={
-                "engine_nodes": len(self.engine_nodes),
-                "engine_links": len(self.engine_links)
-            },
+            (
+                f"Engine preparada, "
+                f"nos mapeados: {len(self.engine_nodes)}, "
+                f"links mapeados: {len(self.engine_links)}"
+            ),
             component=self.name
         )
 
@@ -156,13 +161,7 @@ class BaseEngine(ABC):
             self.engine_nodes[node_id] = engine_node
 
         self.logger.log(
-            "Nos mapeados para engine",
-            data={
-                "nodes": [
-                    node.to_dict() if hasattr(node, "to_dict") else asdict(node)
-                    for node in self.engine_nodes.values()
-                ]
-            },
+            f"{len(self.engine_nodes)} nos mapeados para a engine",
             component=self.name
         )
 
@@ -195,13 +194,7 @@ class BaseEngine(ABC):
             self.engine_links.append(engine_link)
 
         self.logger.log(
-            "Links mapeados para engine",
-            data={
-                "links": [
-                    asdict(link)
-                    for link in self.engine_links
-                ]
-            },
+            f"{len(self.engine_links)} links mapeados para a engine",
             component=self.name
         )
 
@@ -257,8 +250,7 @@ class BaseEngine(ABC):
         self.status.is_built = True
 
         self.logger.log(
-            "Engine marcada como construida",
-            data=self.status.to_dict(),
+            f"Engine {self.name} marcada como construida",
             component=self.name
         )
 
@@ -269,8 +261,7 @@ class BaseEngine(ABC):
         self.status.started_at = self._now()
 
         self.logger.log(
-            "Engine marcada como iniciada",
-            data=self.status.to_dict(),
+            f"Engine {self.name} iniciada em {self.status.started_at}",
             component=self.name
         )
 
@@ -281,8 +272,7 @@ class BaseEngine(ABC):
         self.status.stopped_at = self._now()
 
         self.logger.log(
-            "Engine marcada como parada",
-            data=self.status.to_dict(),
+            f"Engine {self.name} parada em {self.status.stopped_at}",
             component=self.name
         )
 
@@ -316,11 +306,7 @@ class BaseEngine(ABC):
         self.runtime_objects[key] = value
 
         self.logger.log(
-            "Objeto de runtime registrado",
-            data={
-                "key": key,
-                "type": type(value).__name__
-            },
+            f"Objeto de runtime registrado, chave: {key}, tipo: {type(value).__name__}",
             component=self.name
         )
 
@@ -333,18 +319,6 @@ class BaseEngine(ABC):
             "links": self.get_engine_links(),
             "runtime_objects": list(self.runtime_objects.keys())
         }
-
-        self.logger.log(
-            "Resumo da engine solicitado",
-            data={
-                "engine_type": self.engine_type,
-                "is_built": self.status.is_built,
-                "is_running": self.status.is_running,
-                "nodes": len(self.engine_nodes),
-                "links": len(self.engine_links)
-            },
-            component=self.name
-        )
 
         return data
 
@@ -385,7 +359,7 @@ class BaseEngine(ABC):
 
     def restart(self):
         self.logger.log(
-            "Reinicio da engine solicitado",
+            f"Reinicio da engine {self.name} solicitado",
             component=self.name
         )
 
@@ -394,5 +368,10 @@ class BaseEngine(ABC):
 
         self.build()
         self.start()
+
+        self.logger.log(
+            f"Engine {self.name} reiniciada com sucesso",
+            component=self.name
+        )
 
         return self

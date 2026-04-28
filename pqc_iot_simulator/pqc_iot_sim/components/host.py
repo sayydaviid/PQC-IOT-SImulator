@@ -42,26 +42,84 @@ class Host:
         self.forwarded_packets: list[Packet] = []
 
         self.logger.log(
-            "Host criado",
-            data={
-                "host_id": self.host_id,
-                "host_type": self.host_type,
-                "energy": self.energy,
-                "protocol": self.protocol,
-                "crypto_mode": self.crypto_mode
-            },
+            (
+                f"{self._label()} criado e inicializado, "
+                f"energia: {self._format_number(self.energy)}, "
+                f"protocolo: {self._safe_label(self.protocol)}, "
+                f"modo de criptografia: {self._crypto_label(self.crypto_mode)}"
+            ),
             component=self.host_id
         )
+
+    def _label(self):
+        return self._label_from_id(self.host_id)
+
+    def _label_from_id(self, host_id: str | None):
+        if not host_id:
+            return "Host"
+
+        parts = str(host_id).split("_")
+
+        if len(parts) != 2:
+            return str(host_id)
+
+        prefix, number = parts
+
+        labels = {
+            "iot": "IOT",
+            "gateway": "Gateway",
+            "server": "Servidor"
+        }
+
+        return f"{labels.get(prefix, prefix)} {number}"
+
+    def _crypto_label(self, crypto_mode: str | None):
+        labels = {
+            "classical": "classica",
+            "hybrid": "hibrida",
+            "pqc": "pos quantica"
+        }
+
+        if crypto_mode is None:
+            return "nao definido"
+
+        return labels.get(crypto_mode, crypto_mode)
+
+    def _reason_label(self, reason: str | None):
+        labels = {
+            "operation": "operacao",
+            "crypto_protect": "protecao criptografica",
+            "send_data": "envio de dados",
+            "receive_data": "recebimento de dados",
+            "forward_data": "encaminhamento de dados",
+            "generate_sensor_data": "geracao de dado do sensor"
+        }
+
+        if reason is None:
+            return "operacao"
+
+        return labels.get(reason, reason)
+
+    def _safe_label(self, value: Any):
+        if value is None:
+            return "nao definido"
+
+        return value
+
+    def _format_number(self, value: float):
+        if isinstance(value, float):
+            value = round(value, 6)
+
+            if value.is_integer():
+                return int(value)
+
+        return value
 
     def set_protocol(self, protocol: str):
         self.protocol = protocol
 
         self.logger.log(
-            "Protocolo definido no host",
-            data={
-                "host_id": self.host_id,
-                "protocol": protocol
-            },
+            f"{self._label()} configurado para usar o protocolo {protocol}",
             component=self.host_id
         )
 
@@ -71,11 +129,10 @@ class Host:
         self.crypto_mode = crypto_mode
 
         self.logger.log(
-            "Modo criptografico definido no host",
-            data={
-                "host_id": self.host_id,
-                "crypto_mode": crypto_mode
-            },
+            (
+                f"{self._label()} configurado com modo de criptografia "
+                f"{self._crypto_label(crypto_mode)}"
+            ),
             component=self.host_id
         )
 
@@ -85,11 +142,7 @@ class Host:
         self.energy = energy
 
         self.logger.log(
-            "Energia definida no host",
-            data={
-                "host_id": self.host_id,
-                "energy": self.energy
-            },
+            f"{self._label()} agora possui energia: {self._format_number(self.energy)}",
             component=self.host_id
         )
 
@@ -102,13 +155,11 @@ class Host:
         self.energy = max(0.0, self.energy - amount)
 
         self.logger.log(
-            "Energia consumida",
-            data={
-                "host_id": self.host_id,
-                "amount": amount,
-                "remaining_energy": self.energy,
-                "reason": reason
-            },
+            (
+                f"{self._label()} consumiu {self._format_number(amount)} de energia "
+                f"por {self._reason_label(reason)}, "
+                f"energia restante: {self._format_number(self.energy)}"
+            ),
             component=self.host_id
         )
 
@@ -140,14 +191,11 @@ class Host:
         )
 
         self.logger.log(
-            "Pacote enviado",
-            data={
-                "source": packet.source,
-                "destination": packet.destination,
-                "protocol": packet.protocol,
-                "crypto_mode": packet.crypto_mode,
-                "payload": packet.payload
-            },
+            (
+                f"{self._label()} enviou pacote para {self._label_from_id(destination)}, "
+                f"protocolo: {self._safe_label(packet.protocol)}, "
+                f"criptografia: {self._crypto_label(packet.crypto_mode)}"
+            ),
             component=self.host_id
         )
 
@@ -162,15 +210,12 @@ class Host:
         )
 
         self.logger.log(
-            "Pacote recebido",
-            data={
-                "receiver": self.host_id,
-                "source": packet.source,
-                "destination": packet.destination,
-                "protocol": packet.protocol,
-                "crypto_mode": packet.crypto_mode,
-                "payload": packet.payload
-            },
+            (
+                f"{self._label()} recebeu pacote de {self._label_from_id(packet.source)} "
+                f"com destino a {self._label_from_id(packet.destination)}, "
+                f"protocolo: {self._safe_label(packet.protocol)}, "
+                f"criptografia: {self._crypto_label(packet.crypto_mode)}"
+            ),
             component=self.host_id
         )
 
@@ -215,15 +260,6 @@ class IoTNode(Host):
 
         self.sensor_type = sensor_type
 
-        self.logger.log(
-            "No IoT inicializado",
-            data={
-                "host_id": self.host_id,
-                "sensor_type": self.sensor_type
-            },
-            component=self.host_id
-        )
-
     def generate_sensor_data(self, value: Any | None = None):
         data = {
             "node_id": self.host_id,
@@ -238,8 +274,11 @@ class IoTNode(Host):
         )
 
         self.logger.log(
-            "Dado de sensor gerado",
-            data=data,
+            (
+                f"{self._label()} gerou dado do sensor, "
+                f"tipo: {self.sensor_type}, "
+                f"valor: {self._safe_label(value)}"
+            ),
             component=self.host_id
         )
 
@@ -278,12 +317,6 @@ class GatewayNode(Host):
             metadata=metadata
         )
 
-        self.logger.log(
-            "Gateway inicializado",
-            data={"host_id": self.host_id},
-            component=self.host_id
-        )
-
     def forward_data(
         self,
         packet: Packet,
@@ -305,14 +338,12 @@ class GatewayNode(Host):
         )
 
         self.logger.log(
-            "Pacote encaminhado pelo gateway",
-            data={
-                "gateway": self.host_id,
-                "original_source": packet.source,
-                "new_destination": destination,
-                "protocol": packet.protocol,
-                "crypto_mode": packet.crypto_mode
-            },
+            (
+                f"{self._label()} encaminhou pacote de {self._label_from_id(packet.source)} "
+                f"para {self._label_from_id(destination)}, "
+                f"protocolo: {self._safe_label(packet.protocol)}, "
+                f"criptografia: {self._crypto_label(packet.crypto_mode)}"
+            ),
             component=self.host_id
         )
 
@@ -341,12 +372,6 @@ class ApplicationServer(Host):
 
         self.application_data: list[dict[str, Any]] = []
 
-        self.logger.log(
-            "Servidor de aplicacao inicializado",
-            data={"host_id": self.host_id},
-            component=self.host_id
-        )
-
     def process_data(self, packet: Packet):
         self.receive_data(packet)
 
@@ -362,8 +387,11 @@ class ApplicationServer(Host):
         self.application_data.append(record)
 
         self.logger.log(
-            "Dado processado pelo servidor",
-            data=record,
+            (
+                f"{self._label()} processou pacote recebido de {self._label_from_id(packet.source)}, "
+                f"protocolo: {self._safe_label(packet.protocol)}, "
+                f"criptografia: {self._crypto_label(packet.crypto_mode)}"
+            ),
             component=self.host_id
         )
 
