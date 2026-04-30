@@ -72,7 +72,7 @@ class Network:
         )
 
         self._log_info(
-            f"Rede {self.name} criada e pronta para configuracao"
+            f"Rede criada e pronta para configuracao"
         )
 
     def _crypto_label(self, crypto_mode: str | None):

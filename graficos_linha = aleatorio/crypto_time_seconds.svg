@@ -1,0 +1,315 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="550.0" y="38" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#111827">Tempo criptografico</text>
+<text x="550.0" y="62" text-anchor="middle" font-family="Arial" font-size="14" fill="#4b5563">Comparacao por execucao</text>
+<line x1="90" y1="80.0" x2="1060" y2="80.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="78" y="84.0" text-anchor="end" font-family="Arial" font-size="12" fill="#374151">0.012966</text>
+<line x1="90" y1="170.0" x2="1060" y2="170.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="78" y="174.0" text-anchor="end" font-family="Arial" font-size="12" fill="#374151">0.010477</text>
+<line x1="90" y1="260.0" x2="1060" y2="260.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="78" y="264.0" text-anchor="end" font-family="Arial" font-size="12" fill="#374151">0.007988</text>
+<line x1="90" y1="350.0" x2="1060" y2="350.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="78" y="354.0" text-anchor="end" font-family="Arial" font-size="12" fill="#374151">0.005500</text>
+<line x1="90" y1="440.0" x2="1060" y2="440.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="78" y="444.0" text-anchor="end" font-family="Arial" font-size="12" fill="#374151">0.003011</text>
+<line x1="90" y1="530.0" x2="1060" y2="530.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="78" y="534.0" text-anchor="end" font-family="Arial" font-size="12" fill="#374151">0.000522</text>
+<line x1="90.0" y1="80" x2="90.0" y2="530" stroke="#f3f4f6" stroke-width="1"/>
+<text x="90.0" y="554" text-anchor="middle" font-family="Arial" font-size="12" fill="#374151">1</text>
+<line x1="284.0" y1="80" x2="284.0" y2="530" stroke="#f3f4f6" stroke-width="1"/>
+<text x="284.0" y="554" text-anchor="middle" font-family="Arial" font-size="12" fill="#374151">7</text>
+<line x1="477.99999999999994" y1="80" x2="477.99999999999994" y2="530" stroke="#f3f4f6" stroke-width="1"/>
+<text x="477.99999999999994" y="554" text-anchor="middle" font-family="Arial" font-size="12" fill="#374151">13</text>
+<line x1="672.0" y1="80" x2="672.0" y2="530" stroke="#f3f4f6" stroke-width="1"/>
+<text x="672.0" y="554" text-anchor="middle" font-family="Arial" font-size="12" fill="#374151">18</text>
+<line x1="865.9999999999999" y1="80" x2="865.9999999999999" y2="530" stroke="#f3f4f6" stroke-width="1"/>
+<text x="865.9999999999999" y="554" text-anchor="middle" font-family="Arial" font-size="12" fill="#374151">24</text>
+<line x1="1060.0" y1="80" x2="1060.0" y2="530" stroke="#f3f4f6" stroke-width="1"/>
+<text x="1060.0" y="554" text-anchor="middle" font-family="Arial" font-size="12" fill="#374151">30</text>
+<line x1="90" y1="530" x2="1060" y2="530" stroke="#111827" stroke-width="1.5"/>
+<line x1="90" y1="80" x2="90" y2="530" stroke="#111827" stroke-width="1.5"/>
+<text x="575.0" y="590" text-anchor="middle" font-family="Arial" font-size="14" fill="#111827">Run</text>
+<text x="24" y="305.0" text-anchor="middle" font-family="Arial" font-size="14" fill="#111827" transform="rotate(-90 24 305.0)">s</text>
+<polyline points="90.00,457.67 123.45,441.58 156.90,447.54 190.34,455.79 223.79,451.30 257.24,440.71 290.69,378.95 324.14,438.61 357.59,432.18 391.03,435.18 424.48,450.36 457.93,444.07 491.38,453.47 524.83,445.05 558.28,460.89 591.72,434.38 625.17,442.95 658.62,444.33 692.07,448.77 725.52,443.35 758.97,469.38 792.41,439.84 825.86,439.73 859.31,472.82 892.76,445.77 926.21,411.27 959.66,486.45 993.10,443.42 1026.55,465.30 1060.00,448.19" fill="none" stroke="#2563eb" stroke-width="3"/>
+<circle cx="90.00" cy="457.67" r="4" fill="#2563eb">
+<title>pqc run 1: 0.002522</title>
+</circle>
+<circle cx="123.45" cy="441.58" r="4" fill="#2563eb">
+<title>pqc run 2: 0.002967</title>
+</circle>
+<circle cx="156.90" cy="447.54" r="4" fill="#2563eb">
+<title>pqc run 3: 0.002802</title>
+</circle>
+<circle cx="190.34" cy="455.79" r="4" fill="#2563eb">
+<title>pqc run 4: 0.002574</title>
+</circle>
+<circle cx="223.79" cy="451.30" r="4" fill="#2563eb">
+<title>pqc run 5: 0.002698</title>
+</circle>
+<circle cx="257.24" cy="440.71" r="4" fill="#2563eb">
+<title>pqc run 6: 0.002991</title>
+</circle>
+<circle cx="290.69" cy="378.95" r="4" fill="#2563eb">
+<title>pqc run 7: 0.004699</title>
+</circle>
+<circle cx="324.14" cy="438.61" r="4" fill="#2563eb">
+<title>pqc run 8: 0.003049</title>
+</circle>
+<circle cx="357.59" cy="432.18" r="4" fill="#2563eb">
+<title>pqc run 9: 0.003227</title>
+</circle>
+<circle cx="391.03" cy="435.18" r="4" fill="#2563eb">
+<title>pqc run 10: 0.003144</title>
+</circle>
+<circle cx="424.48" cy="450.36" r="4" fill="#2563eb">
+<title>pqc run 11: 0.002724</title>
+</circle>
+<circle cx="457.93" cy="444.07" r="4" fill="#2563eb">
+<title>pqc run 12: 0.002898</title>
+</circle>
+<circle cx="491.38" cy="453.47" r="4" fill="#2563eb">
+<title>pqc run 13: 0.002638</title>
+</circle>
+<circle cx="524.83" cy="445.05" r="4" fill="#2563eb">
+<title>pqc run 14: 0.002871</title>
+</circle>
+<circle cx="558.28" cy="460.89" r="4" fill="#2563eb">
+<title>pqc run 15: 0.002433</title>
+</circle>
+<circle cx="591.72" cy="434.38" r="4" fill="#2563eb">
+<title>pqc run 16: 0.003166</title>
+</circle>
+<circle cx="625.17" cy="442.95" r="4" fill="#2563eb">
+<title>pqc run 17: 0.002929</title>
+</circle>
+<circle cx="658.62" cy="444.33" r="4" fill="#2563eb">
+<title>pqc run 18: 0.002891</title>
+</circle>
+<circle cx="692.07" cy="448.77" r="4" fill="#2563eb">
+<title>pqc run 19: 0.002768</title>
+</circle>
+<circle cx="725.52" cy="443.35" r="4" fill="#2563eb">
+<title>pqc run 20: 0.002918</title>
+</circle>
+<circle cx="758.97" cy="469.38" r="4" fill="#2563eb">
+<title>pqc run 21: 0.002198</title>
+</circle>
+<circle cx="792.41" cy="439.84" r="4" fill="#2563eb">
+<title>pqc run 22: 0.003015</title>
+</circle>
+<circle cx="825.86" cy="439.73" r="4" fill="#2563eb">
+<title>pqc run 23: 0.003018</title>
+</circle>
+<circle cx="859.31" cy="472.82" r="4" fill="#2563eb">
+<title>pqc run 24: 0.002103</title>
+</circle>
+<circle cx="892.76" cy="445.77" r="4" fill="#2563eb">
+<title>pqc run 25: 0.002851</title>
+</circle>
+<circle cx="926.21" cy="411.27" r="4" fill="#2563eb">
+<title>pqc run 26: 0.003805</title>
+</circle>
+<circle cx="959.66" cy="486.45" r="4" fill="#2563eb">
+<title>pqc run 27: 0.001726</title>
+</circle>
+<circle cx="993.10" cy="443.42" r="4" fill="#2563eb">
+<title>pqc run 28: 0.002916</title>
+</circle>
+<circle cx="1026.55" cy="465.30" r="4" fill="#2563eb">
+<title>pqc run 29: 0.002311</title>
+</circle>
+<circle cx="1060.00" cy="448.19" r="4" fill="#2563eb">
+<title>pqc run 30: 0.002784</title>
+</circle>
+<polyline points="90.00,186.50 123.45,199.38 156.90,153.24 190.34,209.61 223.79,313.17 257.24,215.87 290.69,323.95 324.14,410.37 357.59,214.93 391.03,220.46 424.48,251.41 457.93,238.90 491.38,208.96 524.83,220.13 558.28,155.95 591.72,467.47 625.17,248.30 658.62,227.04 692.07,233.84 725.52,324.53 758.97,211.82 792.41,227.40 825.86,123.55 859.31,439.81 892.76,218.36 926.21,217.71 959.66,338.59 993.10,140.40 1026.55,198.36 1060.00,169.87" fill="none" stroke="#f97316" stroke-width="3"/>
+<circle cx="90.00" cy="186.50" r="4" fill="#f97316">
+<title>hybrid run 1: 0.010021</title>
+</circle>
+<circle cx="123.45" cy="199.38" r="4" fill="#f97316">
+<title>hybrid run 2: 0.009665</title>
+</circle>
+<circle cx="156.90" cy="153.24" r="4" fill="#f97316">
+<title>hybrid run 3: 0.010941</title>
+</circle>
+<circle cx="190.34" cy="209.61" r="4" fill="#f97316">
+<title>hybrid run 4: 0.009382</title>
+</circle>
+<circle cx="223.79" cy="313.17" r="4" fill="#f97316">
+<title>hybrid run 5: 0.006518</title>
+</circle>
+<circle cx="257.24" cy="215.87" r="4" fill="#f97316">
+<title>hybrid run 6: 0.009209</title>
+</circle>
+<circle cx="290.69" cy="323.95" r="4" fill="#f97316">
+<title>hybrid run 7: 0.006220</title>
+</circle>
+<circle cx="324.14" cy="410.37" r="4" fill="#f97316">
+<title>hybrid run 8: 0.003830</title>
+</circle>
+<circle cx="357.59" cy="214.93" r="4" fill="#f97316">
+<title>hybrid run 9: 0.009235</title>
+</circle>
+<circle cx="391.03" cy="220.46" r="4" fill="#f97316">
+<title>hybrid run 10: 0.009082</title>
+</circle>
+<circle cx="424.48" cy="251.41" r="4" fill="#f97316">
+<title>hybrid run 11: 0.008226</title>
+</circle>
+<circle cx="457.93" cy="238.90" r="4" fill="#f97316">
+<title>hybrid run 12: 0.008572</title>
+</circle>
+<circle cx="491.38" cy="208.96" r="4" fill="#f97316">
+<title>hybrid run 13: 0.009400</title>
+</circle>
+<circle cx="524.83" cy="220.13" r="4" fill="#f97316">
+<title>hybrid run 14: 0.009091</title>
+</circle>
+<circle cx="558.28" cy="155.95" r="4" fill="#f97316">
+<title>hybrid run 15: 0.010866</title>
+</circle>
+<circle cx="591.72" cy="467.47" r="4" fill="#f97316">
+<title>hybrid run 16: 0.002251</title>
+</circle>
+<circle cx="625.17" cy="248.30" r="4" fill="#f97316">
+<title>hybrid run 17: 0.008312</title>
+</circle>
+<circle cx="658.62" cy="227.04" r="4" fill="#f97316">
+<title>hybrid run 18: 0.008900</title>
+</circle>
+<circle cx="692.07" cy="233.84" r="4" fill="#f97316">
+<title>hybrid run 19: 0.008712</title>
+</circle>
+<circle cx="725.52" cy="324.53" r="4" fill="#f97316">
+<title>hybrid run 20: 0.006204</title>
+</circle>
+<circle cx="758.97" cy="211.82" r="4" fill="#f97316">
+<title>hybrid run 21: 0.009321</title>
+</circle>
+<circle cx="792.41" cy="227.40" r="4" fill="#f97316">
+<title>hybrid run 22: 0.008890</title>
+</circle>
+<circle cx="825.86" cy="123.55" r="4" fill="#f97316">
+<title>hybrid run 23: 0.011762</title>
+</circle>
+<circle cx="859.31" cy="439.81" r="4" fill="#f97316">
+<title>hybrid run 24: 0.003016</title>
+</circle>
+<circle cx="892.76" cy="218.36" r="4" fill="#f97316">
+<title>hybrid run 25: 0.009140</title>
+</circle>
+<circle cx="926.21" cy="217.71" r="4" fill="#f97316">
+<title>hybrid run 26: 0.009158</title>
+</circle>
+<circle cx="959.66" cy="338.59" r="4" fill="#f97316">
+<title>hybrid run 27: 0.005815</title>
+</circle>
+<circle cx="993.10" cy="140.40" r="4" fill="#f97316">
+<title>hybrid run 28: 0.011296</title>
+</circle>
+<circle cx="1026.55" cy="198.36" r="4" fill="#f97316">
+<title>hybrid run 29: 0.009693</title>
+</circle>
+<circle cx="1060.00" cy="169.87" r="4" fill="#f97316">
+<title>hybrid run 30: 0.010481</title>
+</circle>
+<polyline points="90.00,324.27 123.45,459.15 156.90,295.35 190.34,222.59 223.79,395.58 257.24,323.51 290.69,294.95 324.14,331.25 357.59,368.35 391.03,332.99 424.48,333.31 457.93,330.96 491.38,304.20 524.83,370.81 558.28,356.53 591.72,370.74 625.17,352.19 658.62,239.66 692.07,363.04 725.52,305.69 758.97,325.14 792.41,322.86 825.86,323.04 859.31,307.10 892.76,356.53 926.21,327.82 959.66,432.25 993.10,336.78 1026.55,385.28 1060.00,291.11" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="90.00" cy="324.27" r="4" fill="#16a34a">
+<title>classical run 1: 0.006211</title>
+</circle>
+<circle cx="123.45" cy="459.15" r="4" fill="#16a34a">
+<title>classical run 2: 0.002481</title>
+</circle>
+<circle cx="156.90" cy="295.35" r="4" fill="#16a34a">
+<title>classical run 3: 0.007011</title>
+</circle>
+<circle cx="190.34" cy="222.59" r="4" fill="#16a34a">
+<title>classical run 4: 0.009023</title>
+</circle>
+<circle cx="223.79" cy="395.58" r="4" fill="#16a34a">
+<title>classical run 5: 0.004239</title>
+</circle>
+<circle cx="257.24" cy="323.51" r="4" fill="#16a34a">
+<title>classical run 6: 0.006232</title>
+</circle>
+<circle cx="290.69" cy="294.95" r="4" fill="#16a34a">
+<title>classical run 7: 0.007022</title>
+</circle>
+<circle cx="324.14" cy="331.25" r="4" fill="#16a34a">
+<title>classical run 8: 0.006018</title>
+</circle>
+<circle cx="357.59" cy="368.35" r="4" fill="#16a34a">
+<title>classical run 9: 0.004992</title>
+</circle>
+<circle cx="391.03" cy="332.99" r="4" fill="#16a34a">
+<title>classical run 10: 0.005970</title>
+</circle>
+<circle cx="424.48" cy="333.31" r="4" fill="#16a34a">
+<title>classical run 11: 0.005961</title>
+</circle>
+<circle cx="457.93" cy="330.96" r="4" fill="#16a34a">
+<title>classical run 12: 0.006026</title>
+</circle>
+<circle cx="491.38" cy="304.20" r="4" fill="#16a34a">
+<title>classical run 13: 0.006766</title>
+</circle>
+<circle cx="524.83" cy="370.81" r="4" fill="#16a34a">
+<title>classical run 14: 0.004924</title>
+</circle>
+<circle cx="558.28" cy="356.53" r="4" fill="#16a34a">
+<title>classical run 15: 0.005319</title>
+</circle>
+<circle cx="591.72" cy="370.74" r="4" fill="#16a34a">
+<title>classical run 16: 0.004926</title>
+</circle>
+<circle cx="625.17" cy="352.19" r="4" fill="#16a34a">
+<title>classical run 17: 0.005439</title>
+</circle>
+<circle cx="658.62" cy="239.66" r="4" fill="#16a34a">
+<title>classical run 18: 0.008551</title>
+</circle>
+<circle cx="692.07" cy="363.04" r="4" fill="#16a34a">
+<title>classical run 19: 0.005139</title>
+</circle>
+<circle cx="725.52" cy="305.69" r="4" fill="#16a34a">
+<title>classical run 20: 0.006725</title>
+</circle>
+<circle cx="758.97" cy="325.14" r="4" fill="#16a34a">
+<title>classical run 21: 0.006187</title>
+</circle>
+<circle cx="792.41" cy="322.86" r="4" fill="#16a34a">
+<title>classical run 22: 0.006250</title>
+</circle>
+<circle cx="825.86" cy="323.04" r="4" fill="#16a34a">
+<title>classical run 23: 0.006245</title>
+</circle>
+<circle cx="859.31" cy="307.10" r="4" fill="#16a34a">
+<title>classical run 24: 0.006686</title>
+</circle>
+<circle cx="892.76" cy="356.53" r="4" fill="#16a34a">
+<title>classical run 25: 0.005319</title>
+</circle>
+<circle cx="926.21" cy="327.82" r="4" fill="#16a34a">
+<title>classical run 26: 0.006113</title>
+</circle>
+<circle cx="959.66" cy="432.25" r="4" fill="#16a34a">
+<title>classical run 27: 0.003225</title>
+</circle>
+<circle cx="993.10" cy="336.78" r="4" fill="#16a34a">
+<title>classical run 28: 0.005865</title>
+</circle>
+<circle cx="1026.55" cy="385.28" r="4" fill="#16a34a">
+<title>classical run 29: 0.004524</title>
+</circle>
+<circle cx="1060.00" cy="291.11" r="4" fill="#16a34a">
+<title>classical run 30: 0.007128</title>
+</circle>
+<line x1="90" y1="558" x2="122" y2="558" stroke="#2563eb" stroke-width="4"/>
+<circle cx="106" cy="558" r="4" fill="#2563eb"/>
+<text x="132" y="563" font-family="Arial" font-size="14" fill="#111827">pqc</text>
+<line x1="270" y1="558" x2="302" y2="558" stroke="#f97316" stroke-width="4"/>
+<circle cx="286" cy="558" r="4" fill="#f97316"/>
+<text x="312" y="563" font-family="Arial" font-size="14" fill="#111827">hybrid</text>
+<line x1="450" y1="558" x2="482" y2="558" stroke="#16a34a" stroke-width="4"/>
+<circle cx="466" cy="558" r="4" fill="#16a34a"/>
+<text x="492" y="563" font-family="Arial" font-size="14" fill="#111827">classical</text>
+</svg>

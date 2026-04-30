@@ -28,7 +28,7 @@ class CryptoResult:
 
 class CryptoManager:
     """
-    Gerenciador criptografico real.
+    Gerenciador criptografico.
 
     Modos suportados:
 
@@ -137,7 +137,7 @@ class CryptoManager:
         if self.mode == "hybrid":
             return self._protect_hybrid_real(payload)
 
-        raise ValueError(f"Modo criptografico nao suportado: {self.mode}")
+        raise ValueError(f"Modo criptográfico nao suportado: {self.mode}")
 
     def _protect_classical_real(self, payload: dict[str, Any]):
         start = time.perf_counter()
@@ -212,7 +212,7 @@ class CryptoManager:
         )
 
         self.logger.log(
-            "Payload protegido com criptografia classica real",
+            "Payload protegido com criptografia classica",
             data={
                 "algorithm": result.algorithm,
                 "overhead_bytes": result.overhead_bytes,
@@ -303,7 +303,7 @@ class CryptoManager:
         )
 
         self.logger.log(
-            "Payload protegido com criptografia pos quantica real",
+            "Payload protegido com criptografia pos quântica",
             data={
                 "kem": self.kem,
                 "signature": self.pqc_signature if self.use_pqc_signature else None,
@@ -422,7 +422,7 @@ class CryptoManager:
         )
 
         self.logger.log(
-            "Payload protegido com criptografia hibrida real",
+            "Payload protegido com criptográfia hibrida",
             data={
                 "algorithm": result.algorithm,
                 "overhead_bytes": result.overhead_bytes,
@@ -528,7 +528,7 @@ class CryptoManager:
         is_valid = signer.verify(message, signature, public_key)
 
         if not is_valid:
-            raise RuntimeError("Falha na assinatura PQC: verificacao invalida.")
+            raise RuntimeError("Falha na assinatura PQC: verificação invalida.")
 
         return {
             "algorithm": self.pqc_signature,
