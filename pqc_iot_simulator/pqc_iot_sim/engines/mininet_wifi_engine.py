@@ -130,18 +130,6 @@ class MininetWiFiEngine(BaseEngine):
             )
         )
 
-    def set_log_level(self, level: str):
-        valid_levels = ["silent", "info", "debug"]
-
-        if level not in valid_levels:
-            raise ValueError(
-                f"Nivel de log invalido: {level}. "
-                f"Use um destes: {valid_levels}"
-            )
-
-        self.log_level = level
-        return self
-
     def _log_info(
         self,
         message: str,
@@ -181,18 +169,6 @@ class MininetWiFiEngine(BaseEngine):
                 level="ERROR",
                 component=component or self.name
             )
-
-    def set_link_mode(self, link_mode: str):
-        self.link_mode = link_mode
-        self._validate_link_mode()
-
-        self.status.metadata["link_mode"] = self.link_mode
-
-        self._log_info(
-            f"Modo de link alterado para {self.link_mode}"
-        )
-
-        return self
 
     def build(self):
         if self.is_built():
@@ -476,25 +452,6 @@ class MininetWiFiEngine(BaseEngine):
 
         return metrics
 
-    def ping_all(self):
-        if not self.is_running():
-            raise RuntimeError("A engine precisa estar em execucao para executar ping_all.")
-
-        if self.net is None:
-            raise RuntimeError("A rede Mininet WiFi ainda nao foi criada.")
-
-        self._log_info(
-            "Executando teste geral de conectividade com pingAll"
-        )
-
-        result = self.net.pingAll()
-
-        self._log_info(
-            f"Teste geral de conectividade concluido, perda de pacotes: {result}%"
-        )
-
-        return result
-
     def iperf(
         self,
         source: str,
@@ -544,14 +501,6 @@ class MininetWiFiEngine(BaseEngine):
             return None
 
         return engine_node.ip.split("/")[0]
-
-    def get_mininet_name(self, node_id: str):
-        engine_node = self.engine_nodes.get(node_id)
-
-        if engine_node is None:
-            return None
-
-        return engine_node.mininet_name
 
     def export_mapping_json(self, output_path: str):
         path = Path(output_path)

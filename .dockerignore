@@ -1,0 +1,12 @@
+.git
+__pycache__
+*.pyc
+.ipynb_checkpoints
+.ruff_cache
+.pytest_cache
+.mypy_cache
+.venv
+venv
+results
+*.ipynb
+graficos*

@@ -1,7 +1,6 @@
 from pathlib import Path
 import csv
 import html
-import math
 
 
 CSV_ENTRADA = Path("comparativo_geral.csv")

@@ -1,0 +1,19 @@
+services:
+  pqc_iot_simulator:
+    build: .
+    image: pqc_iot_simulator:latest
+    container_name: pqc_iot_simulator
+    privileged: true
+    network_mode: host
+    pid: host
+    volumes:
+      - .:/workspace
+      - /lib/modules:/lib/modules:ro
+      - /sys/kernel/debug:/sys/kernel/debug
+      - /dev:/dev
+    environment:
+      PYTHONPATH: /workspace
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib64
+      OQS_INSTALL_PATH: /usr/local
+      MPLBACKEND: Agg
+    command: python3 -m pqc_iot_simulator.pqc_iot_sim.main

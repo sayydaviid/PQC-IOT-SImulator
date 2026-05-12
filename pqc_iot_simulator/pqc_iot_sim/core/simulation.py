@@ -37,9 +37,9 @@ class Simulation:
         return {
             "simulation": {
                 "activate_logger": True,
-                "run_engine": False,
+                "run_engine": True,
                 "send_test_message": True,
-                "collect_link_metrics": False,
+                "collect_link_metrics": True,
                 "test_source": "iot_1",
                 "test_destination": "server_1",
                 "test_payload": {
@@ -74,7 +74,7 @@ class Simulation:
                 ]
             },
             "engine": {
-                "enabled": False,
+                "enabled": True,
                 "type": "mininet_wifi",
                 "params": {
                     "default_bw": 10,

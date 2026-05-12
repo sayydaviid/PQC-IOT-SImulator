@@ -2,15 +2,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 import random
-import warnings
-
-warnings.filterwarnings(
-    "ignore",
-    message="Unable to import Axes3D.*"
-)
 
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from .logger import Logger
 from .host import Host, IoTNode, GatewayNode, ApplicationServer, Packet
@@ -98,18 +91,6 @@ class Network:
             return f"{value} {singular}"
 
         return f"{value} {plural}"
-
-    def set_log_level(self, level: str):
-        valid_levels = ["silent", "info", "debug"]
-
-        if level not in valid_levels:
-            raise ValueError(
-                f"Nivel de log invalido: {level}. "
-                f"Use um destes: {valid_levels}"
-            )
-
-        self.log_level = level
-        return self
 
     def _log_info(
         self,
@@ -230,23 +211,6 @@ class Network:
 
         return self
 
-    def set_engine(self, engine_name: str):
-        valid_engines = ["mininet", "mininet_wifi"]
-
-        if engine_name not in valid_engines:
-            raise ValueError(
-                f"Engine invalida: {engine_name}. "
-                f"Use uma destas: {valid_engines}"
-            )
-
-        self.config.engine = engine_name
-
-        self._log_info(
-            f"Engine configurada: {engine_name}"
-        )
-
-        return self
-
     def set_ready_topology(self, topology_name: str, *args, **kwargs):
         self._log_debug(
             f"Preparando topologia {topology_name}"
@@ -308,24 +272,6 @@ class Network:
         for host in self.hosts.values():
             host.set_crypto_mode(mode)
 
-
-        return self
-
-    def set_crypto_algorithm(self, **params):
-        self.config.crypto_params.update(params)
-
-        self.crypto_manager.configure(
-            kem=params.get("kem"),
-            signature=params.get("signature"),
-            pqc_signature=params.get("pqc_signature"),
-            classical_signature=params.get("classical_signature"),
-            use_classical_signature=params.get("use_classical_signature"),
-            use_pqc_signature=params.get("use_pqc_signature")
-        )
-
-        self._log_info(
-            "Parametros criptograficos atualizados"
-        )
 
         return self
 
@@ -396,33 +342,6 @@ class Network:
 
         return self
 
-    def add_link(self, source: str, target: str):
-        if source not in self.topology_data.nodes:
-            self.topology_data.nodes.append(source)
-
-        if target not in self.topology_data.nodes:
-            self.topology_data.nodes.append(target)
-
-        link = self._normalize_link(source, target)
-
-        if link not in self.topology_data.links:
-            self.topology_data.links.append(link)
-
-        self._sync_graph()
-
-        if self.hosts:
-            if source not in self.hosts:
-                self.hosts[source] = self._create_host_from_node(source)
-
-            if target not in self.hosts:
-                self.hosts[target] = self._create_host_from_node(target)
-
-        self._log_info(
-            f"Link entre {source} e {target} adicionado a rede"
-        )
-
-        return self
-
     def create_hosts(self):
         if not self.topology_data.nodes:
             raise RuntimeError("Defina uma topologia antes de criar os hosts.")
@@ -453,18 +372,6 @@ class Network:
             raise KeyError(f"Host nao encontrado: {host_id}")
 
         return self.hosts[host_id]
-
-    def show_hosts(self):
-        if not self.hosts:
-            self._log_debug(
-                "Hosts ainda nao existiam, criando automaticamente"
-            )
-            self.create_hosts()
-
-        return {
-            host_id: host.get_status()
-            for host_id, host in self.hosts.items()
-        }
 
     def send(
         self,
@@ -742,9 +649,6 @@ class Network:
     def energy_by_host(self):
         return self.metrics_collector.get_energy_by_host()
 
-    def delivery_summary(self):
-        return self.metrics_collector.get_delivery_summary()
-
     def export_metrics_json(self, output_path: str):
         return self.metrics_collector.export_json(output_path)
 
@@ -797,6 +701,21 @@ class Network:
         return self
 
     def draw(self, output_path: str | None = None, show: bool = True):
+        try:
+            import warnings
+
+            warnings.filterwarnings(
+                "ignore",
+                message="Unable to import Axes3D.*"
+            )
+
+            import matplotlib.pyplot as plt
+        except Exception as exc:
+            raise RuntimeError(
+                "Matplotlib nao esta disponivel/compativel neste ambiente. "
+                "Instale/atualize matplotlib (e numpy) para usar Network.draw()."
+            ) from exc
+
         if not self.topology_data.nodes:
             raise RuntimeError("Nenhuma topologia foi definida.")
 
@@ -915,9 +834,6 @@ class Network:
             "total_hosts": len(self.hosts)
         }
 
-    def get_logs(self):
-        return self.logger.get_events()
-
     def _deliver_to_destination(
         self,
         host: Host,
@@ -984,7 +900,6 @@ class Network:
         return IoTNode(
             host_id=node_id,
             logger=self.logger,
-            sensor_type="generic",
             protocol=self.config.protocol_name,
             crypto_mode=self.config.crypto_mode
         )

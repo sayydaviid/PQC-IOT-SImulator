@@ -44,14 +44,6 @@ class Logger:
             print(f"{timestamp} | Logger desativado")
 
     @classmethod
-    def set_global_verbose(cls, verbose: bool):
-        cls.verbose = verbose
-
-    @classmethod
-    def set_redact_keys(cls, keys: list[str]):
-        cls.redact_keys = set(keys)
-
-    @classmethod
     def _redact_data(cls, data: Any):
         if isinstance(data, dict):
             redacted = {}
@@ -104,57 +96,6 @@ class Logger:
             time_only = event["timestamp"].split(" ", 1)[-1]
             print(f"{time_only} | {event['message']}")
 
-    def info(
-        self,
-        message: str,
-        data: dict[str, Any] | None = None,
-        component: str | None = None
-    ):
-        self.log(
-            message=message,
-            data=data,
-            level="INFO",
-            component=component
-        )
-
-    def warning(
-        self,
-        message: str,
-        data: dict[str, Any] | None = None,
-        component: str | None = None
-    ):
-        self.log(
-            message=message,
-            data=data,
-            level="WARNING",
-            component=component
-        )
-
-    def error(
-        self,
-        message: str,
-        data: dict[str, Any] | None = None,
-        component: str | None = None
-    ):
-        self.log(
-            message=message,
-            data=data,
-            level="ERROR",
-            component=component
-        )
-
-    def get_events(self):
-        return self.events
-
-    @classmethod
-    def get_global_events(cls):
-        return cls.global_events
-
     def clear(self):
         with Logger._lock:
             self.events.clear()
-
-    @classmethod
-    def clear_global(cls):
-        with Logger._lock:
-            cls.global_events.clear()

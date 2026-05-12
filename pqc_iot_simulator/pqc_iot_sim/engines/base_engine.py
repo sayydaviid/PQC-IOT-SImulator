@@ -299,9 +299,6 @@ class BaseEngine(ABC):
             for link in self.engine_links
         ]
 
-    def get_runtime_object(self, key: str):
-        return self.runtime_objects.get(key)
-
     def set_runtime_object(self, key: str, value: Any):
         self.runtime_objects[key] = value
 
@@ -356,22 +353,3 @@ class BaseEngine(ABC):
         Exemplo: sta1.cmd("ping h1").
         """
         raise NotImplementedError
-
-    def restart(self):
-        self.logger.log(
-            f"Reinicio da engine {self.name} solicitado",
-            component=self.name
-        )
-
-        if self.is_running():
-            self.stop()
-
-        self.build()
-        self.start()
-
-        self.logger.log(
-            f"Engine {self.name} reiniciada com sucesso",
-            component=self.name
-        )
-
-        return self

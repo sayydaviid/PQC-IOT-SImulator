@@ -92,7 +92,6 @@ class Host:
             "send_data": "envio de dados",
             "receive_data": "recebimento de dados",
             "forward_data": "encaminhamento de dados",
-            "generate_sensor_data": "geracao de dado do sensor"
         }
 
         if reason is None:
@@ -133,16 +132,6 @@ class Host:
                 f"{self._label()} configurado com modo de criptografia "
                 f"{self._crypto_label(crypto_mode)}"
             ),
-            component=self.host_id
-        )
-
-        return self
-
-    def set_energy(self, energy: float):
-        self.energy = energy
-
-        self.logger.log(
-            f"{self._label()} agora possui energia: {self._format_number(self.energy)}",
             component=self.host_id
         )
 
@@ -242,7 +231,6 @@ class IoTNode(Host):
         self,
         host_id: str,
         logger: Logger | None = None,
-        sensor_type: str = "generic",
         initial_energy: float = 100.0,
         protocol: str | None = None,
         crypto_mode: str | None = None,
@@ -256,44 +244,6 @@ class IoTNode(Host):
             protocol=protocol,
             crypto_mode=crypto_mode,
             metadata=metadata
-        )
-
-        self.sensor_type = sensor_type
-
-    def generate_sensor_data(self, value: Any | None = None):
-        data = {
-            "node_id": self.host_id,
-            "sensor_type": self.sensor_type,
-            "value": value,
-            "timestamp": datetime.now().strftime("%Y/%m/%d %H:%M:%S")
-        }
-
-        self.consume_energy(
-            amount=0.02,
-            reason="generate_sensor_data"
-        )
-
-        self.logger.log(
-            (
-                f"{self._label()} gerou dado do sensor, "
-                f"tipo: {self.sensor_type}, "
-                f"valor: {self._safe_label(value)}"
-            ),
-            component=self.host_id
-        )
-
-        return data
-
-    def send_sensor_data(
-        self,
-        destination: str,
-        value: Any | None = None
-    ):
-        payload = self.generate_sensor_data(value=value)
-
-        return self.send_data(
-            destination=destination,
-            payload=payload
         )
 
 
@@ -396,6 +346,3 @@ class ApplicationServer(Host):
         )
 
         return record
-
-    def get_application_data(self):
-        return self.application_data

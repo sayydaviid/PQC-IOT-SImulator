@@ -437,29 +437,6 @@ class MetricsCollector:
             }
         )
 
-    def record_link_metrics(
-        self,
-        source: str,
-        destination: str,
-        link_metrics: dict[str, Any]
-    ):
-        data = self.extract_link_data(link_metrics)
-
-        self.logger.log(
-            (
-                f"Metricas reais de link registradas, "
-                f"origem: {source}, "
-                f"destino: {destination}, "
-                f"latencia: {self._format_number(data['link_latency_ms'])} ms, "
-                f"perda de pacotes: {self._format_number(data['link_packet_loss_percent'])}%, "
-                f"pacotes transmitidos: {self._format_number(data['link_packets_transmitted'])}, "
-                f"pacotes recebidos: {self._format_number(data['link_packets_received'])}"
-            ),
-            component="MetricsCollector"
-        )
-
-        return data
-
     def start_timer(self):
         return time.perf_counter(), self.now()
 
