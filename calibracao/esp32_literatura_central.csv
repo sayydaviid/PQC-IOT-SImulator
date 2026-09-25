@@ -1,0 +1,10 @@
+device,operation,voltage_v,current_ma,duration_seconds,energy_j,source,energy_model,throughput_bytes_per_second,fixed_cost_seconds,estimation_status
+ESP32-WROOM-32,wifi_reconnect_initialization_proxy,3.3,0,1.6,0.2184,literature_derived_proxy_hotnets2019_238_2mj_minus_19_8mj_scope_overlap_possible,direct_event,,,literature_derived_proxy
+ESP32-WROOM-32,x25519_keygen,3.3,49,0.017,0.0027489,derived_literature_oryx_timing_espressif_current_midpoint,v_i_t
+ESP32-WROOM-32,x25519_exchange,3.3,49,0.016,0.0025872,derived_literature_oryx_timing_espressif_current_midpoint,v_i_t
+ESP32-WROOM-32,ed25519_verify,3.3,25.5,0.060,0.005049,derived_literature_acns2022_timing_espressif_current_midpoint,v_i_t
+ESP32-WROOM-32,ml_kem_encaps,3.3,49,0.006352,0.0010271184,proxy_kyber512_prestandard_aiccsa2024_for_mlkem512_espressif_240mhz_current_midpoint,v_i_t
+ESP32-WROOM-32,ml_dsa_verify,3.3,25.5,0.043,0.00361845,proxy_dilithium2_round3_acns2022_for_mldsa44_espressif_80mhz_current_midpoint,v_i_t
+ESP32-WROOM-32,hkdf_extract,3.3,49,0.00000169204737732657,0.000000273604060913706,derived_from_oryx_sha256_throughput_short_call_lower_bound,v_i_t,27777000,0,throughput_extrapolation_lower_bound
+ESP32-WROOM-32,hkdf_expand,3.3,49,0.00000284407963422976,0.000000459887676854952,derived_from_oryx_sha256_throughput_short_call_lower_bound,v_i_t,27777000,0,throughput_extrapolation_lower_bound
+ESP32-WROOM-32,aes_gcm_encrypt,3.3,49,0.000112803158488438,0.0000182402707275804,derived_literature_oryx_aes256gcm_throughput_short_call_lower_bound,v_i_t,1773000,0,throughput_extrapolation_lower_bound
