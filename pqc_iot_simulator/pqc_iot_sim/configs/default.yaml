@@ -1,0 +1,238 @@
+simulation:
+  duration_seconds: 3600
+  random_seed: 42
+  start_datetime: "2026-08-05T14:00:00-03:00"
+  activate_logger: true
+  # A plataforma exige que cada ciclo atravesse uma topologia Mininet-WiFi.
+  run_engine: true
+  send_test_message: true
+  collect_link_metrics: true
+  capture_packets: true
+  require_packet_capture: true
+  pcap_directory: null
+  communication_correction_factor: 1.0
+  test_source: iot_1
+  test_destination: server_1
+
+devices:
+  iot_1:
+    profile: esp32_bme280_wifi
+    location: laboratorio_sala_1
+    destination: server_1
+
+device_profiles:
+  esp32_bme280_wifi:
+    board: ESP32-WROOM-32
+    supply_voltage_v: 3.3
+    protocol: mqtt
+
+    # Values are either datasheet typicals or explicitly labelled arithmetic
+    # midpoints/derivations. They are literature estimates, not measurements.
+    power_states:
+      deep_sleep:
+        current_ma: 0.0101
+        source: esp32_10ua_plus_bme280_0.1ua_datasheet_typical
+      light_sleep:
+        current_ma: 0.8
+        source: esp32_datasheet_light_sleep_typical
+      wake_up:
+        current_ma: 25.5
+        source: esp32_datasheet_cpu_active_80mhz_dual_core_arithmetic_midpoint_20_to_31ma
+      sensor_measurement:
+        current_ma: 25.85
+        source: esp32_25_5ma_midpoint_plus_bme280_0_35ma_per_sample_derived_from_3_6ua_at_1hz_minus_sleep
+      cpu_processing:
+        current_ma: 25.5
+        source: esp32_datasheet_cpu_active_80mhz_dual_core_arithmetic_midpoint_20_to_31ma
+      crypto_processing:
+        current_ma: 25.5
+        source: esp32_datasheet_cpu_active_80mhz_dual_core_arithmetic_midpoint_20_to_31ma
+      wifi_association:
+        current_ma: 190
+        source: esp32_datasheet_wifi_tx_80211g_54mbps_typical_conservative
+      wifi_tx:
+        current_ma: 190
+        source: esp32_datasheet_wifi_tx_80211g_54mbps_typical
+      wifi_rx:
+        current_ma: 100
+        source: esp32_datasheet_wifi_rx_typical
+      mqtt_wait_ack:
+        current_ma: 100
+        source: esp32_datasheet_wifi_rx_typical
+      idle:
+        current_ma: 25.5
+        source: esp32_datasheet_cpu_active_80mhz_dual_core_arithmetic_midpoint_20_to_31ma
+
+    sensor:
+      model: BME280
+      sampling_rate_hz: 0.0166666666666667
+      average_current_ua: 0.158333333333333
+      sleep_current_ua: 0.1
+      reference_sampling_rate_hz: 1
+      reference_average_current_ua: 3.6
+      source: derived_from_bme280_datasheet_3_6ua_at_1hz_and_0_1ua_sleep_for_60s_interval
+
+    battery:
+      chemistry: li_ion
+      nominal_voltage_v: 3.7
+      capacity_mah: 2000
+      usable_fraction: 0.80
+      regulator_efficiency: 0.90
+      initial_soc_percent: 100
+      minimum_voltage_v: 3.2
+      maximum_voltage_v: 4.2
+      source: user_configured_nominal_pack
+      # Unknown for the unspecified regulator; excluded instead of assumed zero.
+      regulator_quiescent_current_ua: null
+
+    workload:
+      sample_interval_seconds: 60
+      reconnect_wifi_each_cycle: true
+      payload_format: compact_json
+      base_temperature_c: 28.4
+      base_humidity_percent: 78.2
+      base_pressure_hpa: 1008.7
+      daily_temperature_amplitude_c: 1.5
+      daily_humidity_amplitude_percent: 3.0
+      daily_pressure_amplitude_hpa: 0.8
+      temperature_noise_stddev_c: 0.15
+      humidity_noise_stddev_percent: 0.4
+      pressure_noise_stddev_hpa: 0.15
+      synthetic_padding_bytes: 0
+      wake_up_seconds: 0.005
+      # BME280 forced mode, oversampling x1 for temperature, pressure and
+      # humidity: datasheet maximum is 9.3 ms; rounded conservatively to 10 ms.
+      sensor_measurement_seconds: 0.010
+      cpu_processing_seconds: 0.003
+      timing_source: user_configured_model_estimate_not_hardware_measurement
+      timing_sources:
+        wake_up: user_configured_estimate_not_hardware_measurement
+        sensor_measurement: bme280_datasheet_forced_mode_x1_all_max_9_3ms_rounded_to_10ms
+        cpu_processing: user_configured_estimate_not_hardware_measurement
+      limits:
+        temperature_c: [-40, 85]
+        humidity_percent: [0, 100]
+        pressure_hpa: [300, 1100]
+
+    mqtt:
+      topic: laboratorio/sala1/ambiente
+      qos: 1
+      persistent_session: true
+      client_id: pqc-iot-esp32-01
+      clean_session: false
+      username: null
+      password: null
+      version: "3.1.1"
+      tcp_ack_policy: response_piggyback
+      connection_close_policy: abandon_before_deep_sleep_no_fin_modelled
+
+    coap:
+      resource_path: sensors/environment
+      confirmable: true
+      token_length_bytes: 2
+      # CoAP Content-Format 50 = application/json.
+      content_format: 50
+      version: "1"
+
+    http:
+      host: server.local
+      path: /telemetry
+      method: POST
+      version: HTTP/1.1
+      # O payload protegido por AES-GCM e tratado como bytes opacos.
+      content_type: application/octet-stream
+      response_status: 204 No Content
+      tcp_ack_policy: response_piggyback
+      connection_close_policy: connection_close_after_response
+
+    radio:
+      effective_bitrate_bps: 20000000
+      retry_model: expected
+      max_retries: 4
+      association_duration_seconds: 1.6
+      mqtt_ack_wait_seconds: 0.0
+      handshake_round_trips: 1
+      wifi_reconnect_energy_model: incremental_direct_proxy
+      wifi_reconnect_proxy_multiplier: 1.0
+      timing_source: wifi_window_from_hotnets2019_figure3a_and_ack_wait_from_measured_rtt
+
+    crypto_session:
+      lifetime_seconds: 3600
+      max_messages: 100
+      rekey_on_restart: true
+      # Optional measured/configured states. Null means excluded, never zero.
+      rtc_state_write: null
+      rtc_state_restore: null
+      rtc_state_validation: null
+
+    parameter_sources:
+      esp32: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
+      bme280: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf
+      mqtt: https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.pdf
+      coap: https://www.rfc-editor.org/rfc/rfc7252
+      http: https://www.rfc-editor.org/rfc/rfc9112
+
+crypto_timing:
+  # No ESP32 PQC timings are invented. Supply operations below or use
+  # calibration_csv. Missing operations are exported as calibration required.
+  mode: target_profile
+  device: ESP32-WROOM-32
+  calibration_csv: null
+  firmware: null
+  compiler: null
+  implementation: null
+  strict_target_calibration: false
+  operations: {}
+
+network:
+  verbose: true
+  topology:
+    name: grade
+    params:
+      rows: 3
+      cols: 3
+  protocol: mqtt
+  crypto:
+    mode: classical
+    params:
+      kem: ML-KEM-512
+      pqc_signature: ML-DSA-44
+      server_classical_credential_id: server-ed25519-identity-v1
+      server_pqc_credential_id: server-mldsa44-identity-v1
+      server_kem_credential_id: server-mlkem512-static-v1
+      session_context: mqtt-qos1-telemetry
+      authentication_model: preprovisioned_server_credentials_not_tls
+      # preprovisioned preserva o modelo original. full_certificate adiciona
+      # certificados e framing até os totais publicados pelo HySecure.
+      handshake_variant: preprovisioned
+  default_conditions:
+    bandwidth_mbps: 10
+    latency_ms: 5
+    rtt_avg_ms: 10
+    packet_loss_percent: 0
+  metrics:
+    - latency
+    - packet_loss
+    - pdr
+    - energy
+    - crypto_time
+    - message_overhead
+    - link_metrics
+
+engine:
+  enabled: true
+  type: mininet_wifi
+  params:
+    default_bw: 10
+    default_delay: 5ms
+    default_loss: 0
+    link_mode: infrastructure
+    # Geometria configurada de laboratório: grade de 5 m; iot_1 fica a
+    # aproximadamente 11,2 m do AP nesta topologia 3x3.
+    position_spacing_m: 5.0
+    station_range: 30
+    ap_range: 30
+    # A primeira associação pode ainda não ter materializado no mac80211_hwsim
+    # após 1 s; o notebook de artigo também repete associação/L2 se o ping não responder.
+    association_wait_seconds: 2.0
+    open_cli_on_start: false
