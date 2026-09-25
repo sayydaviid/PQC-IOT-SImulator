@@ -1,0 +1,45 @@
+x-pqc-common: &pqc-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: pqc_iot_simulator:latest
+  privileged: true
+  network_mode: host
+  init: true
+  working_dir: /workspace
+
+  volumes:
+    - .:/workspace
+    - /lib/modules:/lib/modules:ro
+    - /sys/kernel/debug:/sys/kernel/debug
+    - /dev:/dev
+
+  environment:
+    PYTHONPATH: /workspace
+    LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib64
+    OQS_INSTALL_PATH: /usr/local
+    MPLBACKEND: Agg
+    PYTHONUNBUFFERED: "1"
+
+services:
+  pqc_iot_simulator:
+    <<: *pqc-common
+    container_name: pqc_iot_simulator
+
+    command:
+      - python3
+      - -m
+      - pqc_iot_simulator.pqc_iot_sim.main
+
+  notebook:
+    <<: *pqc-common
+    container_name: pqc_iot_notebook
+
+    command:
+      - jupyter
+      - lab
+      - --ip=127.0.0.1
+      - --port=8888
+      - --no-browser
+      - --allow-root
+      - --ServerApp.root_dir=/workspace

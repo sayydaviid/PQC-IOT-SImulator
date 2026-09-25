@@ -1,0 +1,14 @@
+# Dependencias Python do simulador, notebooks e ferramentas de manutencao.
+# Mininet-WiFi, Open vSwitch e a liboqs nativa sao instalados pelo Dockerfile.
+cryptography>=3.4.8,<47
+PyYAML>=5.4.1,<7
+networkx>=2.4,<4
+numpy>=1.23,<2
+matplotlib>=3.7,<4
+pandas>=2,<3
+jupyterlab>=4,<5
+ipykernel>=6,<7
+nbconvert>=7,<8
+nbformat>=5.9,<6
+packaging>=23,<26
+ruff>=0.6,<1

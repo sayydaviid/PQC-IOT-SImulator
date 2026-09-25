@@ -1,0 +1,17 @@
+.git/
+.gitignore
+.gitattributes
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+.vscode/
+.idea/
+results/
+tmp/
+output/
+*.pcap
