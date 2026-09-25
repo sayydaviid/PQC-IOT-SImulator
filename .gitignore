@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# Jupyter e editores
+.ipynb_checkpoints/
+.vscode/
+.idea/
+
+# Dados gerados pelas simulacoes
+results/
+*.pcap
+*.log
+
+# Arquivos locais e temporarios
+tmp/
+output/
