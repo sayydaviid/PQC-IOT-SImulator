@@ -3,9 +3,6 @@
 Plataforma de simulação e emulação de rede para comparar criptografia clássica, pós-quântica e híbrida em cenários de Internet das Coisas. O perfil físico principal representa um ESP32-WROOM-32 com sensor BME280, Wi-Fi de 2,4 GHz e bateria Li-ion.
 
 O Mininet-WiFi é o motor de rede obrigatório. Cada ciclo transmite mensagens entre namespaces reais da topologia antes de ser aceito como resultado. A plataforma registra tráfego, PCAP, latência, bytes, operações criptográficas e estimativas de energia do nó IoT.
-
-> **Limite científico:** a energia do ESP32 é estimada com parâmetros de datasheets e literatura. O Mininet-WiFi não mede corrente elétrica e os protocolos de aplicação são traços equivalentes, não implementações interoperáveis completas.
-
 ## Recursos
 
 - modos clássico, pós-quântico e híbrido;
