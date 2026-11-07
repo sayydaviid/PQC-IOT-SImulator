@@ -21,3 +21,7 @@ analysis_outputs/
 # Arquivos locais e temporarios
 tmp/
 output/
+
+# Arquivos temporários do Mininet-WiFi
+mn*_*.apconf
+mn*_*.staconf

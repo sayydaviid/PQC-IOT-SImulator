@@ -18,24 +18,22 @@ O Mininet-WiFi é o motor de rede obrigatório. Cada ciclo transmite mensagens e
 - execução obrigatória no Mininet-WiFi;
 - captura PCAP e exportação em JSON e CSV.
 
-Experimento adicional: **retomada PQC após reinício e rollback de estado**, com criptografia real, seis políticas de persistência/retomada e validação por processos no Mininet-WiFi. Consulte o [protocolo e os comandos](docs/experimento_retomada.md) e o [resultado da hipótese](docs/resultado_hipotese_retomada.md). A avaliação registra escritas e bytes; não estima energia do ESP32 para armazenamento persistente.
-
-A avaliação seguinte cobre interrupções durante o handshake, tentativas rejeitadas e confirmação de leitura perdida. Veja os [próximos passos e critérios de publicação](docs/proximos_passos_retomada.md) e o [resultado das transições](docs/resultado_transicoes_retomada.md).
-
-O backend adicional executa **TLS 1.3 nativo com X25519MLKEM768 e ML-DSA-44**, tickets autenticados restaurados pelo cliente e deduplicação durável de leituras. Consulte a [reprodução do runtime TLS](docs/tls_reproducao.md), o [resultado do piloto](docs/resultado_tls_piloto.md) e o [manuscrito para WQuNets](docs/artigo_retomada_wqunets.md). Esta avaliação não mede energia do ESP32. A [revisão dirigida](docs/revisao_retomada.md) delimita os antecedentes e a novidade ainda pendente.
+A pesquisa de **recuperação de sessões após reinícios e rollback** está em [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). O notebook consulta os resultados de referência e permite repetir os experimentos com TLS 1.3 nativo, preservação/perda do contexto de retomada, diferentes cadeias de certificados, várias leituras por conexão e deduplicação persistente. A implementação é chamada por classes do simulador. Consulte o [guia de reprodução](docs/reproducao/README.md).
 
 ## Estrutura
 
 ```text
 .
-├── Tutorial_Execucao.ipynb
-├── calibracao/
-│   ├── README.md
-│   └── *.csv
-├── pqc_iot_simulator/
-│   └── pqc_iot_sim/
-├── scripts/
-│   └── verify_installation.py
+├── Tutorial_Execucao.ipynb          # uso geral, preservado
+├── Pesquisa_Retomada_Sessoes.ipynb  # reprodução da pesquisa atual
+├── pqc_iot_simulator/pqc_iot_sim/
+│   ├── components/                 # rede, dispositivos, criptografia e estado
+│   ├── core/                       # Simulation e protótipo
+│   ├── engines/                    # Mininet-WiFi
+│   └── research/                   # classes de experimentos, análise e validação
+├── calibracao/                     # parâmetros e fontes bibliográficas
+├── docs/                           # métodos, resultados de referência e artigo
+├── docker/                         # ambiente TLS da pesquisa
 ├── Dockerfile
 ├── docker-compose.yml
 ├── docker-entrypoint.sh
@@ -43,7 +41,7 @@ O backend adicional executa **TLS 1.3 nativo com X25519MLKEM768 e ML-DSA-44**, t
 └── LICENSE
 ```
 
-Resultados são criados localmente em `results/` e não são versionados.
+Dados produzidos nas execuções são salvos no diretório escolhido no notebook e não são versionados automaticamente. Os resultados de referência da pesquisa estão em `docs/`.
 
 ## Requisitos
 
@@ -65,17 +63,15 @@ sudo docker compose version
 sudo docker compose build notebook
 ```
 
-Valide os três modos criptográficos:
+O tutorial monta a rede e executa a simulação. As verificações adicionais estão disponíveis como classe Python:
 
-```bash
-sudo docker compose run --rm notebook   python3 scripts/verify_installation.py --mode classical
+```python
+from pqc_iot_simulator.pqc_iot_sim.research.validation.installation import InstallationValidation
 
-sudo docker compose run --rm notebook   python3 scripts/verify_installation.py --mode pqc
-
-sudo docker compose run --rm notebook   python3 scripts/verify_installation.py --mode hybrid
+InstallationValidation(mode="classical").run()
 ```
 
-Cada verificação exige associação Wi-Fi, entrega pelo Mininet e PCAP bidirecional. O comando termina com `"status": "PASS"` quando a instalação está funcional.
+Esse código deve ser executado no ambiente Docker, em uma célula do notebook. Os modos `pqc` e `hybrid` também são aceitos.
 
 ## Tutorial
 
@@ -89,13 +85,7 @@ Abra a URL exibida no terminal, selecione o kernel **Python 3 - PQC IoT Simulato
 
 O Jupyter escuta somente em `127.0.0.1:8888`. Não exponha essa porta à Internet.
 
-## Execução pela linha de comando
-
-Para executar a configuração padrão:
-
-```bash
-sudo docker compose run --rm pqc_iot_simulator
-```
+## Configuração
 
 A configuração principal está em [default.yaml](pqc_iot_simulator/pqc_iot_sim/configs/default.yaml). Os principais blocos configuráveis são:
 
@@ -144,7 +134,7 @@ Os eventos podem incluir sensor, CPU, criptografia, associação Wi-Fi, transmis
 
 ## Dados gerados
 
-Execuções criam arquivos em `results/raw/`, incluindo configurações resolvidas, CSV, JSON e PCAP. Esse diretório é ignorado pelo Git. Para publicar uma campanha, use um repositório de dados separado e registre o commit da plataforma, a configuração, as sementes e a versão da imagem Docker.
+Execuções criam arquivos em `results/raw/`, incluindo configurações resolvidas, CSV, JSON e PCAP. Esse diretório é ignorado pelo Git. Para compartilhar uma execução, use um repositório de dados separado e registre o commit da plataforma, a configuração, as sementes e a versão da imagem Docker.
 
 ## Licença
 

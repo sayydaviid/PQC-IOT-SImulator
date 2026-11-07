@@ -20,6 +20,7 @@ x-pqc-common: &pqc-common
     OQS_INSTALL_PATH: /usr/local
     MPLBACKEND: Agg
     PYTHONUNBUFFERED: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
 
 services:
   pqc_iot_simulator:

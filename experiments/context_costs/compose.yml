@@ -1,9 +1,0 @@
-services:
-  notebook:
-    image: pqc-iot-context-costs:3.5.9-v1
-    build:
-      context: .
-      dockerfile: experiments/context_costs/Dockerfile
-    environment:
-      LD_LIBRARY_PATH: /opt/pqc-tls/lib:/usr/local/lib:/usr/local/lib64
-      PYTHONPATH: /workspace:/opt/pqc-tls/native:/opt/pqc-tls/continuity:/opt/pqc-tls/context_costs

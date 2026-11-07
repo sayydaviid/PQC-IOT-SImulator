@@ -18,7 +18,6 @@ workspace_uid="${HOST_UID:-$(stat -c '%u' /workspace)}"
 workspace_gid="${HOST_GID:-$(stat -c '%g' /workspace)}"
 output_directories=(
     /workspace/results
-    /workspace/analysis_outputs
 )
 
 if ! [[ "$workspace_uid" =~ ^[0-9]+$ && "$workspace_gid" =~ ^[0-9]+$ ]]; then
@@ -27,7 +26,9 @@ if ! [[ "$workspace_uid" =~ ^[0-9]+$ && "$workspace_gid" =~ ^[0-9]+$ ]]; then
 fi
 
 for output_directory in "${output_directories[@]}"; do
-    mkdir -p "$output_directory"
+    if [ ! -d "$output_directory" ]; then
+        continue
+    fi
     chown "$workspace_uid:$workspace_gid" "$output_directory"
     chmod 2775 "$output_directory"
 done

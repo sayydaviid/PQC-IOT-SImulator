@@ -15,3 +15,9 @@ results/
 tmp/
 output/
 *.pcap
+
+analysis_outputs/
+
+# Arquivos temporários do Mininet-WiFi
+mn*_*.apconf
+mn*_*.staconf

@@ -31,7 +31,7 @@ _ledger = load_component("_continuity_ledger", "reading_ledger.py")
 _checkpoint = load_component("_continuity_checkpoint", "recovery.py")
 ReadingConflict, ReadingLedger = _ledger.ReadingConflict, _ledger.ReadingLedger
 SealedStore, b64, unb64 = _checkpoint.SealedStore, _checkpoint.b64, _checkpoint.unb64
-from scripts.continuity_design import PROFILES
+PROFILES = load_component("_continuity_design", "../research/tls/design.py").PROFILES
 
 LENGTH = struct.Struct("!I")
 
