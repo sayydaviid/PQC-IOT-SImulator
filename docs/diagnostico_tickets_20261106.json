@@ -1,0 +1,799 @@
+{
+  "status": "PASS",
+  "diagnostics": [
+    {
+      "profile": "classical",
+      "root": -1,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 413,
+          "sha256": "3ea877920a2ef262faebb11ea446c0e8fff4ef54809db042e000eae9e34484d9",
+          "spki_der_bytes": 91
+        },
+        "client": {
+          "der_bytes": 423,
+          "sha256": "b956e7ff7e4c728b7cde61100991671741c16ccaad47bda4dc4c1708c5f97b04",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 437,
+          "sha256": "9a7ed6bc0979429c013b530238273fc400b4b707479987957cc96e53f11816fc",
+          "spki_der_bytes": 91
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 194,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 1225,
+          "tickets_rx_bytes": [
+            640
+          ],
+          "wire_cert_tx_der_bytes": [
+            423,
+            413
+          ],
+          "wire_cert_rx_der_bytes": [
+            437,
+            413
+          ],
+          "ticket_plaintext_session_der_bytes": 574,
+          "ticket_peer_certificate_der_bytes": 423,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            640
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 897,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 897,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "classical",
+      "root": 0,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 412,
+          "sha256": "132fbc90f9a4c9da225955dd04991ce9818d87914b43f43b3ebf6cdf7b82c018",
+          "spki_der_bytes": 91
+        },
+        "client": {
+          "der_bytes": 423,
+          "sha256": "458ec92a7a9da315427d15294beee92d869db238bbede983fa268f2fd1897f82",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 438,
+          "sha256": "6641d8079023d8f2b99b47bfb622e739a182e1edaff5fd448b4f3ed82d25ca38",
+          "spki_der_bytes": 91
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 194,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 1227,
+          "tickets_rx_bytes": [
+            640
+          ],
+          "wire_cert_tx_der_bytes": [
+            423
+          ],
+          "wire_cert_rx_der_bytes": [
+            438
+          ],
+          "ticket_plaintext_session_der_bytes": 575,
+          "ticket_peer_certificate_der_bytes": 423,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            640
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 897,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 897,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "classical",
+      "root": 1,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 413,
+          "sha256": "2a3331ff532739465278e92d99996ccaf580c8da2da3e578357e5f372376b274",
+          "spki_der_bytes": 91
+        },
+        "client": {
+          "der_bytes": 422,
+          "sha256": "5fba92ed709e7b8a47f8fcdd3523fe3d58d1f558fca9c8d31a757f12cacd253c",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 438,
+          "sha256": "29a70d5dc23450d309701fdc2ee4431441d64d86c0869f3bca9dad2ce8674f87",
+          "spki_der_bytes": 91
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 194,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 1227,
+          "tickets_rx_bytes": [
+            640
+          ],
+          "wire_cert_tx_der_bytes": [
+            422,
+            413
+          ],
+          "wire_cert_rx_der_bytes": [
+            438,
+            413
+          ],
+          "ticket_plaintext_session_der_bytes": 574,
+          "ticket_peer_certificate_der_bytes": 422,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            640
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 897,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 897,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "hybrid",
+      "root": -1,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 412,
+          "sha256": "1f17a301d3476792a4684c9b46649a6f6db96ee5b205de5e0a6e90c47eb7941e",
+          "spki_der_bytes": 91
+        },
+        "client": {
+          "der_bytes": 423,
+          "sha256": "3ed96301e6603f4b5e2dd159b41c13ac3d3a59e952075d179d456bb2ed74648f",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 438,
+          "sha256": "84d37efc652292de1218feabcfee6cd7aedf618f1270055f6fb112cc9de9af65",
+          "spki_der_bytes": 91
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 1244,
+          "tickets_rx_bytes": [
+            656
+          ],
+          "wire_cert_tx_der_bytes": [
+            423,
+            412
+          ],
+          "wire_cert_rx_der_bytes": [
+            438,
+            412
+          ],
+          "ticket_plaintext_session_der_bytes": 576,
+          "ticket_peer_certificate_der_bytes": 423,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            656
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 2089,
+          "psk_identity_bytes": 656,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 2089,
+          "psk_identity_bytes": 656,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "hybrid",
+      "root": 0,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 414,
+          "sha256": "11747996b8f629d4b40b01c94da6fee11587a0f8f54f46333fdeb6cc8ba976dc",
+          "spki_der_bytes": 91
+        },
+        "client": {
+          "der_bytes": 421,
+          "sha256": "04985a112dfb0638371efbabcc97fb4642465d16561d5bdbbafd9e75bc43834e",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 438,
+          "sha256": "7ddb3225007bc597124dffac1bae044a4b1c826d9c22035663904d305913ee51",
+          "spki_der_bytes": 91
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 1228,
+          "tickets_rx_bytes": [
+            640
+          ],
+          "wire_cert_tx_der_bytes": [
+            421
+          ],
+          "wire_cert_rx_der_bytes": [
+            438
+          ],
+          "ticket_plaintext_session_der_bytes": 574,
+          "ticket_peer_certificate_der_bytes": 421,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            640
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 2073,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 2073,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "hybrid",
+      "root": 1,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 413,
+          "sha256": "9c8c0b53aa6a4f1271fb09a085e81bc07452bf05437d7a5c6d0ffceb14a500df",
+          "spki_der_bytes": 91
+        },
+        "client": {
+          "der_bytes": 422,
+          "sha256": "8445ea27736a0aecec6e3776b6f53868e3a86348785bae55a3776194364807e1",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 439,
+          "sha256": "08c4075eebf649bdb7b5ec9151277ba54a65298c2d8d775551a6455d0e7f6854",
+          "spki_der_bytes": 91
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 1229,
+          "tickets_rx_bytes": [
+            640
+          ],
+          "wire_cert_tx_der_bytes": [
+            422,
+            413
+          ],
+          "wire_cert_rx_der_bytes": [
+            439,
+            413
+          ],
+          "ticket_plaintext_session_der_bytes": 575,
+          "ticket_peer_certificate_der_bytes": 422,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            640
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 2073,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 2073,
+          "psk_identity_bytes": 640,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "pqc",
+      "root": -1,
+      "client_key": "ML-DSA-44",
+      "certificates": {
+        "ca": {
+          "der_bytes": 4009,
+          "sha256": "76c68028f0f5024fab391c7e69973ad313b006be86bc87289b3a6b2bd6db2802",
+          "spki_der_bytes": 1334
+        },
+        "client": {
+          "der_bytes": 4018,
+          "sha256": "716dab6e42883ecf96bcaf379b844aba21d8f76a6660e73e4768c79ac8602aad",
+          "spki_der_bytes": 1334
+        },
+        "server": {
+          "der_bytes": 4034,
+          "sha256": "369e534a0af13651aeee800fb7965ee990e4bd9efded896480aa16d91baec4dc",
+          "spki_der_bytes": 1334
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 8423,
+          "tickets_rx_bytes": [
+            4240
+          ],
+          "wire_cert_tx_der_bytes": [
+            4018,
+            4009
+          ],
+          "wire_cert_rx_der_bytes": [
+            4034,
+            4009
+          ],
+          "ticket_plaintext_session_der_bytes": 4170,
+          "ticket_peer_certificate_der_bytes": 4018,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            4240
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "pqc",
+      "root": 0,
+      "client_key": "ML-DSA-44",
+      "certificates": {
+        "ca": {
+          "der_bytes": 4009,
+          "sha256": "7ae2dcd97492a1c0c97bfb8bc0a125aa2ff7ae3476f17ca24785ff1e91084890",
+          "spki_der_bytes": 1334
+        },
+        "client": {
+          "der_bytes": 4018,
+          "sha256": "a11053ddd9b1386355ca14f4e7bd03880f6c36fdb8b029b0ad44192cb527ce2c",
+          "spki_der_bytes": 1334
+        },
+        "server": {
+          "der_bytes": 4034,
+          "sha256": "659e782a5c7d348e3bf3643178cf893379bffcc0fd968c543ae053dbf6cf8075",
+          "spki_der_bytes": 1334
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 8423,
+          "tickets_rx_bytes": [
+            4240
+          ],
+          "wire_cert_tx_der_bytes": [
+            4018
+          ],
+          "wire_cert_rx_der_bytes": [
+            4034
+          ],
+          "ticket_plaintext_session_der_bytes": 4170,
+          "ticket_peer_certificate_der_bytes": 4018,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            4240
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "pqc",
+      "root": 1,
+      "client_key": "ML-DSA-44",
+      "certificates": {
+        "ca": {
+          "der_bytes": 4009,
+          "sha256": "3e145d3c52b9a6081ad4760ebb4ea86183da04745b8f67b0830c0f7e521b73bc",
+          "spki_der_bytes": 1334
+        },
+        "client": {
+          "der_bytes": 4018,
+          "sha256": "72b247ca604b8fd99f52bb15c468e110810890b15b57f222d4e3e396495fce27",
+          "spki_der_bytes": 1334
+        },
+        "server": {
+          "der_bytes": 4034,
+          "sha256": "e1ecd18482dc32efb6ce5dd57dab7838d13bfb739628005bbc31eb0ec9c365ee",
+          "spki_der_bytes": 1334
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 8424,
+          "tickets_rx_bytes": [
+            4240
+          ],
+          "wire_cert_tx_der_bytes": [
+            4018,
+            4009
+          ],
+          "wire_cert_rx_der_bytes": [
+            4034,
+            4009
+          ],
+          "ticket_plaintext_session_der_bytes": 4171,
+          "ticket_peer_certificate_der_bytes": 4018,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            4240
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "pqc",
+      "root": 0,
+      "client_key": "EC",
+      "certificates": {
+        "ca": {
+          "der_bytes": 4009,
+          "sha256": "9326d4e08cf5da3b0d85c943556baa3e9256c889be7714b4a3312dd748fc1ebd",
+          "spki_der_bytes": 1334
+        },
+        "client": {
+          "der_bytes": 2775,
+          "sha256": "b467fd1de3017e0ef62057da398cbe360d690e34bf1733b04ad528c8aa463735",
+          "spki_der_bytes": 91
+        },
+        "server": {
+          "der_bytes": 4034,
+          "sha256": "8a0bd9e3ca2a1ce4835378e1a55058592303be39ddf19e8565a2cb4f3759752f",
+          "spki_der_bytes": 1334
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 7175,
+          "tickets_rx_bytes": [
+            2992
+          ],
+          "wire_cert_tx_der_bytes": [
+            2775
+          ],
+          "wire_cert_rx_der_bytes": [
+            4034
+          ],
+          "ticket_plaintext_session_der_bytes": 2927,
+          "ticket_peer_certificate_der_bytes": 2775,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            2992
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 4425,
+          "psk_identity_bytes": 2992,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 4425,
+          "psk_identity_bytes": 2992,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    },
+    {
+      "profile": "pqc",
+      "root": 0,
+      "client_key": "ML-DSA-44",
+      "certificates": {
+        "ca": {
+          "der_bytes": 4009,
+          "sha256": "9326d4e08cf5da3b0d85c943556baa3e9256c889be7714b4a3312dd748fc1ebd",
+          "spki_der_bytes": 1334
+        },
+        "client": {
+          "der_bytes": 4018,
+          "sha256": "cbb25e882e0d16c100ad8895d998a76077be803ee4af29df6d09765f6a81d51e",
+          "spki_der_bytes": 1334
+        },
+        "server": {
+          "der_bytes": 4034,
+          "sha256": "8a0bd9e3ca2a1ce4835378e1a55058592303be39ddf19e8565a2cb4f3759752f",
+          "spki_der_bytes": 1334
+        }
+      },
+      "connections": [
+        {
+          "reused": 0,
+          "clienthello_handshake_bytes": 1370,
+          "psk_identity_bytes": 0,
+          "client_session_der_bytes": 8423,
+          "tickets_rx_bytes": [
+            4240
+          ],
+          "wire_cert_tx_der_bytes": [
+            4018
+          ],
+          "wire_cert_rx_der_bytes": [
+            4034
+          ],
+          "ticket_plaintext_session_der_bytes": 4170,
+          "ticket_peer_certificate_der_bytes": 4018,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": [
+            4240
+          ]
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        },
+        {
+          "reused": 1,
+          "clienthello_handshake_bytes": 5673,
+          "psk_identity_bytes": 4240,
+          "client_session_der_bytes": 0,
+          "tickets_rx_bytes": [],
+          "wire_cert_tx_der_bytes": [],
+          "wire_cert_rx_der_bytes": [],
+          "ticket_plaintext_session_der_bytes": 0,
+          "ticket_peer_certificate_der_bytes": 0,
+          "ticket_application_data_bytes": 0,
+          "tickets_tx_bytes": []
+        }
+      ]
+    }
+  ],
+  "source": "results/raw/context_tickets_identity_20261106_v2/results.json"
+}

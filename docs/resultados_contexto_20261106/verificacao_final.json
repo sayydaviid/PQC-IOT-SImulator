@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "pytest_returncode": 0,
+  "pytest_summary": "120 passed, 1 warning in 89.51s (0:01:29)",
+  "analysis_sources_sha256": {
+    "scripts/summarize_context_costs.py": "07efa7dc4f610884e267c7b13825c2d4e42a94548c120f3c09d4b6350ff41689",
+    "scripts/verify_context_results.py": "1eccfd77e5905e733f45414f31a2224d0e1b92dd3173e957db05b4d56fc8581e",
+    "scripts/report_context_costs.py": "1abdbce13a4e6ea037237ce3ed50cdcd60d3f87d890ba38c8201b96a54076e7a",
+    "scripts/finalize_context_validation.py": "bfb8b5c6b4dfbb2157918b68a141be2b95a1248c1ca4c60a01c2ba5e58cba81c",
+    "tests/test_context_costs_analysis.py": "2dee49b103b8e69188d65225db68a01ecea2308baea0f5cd00696f044b08deeb",
+    "scripts/verify_context_persistence_tls.py": "fa385b310fc290d160749a78a6aba316aa9378d295e1c91e8b669220d89fe2d0",
+    "scripts/resume_context_validation.py": "f45b69be7c3c99a1d2ddc48e74982315a3be79645912c555f90eef3144429803",
+    "scripts/context_capture.py": "bea95391978a0aff5dd0e3614fd2190df08cbf956e560e475a3daba535075003",
+    "scripts/complete_context_tests.py": "b6ef3469af3c7bba4dbc83f0b47fc6dcf278e807f57d6f952c437a2f159b002f",
+    "tests/test_context_capture.py": "d11a5f24e320c9558aa3f851d76cf92baa47d419dd2ae6bc3eecd21c9c065efb",
+    "scripts/continuity_ticket_sizes.py": "d35e321cf09de60d7048ae136207cd76172893ade0700273e6c03b9805847478"
+  },
+  "pytest_environment": "host",
+  "measurement_container_test_attempt": {
+    "returncode": 1,
+    "reason": "pytest not installed in measurement image",
+    "log": "testes_container.txt"
+  }
+}

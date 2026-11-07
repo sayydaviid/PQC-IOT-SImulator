@@ -98,7 +98,7 @@ docker compose -f docker-compose.yml -f experiments/continuity/compose.yml run -
   scripts/verify_continuity_chain.py --output /workspace/results/raw/continuity_chain_reproduction
 ```
 
-Os três perfis enviaram folha e CA raiz. A transmissão da raiz deve ser declarada como condição da medição. Uma configuração que omita a raiz pode alterar os percentuais; essa sensibilidade ainda não foi medida. Não apresentar os resultados como referentes a uma cadeia otimizada.
+Os três perfis da avaliação original enviaram folha e CA raiz. Essa condição deve acompanhar os resultados históricos. Naquela avaliação, a sensibilidade à retirada da raiz ainda não havia sido medida. O controle adicional descrito abaixo compara as duas cadeias em ambos os participantes, mantendo a raiz confiável; seus resultados são separados dos anteriores. Não apresentar os resultados históricos como referentes a uma cadeia sem transmissão da raiz.
 
 ## Integridade e rodadas excluídas
 
@@ -119,3 +119,97 @@ docker compose -f docker-compose.yml -f experiments/continuity/compose.yml run -
 A análise não remove esses blocos. Custo por confirmação é indefinido se não houver nenhuma confirmação; tempo até entrega completa não recebe estimativa quando o par de comparadores contém uma sequência incompleta. Os dados por tentativa distinguem injeção programada, ausência não programada e censura pelo watchdog. As duplicações esperadas no controle dependem dos recebimentos reais, não apenas da quantidade de falhas injetadas.
 
 A auditoria exige prefixos TCP contíguos até as mensagens cuja entrega é comprovada e limites de emissão dos participantes. Contadores de cabeçalhos TLS de leituras interrompidas podem anunciar bytes ainda não recebidos, por isso não são tratados como recibos de corpo completo. Lacunas de transporte posteriores aos prefixos comprovados são registradas, e falhas de handshake sem metadados não são apresentadas como conexões autenticadas verificadas. Os arquivos brutos de v1/v2 permanecem disponíveis para diagnóstico, fora das estimativas definitivas.
+
+## Verificações adicionais iniciadas em 6 de novembro de 2026
+
+Os novos experimentos preservam os fontes da avaliação anterior e utilizam `experiments/context_costs/`. O protocolo está em `plano_verificacoes_contexto_20261106.md`, com o detalhamento do cliente persistente em `metodo_amortizacao_20261106.md`. A comparação das cadeias e a de amortização devem ser executadas sequencialmente, sem duas topologias Mininet em paralelo. Verificações funcionais em localhost não entram nas amostras de custo.
+
+```bash
+docker build -t pqc-iot-context-costs:3.5.9-v1 -f experiments/context_costs/Dockerfile .
+
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  -e PYTHONDONTWRITEBYTECODE=1 notebook python3 scripts/run_context_costs.py \
+  --blocks 10 --output /workspace/results/raw/context_chain_reproduction
+
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  -e PYTHONDONTWRITEBYTECODE=1 notebook python3 scripts/run_context_amortization.py \
+  --blocks 10 --output /workspace/results/raw/context_amortization_reproduction
+```
+
+O primeiro experimento compara folha e raiz contra apenas folha em ambos os sentidos da autenticação mútua. A raiz continua no armazenamento de confiança. O segundo mantém um processo cliente e 100 leituras lógicas de 512 bytes, variando o máximo de leituras por conexão. O custo inclui o primeiro handshake completo e todos os reenvios e encerramentos. As sessões são salvas quando fica disponível um estado utilizável diferente do anterior.
+
+Os diagnósticos e as verificações de persistência são separados das medições:
+
+```bash
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  --entrypoint python3 -e PYTHONDONTWRITEBYTECODE=1 notebook \
+  scripts/verify_context_identity_tickets.py \
+  --output /workspace/results/raw/context_tickets_identity_reproduction
+
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  --entrypoint python3 -e PYTHONDONTWRITEBYTECODE=1 notebook \
+  scripts/verify_context_persistence.py \
+  --output /workspace/results/raw/context_persistence_reproduction
+```
+
+Os comprimentos dos tickets são consultados em callbacks do OpenSSL. O estado é medido no servidor antes da proteção do ticket, sem exportar seu conteúdo. O módulo registra separadamente o certificado do participante remoto incorporado à sessão, a informação adicional da aplicação, os certificados transmitidos, as mensagens de ticket e os comprimentos públicos do ClientHello. A identidade esperada é conferida também no certificado recuperado na retomada; não é obtida de um campo de dispositivo enviado pela aplicação.
+
+Os testes de interrupção usam o mesmo componente SQLite e diferenciam fechamento normal de SIGKILL. O sistema operacional e o armazenamento permanecem em funcionamento. Não representam cortes de energia. O teste do checkpoint verifica `os.urandom(12)` em processos separados e sob restauração de arquivos, incluindo um controle negativo de fonte de nonce repetida. A ausência de colisões observadas não é uma garantia determinística.
+
+Após concluir os dois experimentos, executar as auditorias e a análise:
+
+```bash
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  --entrypoint python3 -e PYTHONDONTWRITEBYTECODE=1 notebook \
+  scripts/verify_context_results.py --kind chains \
+  --input /workspace/results/raw/context_chain_reproduction \
+  --output /workspace/docs/resultados_contexto_reproduction/auditoria_cadeias.json
+
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  --entrypoint python3 -e PYTHONDONTWRITEBYTECODE=1 notebook \
+  scripts/verify_context_results.py --kind amortization \
+  --input /workspace/results/raw/context_amortization_reproduction \
+  --output /workspace/docs/resultados_contexto_reproduction/auditoria_amortizacao.json
+
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  --entrypoint python3 -e PYTHONDONTWRITEBYTECODE=1 notebook \
+  scripts/summarize_context_costs.py \
+  --chains /workspace/results/raw/context_chain_reproduction \
+  --amortization /workspace/results/raw/context_amortization_reproduction \
+  --output /workspace/docs/analise_contexto_reproduction
+```
+
+As auditorias exigem o desenho completo, os hashes dos fontes, as cadeias efetivamente enviadas e a correspondência entre os comprimentos do ClientHello medidos no módulo e na captura. A análise apresenta custos absolutos e reduções calculadas dentro da mesma repetição. Os intervalos bootstrap permanecem exploratórios por configuração.
+
+Para verificar as fronteiras também no gateway TLS real, o controle complementar abaixo autentica o cliente, interrompe o processo no ponto de gravação escolhido e reenvia a mesma leitura após reiniciar. São cinco fronteiras, três perfis e dois términos de processo: SIGTERM tratado com fechamento do banco ou SIGKILL sem finalização. O teste é executado em localhost e fica fora das amostras de custo.
+
+```bash
+docker compose -f docker-compose.yml -f experiments/context_costs/compose.yml run --rm \
+  --entrypoint python3 -e PYTHONDONTWRITEBYTECODE=1 notebook \
+  scripts/verify_context_persistence_tls.py \
+  --output /workspace/results/raw/context_persistence_tls_reproduction
+```
+
+### Procedência da retomada em 7 de novembro
+
+A execução original das cadeias foi interrompida pela infraestrutura com nove blocos completos e 51 das 54 condições do último bloco concluídas. Os dados originais permanecem em `results/raw/context_chain_registered_20261106_v1`. Todas as condições do bloco 9 foram repetidas, com os mesmos fontes e imagem, em `context_chain_repeated_block9_20261107_v1`; as 51 condições do bloco incompleto foram excluídas em conjunto, sem seleção de células.
+
+O conjunto consolidado fica em `results/raw/context_chain_completed_20261107_v1`, com nove blocos originais e um bloco repetido. Seu manifesto conserva a origem de cada grupo e referencia o manifesto da repetição. Os diretórios das execuções são ligações relativas aos arquivos preservados. Para mover o conjunto bruto, conservar também os dois diretórios de origem ou copiar seguindo as ligações. Os principais componentes do ambiente e o módulo nativo permaneceram iguais; a memória livre do host variou.
+
+O executor `scripts/resume_context_validation.py` verifica os fontes, repete o bloco inteiro e executa sequencialmente a amortização e a consolidação. O contêiner nomeado `context-verifications-20261107` roda desacoplado da sessão de terminal, permitindo acompanhar sua saída com `docker logs`. As tabelas e auditorias finais ficam em `docs/resultados_contexto_20261106`; a interpretação fica em `docs/resultado_contexto_20261106.md`.
+
+### Auditoria e testes concluídos
+
+As duas matrizes concluíram 540 execuções cada, com 4.860 e 54.000 leituras confirmadas, respectivamente. As auditorias passaram em 6.660 e 20.340 ClientHello, verificando a correspondência das capturas com os comprimentos medidos no OpenSSL, a carga dentro dos blocos e os certificados transmitidos nos dois sentidos. Os 30 controles adicionais do gateway TLS também passaram.
+
+O leitor antigo de ClientHello utilizava somente as portas para reconhecer a direção. Uma porta temporária do cliente coincidiu com a porta 39911 do servidor em uma captura, causando interpretação do ServerHello como ClientHello. O adaptador em `scripts/context_capture.py` identifica o IP iniciador pelo SYN sem ACK e seleciona a direção do cliente antes de usar o leitor congelado. Os dados brutos e as contagens de bytes não mudaram: o contador de custos já distinguia os IPs. Dois testes de regressão verificam a coincidência das portas e a rejeição de múltiplos IPs iniciadores ambíguos.
+
+A imagem de medição não contém `pytest`. As auditorias e os controles TLS foram executados nessa imagem; a suíte completa foi executada no host, encerrando com 120 testes aprovados. O aviso de diferença entre versões de `liboqs` e `liboqs-python` nos testes antigos do protótipo está preservado em `resultados_contexto_20261106/testes.txt`; as medições TLS usam o OpenSSL da imagem identificada no manifesto.
+
+Na execução registrada, a consolidação foi retomada com `--resume-postprocessing`, conferindo os hashes dos dados e do analisador já concluído. O comando abaixo completou o registro final com os testes locais, conservando a tentativa anterior sem `pytest` em `testes_container.txt`:
+
+```bash
+python3 scripts/complete_context_tests.py --analysis docs/resultados_contexto_20261106
+```
+
+O estado final está em `resultados_contexto_20261106/verificacao_final.json`, com resultado `PASS`, hashes dos fontes da análise, ambiente dos testes e caminho do registro da tentativa no contêiner.
