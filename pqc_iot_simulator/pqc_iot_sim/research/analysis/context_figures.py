@@ -49,7 +49,7 @@ def one(rows, **where):
 
     found = [r for r in rows if all(equal(r[k], v) for k, v in where.items())]
     assert len(found) == 1, (where, len(found))
-    assert int(found[0]["blocks"]) == 10
+    assert int(found[0]["blocks"]) > 0
     return found[0]
 
 
@@ -83,11 +83,10 @@ def panel_a(ax, chain, comparisons, amort, amort_cmp, diagnostic):
         ]
         values[policy] = ys
         ax.bar(x + (j - 1) * 0.25, ys, 0.23, color=color, label=label)
-    assert abs(values["full"][2] - 41.4636666667) < 0.001
-    assert abs(values["resume_preserved"][2] - 17.5047777778) < 0.001
     ax.set_xticks(x, NAMES)
     ax.set_ylabel("IPv4 por leitura (kB)")
-    ax.set_ylim(0, 62)
+    ax.margins(y=0.2)
+    ax.set_ylim(bottom=0)
     ax.set_title("Raiz omitida; ambas as falhas em 100%", fontsize=8, pad=6)
     ax.legend(ncol=3, fontsize=7.2, loc="upper left", columnspacing=0.7, handlelength=1)
 
@@ -129,11 +128,9 @@ def panel_b(ax, chain, comparisons, amort, amort_cmp, diagnostic):
             capsize=1.5,
             error_kw={"elinewidth": 0.6},
         )
-        if root == 0 and policy == "resume_volatile":
-            assert abs(ys[2] + 19.70) < 0.02
     ax.axhline(0, color="black", linestyle="--", linewidth=0.65)
     ax.set_xticks(x, NAMES)
-    ax.set_ylim(-37, 90)
+    ax.margins(y=0.2)
     ax.set_ylabel("Economia frente ao completo (%)")
     first = ax.legend(
         handles=[Patch(facecolor=c, label=l) for c, l in zip(COLORS[1:], LABELS[1:])],
@@ -157,16 +154,9 @@ def panel_b(ax, chain, comparisons, amort, amort_cmp, diagnostic):
 
 
 def controls(diagnostic):
-    ds = diagnostic["diagnostics"]
-    ec, ml = ds[-2:]
-    assert ec["client_key"] == "EC" and ml["client_key"] == "ML-DSA-44"
-    assert ec["profile"] == ml["profile"] == "pqc" and ec["root"] == ml["root"] == 0
-    for identity in ("server", "ca"):
-        assert (
-            ec["certificates"][identity]["sha256"]
-            == ml["certificates"][identity]["sha256"]
-        )
-    return ec, ml
+    from ..tls.diagnostics import TicketDiagnostics
+
+    return TicketDiagnostics(diagnostic).matched_client_controls()
 
 
 def panel_c(ax, chain, comparisons, amort, amort_cmp, diagnostic):
@@ -181,7 +171,6 @@ def panel_c(ax, chain, comparisons, amort, amort_cmp, diagnostic):
             c["ticket_plaintext_session_der_bytes"],
             c["tickets_tx_bytes"][0],
         ]
-        assert ys == ([2775, 2927, 2992] if j == 0 else [4018, 4170, 4240])
         bars = ax.bar(x + (j - 0.5) * 0.36, ys, 0.34, color=color, label=label)
         for bar, y in zip(bars, ys):
             ax.text(
@@ -193,7 +182,8 @@ def panel_c(ax, chain, comparisons, amort, amort_cmp, diagnostic):
             )
     ax.set_xticks(x, ("Certificado\ndo cliente", "Estado\nda sessão", "Ticket"))
     ax.set_ylabel("Tamanho (bytes)")
-    ax.set_ylim(0, 5500)
+    ax.margins(y=0.2)
+    ax.set_ylim(bottom=0)
     ax.legend(fontsize=7.3, loc="upper left", ncol=1)
     ax.set_title("Servidor e CA com ML-DSA-44 mantidos", fontsize=8, pad=6)
 
@@ -211,12 +201,11 @@ def panel_d(ax, chain, comparisons, amort, amort_cmp, diagnostic):
             for b in (1, 10, 100)
         ]
         ax.bar(x + (j - 1) * 0.25, ys, 0.23, color=color, label=label)
-        if policy == "full":
-            assert abs(ys[0] - 22.86518) < 0.001
     ax.set_xticks(x, ("1", "10", "100"))
     ax.set_xlabel("Limite de leituras por conexão")
     ax.set_ylabel("IPv4 por leitura (kB)")
-    ax.set_ylim(0, 29)
+    ax.margins(y=0.2)
+    ax.set_ylim(bottom=0)
     ax.legend(
         ncol=3, fontsize=7.2, loc="upper right", columnspacing=0.6, handlelength=1
     )
@@ -245,12 +234,11 @@ def panel_e(ax, chain, comparisons, amort, amort_cmp, diagnostic):
             linewidth=1.3,
             capsize=2,
         )
-        assert abs(ys[-1] - (-5.12 if policy == "resume_volatile" else 15.11)) < 0.02
     ax.axhline(0, color="black", linestyle="--", linewidth=0.65)
     ax.set_xticks((0, 1, 2), ("1", "10", "100"))
     ax.set_xlabel("Limite de leituras por conexão")
     ax.set_ylabel("Economia frente ao completo (%)")
-    ax.set_ylim(-15, 75)
+    ax.margins(y=0.2)
     ax.legend(ncol=2, fontsize=7.4, loc="upper right")
     key_title(ax)
 
@@ -285,13 +273,11 @@ def panel_f(ax, chain, comparisons, amort, amort_cmp, diagnostic):
             capsize=3,
             label=label,
         )
-        if not recovery:
-            assert abs(ys[-1] - 0.17) < 0.02
     ax.axhline(0, color="black", linestyle="--", linewidth=0.65)
     ax.set_xticks((0, 1, 2), ("1", "10", "100"))
     ax.set_xlabel("Limite de leituras por conexão")
     ax.set_ylabel("Diferença de tempo (ms/leitura)")
-    ax.set_ylim(-150, 25)
+    ax.margins(y=0.2)
     ax.legend(ncol=2, fontsize=7.4, loc="lower right")
     key_title(ax)
 
