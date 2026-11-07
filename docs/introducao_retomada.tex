@@ -1,0 +1,18 @@
+\section{Introdução}
+
+A adoção de criptografia pós-quântica em redes de Internet das Coisas (IoT) busca proteger o estabelecimento de chaves e a autenticação diante de adversários com capacidade computacional quântica \cite{liu2024postquantum}. Além dos custos de comunicação e computação investigados na autenticação pós-quântica \cite{schwabe2021kemtlspdk}, essa transição exige considerar a recuperação da comunicação quando sensores reiniciam ou restauram informações antigas.
+
+Nesse contexto, a retomada de sessões permite aproveitar um segredo estabelecido anteriormente, reduzindo a repetição da autenticação completa. No TLS 1.3, esse procedimento pode incorporar uma contribuição assimétrica nova, mas sua aceitação depende da validade da sessão salva e do contexto disponível no servidor \cite{hebrok2023tickets}. A retomada já é investigada em dispositivos restritos \cite{avoine2019iotfriendly}; após reinícios do gateway, preservar ou perder esse contexto pode alterar seu benefício.
+
+A recuperação também apresenta desafios quando o dispositivo restaura uma cópia antiga de seu estado, denominada checkpoint. Se essa cópia contém uma chave de tráfego e um contador já utilizado, pode ocorrer reutilização de chave e nonce, comprometendo a proteção oferecida pelo AES-GCM \cite{bock2016nonce}. Salvar contadores antes do uso ou reservá-los em blocos pode evitar repetições após uma queda de energia, desde que o registro atualizado seja preservado.
+
+Outro desafio surge quando o gateway processa uma leitura, mas sua confirmação se perde. O reenvio pode repetir seus efeitos mesmo em uma sessão autenticada. Reconhecer solicitações repetidas e conservar seus resultados permite controlar essa duplicação \cite{lee2015rifl}. Assim, investigamos como a preservação do estado, a frequência de reinícios e a perda de confirmações afetam o custo de recuperação e os efeitos da aplicação em diferentes configurações criptográficas.
+
+Diante desse cenário, avaliamos uma abordagem que combina checkpoints autenticados, chaves de tráfego novas e um banco de leituras já processadas, atualizado antes da confirmação. No protótipo, os controles vulneráveis restauram chaves e contadores; nos estudos de caso com TLS 1.3 nativo, a sessão salva permite negociar outra conexão, cujas chaves são derivadas pela biblioteca. Os experimentos no Mininet-WiFi comparam configurações clássica, híbrida e pós-quântica, variando a preservação do contexto de retomada e a frequência das falhas. As principais contribuições deste trabalho são:
+\begin{itemize}
+    \item Caracterização das dependências de estado da recuperação, distinguindo sessão salva, contexto do gateway e histórico de leituras.
+    \item Avaliação com controles negativos que distingue reutilização de chave e nonce de efeitos duplicados no banco.
+    \item Quantificação dos custos até a confirmação da leitura, comparando configurações criptográficas, políticas de preservação do contexto e frequências de falhas.
+\end{itemize}
+
+O restante deste artigo está organizado da seguinte forma: a Seção \ref{sec:fun} apresenta a fundamentação teórica sobre criptografia pós-quântica e retomada de sessões. A Seção \ref{sec:related} discute trabalhos relacionados. A Seção \ref{sec:proposta} detalha a abordagem de recuperação avaliada. A Seção \ref{sec:result} apresenta os experimentos e os resultados obtidos. Por fim, a Seção \ref{sec:conclusao} traz as conclusões e trabalhos futuros.

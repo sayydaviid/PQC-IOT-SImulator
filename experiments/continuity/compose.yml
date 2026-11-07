@@ -1,0 +1,9 @@
+services:
+  notebook:
+    image: pqc-iot-continuity:3.5.9-v2
+    build:
+      context: .
+      dockerfile: experiments/continuity/Dockerfile
+    environment:
+      LD_LIBRARY_PATH: /opt/pqc-tls/lib:/usr/local/lib:/usr/local/lib64
+      PYTHONPATH: /workspace:/opt/pqc-tls/native:/opt/pqc-tls/continuity

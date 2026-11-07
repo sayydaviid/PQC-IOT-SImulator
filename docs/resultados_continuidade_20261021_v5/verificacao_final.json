@@ -1,0 +1,16 @@
+{
+  "verified_utc": "2026-10-21T18:21:06.525204+00:00",
+  "status": "PASS",
+  "campaign_cases": 1800,
+  "pcap_hashes_checked": 1800,
+  "historical_hashes_unchanged": 22,
+  "unit_tests_passed": 112,
+  "unit_warning": "preexisting liboqs/liboqs-python version mismatch in prototype",
+  "native_chain_checks": 3,
+  "figure_pdfs_rendered_and_inspected": 2,
+  "standalone_latex_exit": 0,
+  "latex_note": "excerpt only, not the complete Overleaf manuscript",
+  "numeric_csvs_unchanged_after_figure_revisions": true,
+  "report_sha256": "0d641694637d01032ec5c7cf5091d4f46bb381cd05e9553f9cf0fa10671069da",
+  "excerpt_sha256": "35f8d1fe7e11d7e435305dc2b33b600e7fd24bccff9e8c43afb0ac6b92213fba"
+}

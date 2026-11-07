@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-23",
+  "scope": "PDF comparison only; no manuscript changes or experiments",
+  "inspection": "Full text, rendered contact sheets for every page, and enlarged relevant pages",
+  "documents": {
+    "atual": {
+      "path": "/home/tavares/Downloads/sbrc_27_iot_corrigido (4).pdf",
+      "sha256": "7e7aeab5cdc58cdfe1680bcfda7961b304e79dabfc6a2832d0999500bd00a688",
+      "pages": 17,
+      "sections": [
+        {
+          "number": 1,
+          "title": "Introdução"
+        },
+        {
+          "number": 2,
+          "title": "Fundamentação Teórica"
+        },
+        {
+          "number": 3,
+          "title": "Trabalhos Relacionados"
+        },
+        {
+          "number": 4,
+          "title": "Estratégia de Recuperação de Sessões Pós-Quânticas"
+        },
+        {
+          "number": 5,
+          "title": "Avaliação e Resultados"
+        },
+        {
+          "number": 6,
+          "title": "Conclusão e Trabalhos Futuros"
+        }
+      ],
+      "figures": [
+        {
+          "number": 1,
+          "page": 5
+        },
+        {
+          "number": 2,
+          "page": 6
+        },
+        {
+          "number": 3,
+          "page": 9
+        },
+        {
+          "number": 4,
+          "page": 11
+        },
+        {
+          "number": 5,
+          "page": 12
+        },
+        {
+          "number": 6,
+          "page": 14
+        }
+      ],
+      "tables": [
+        {
+          "number": 1,
+          "page": 3
+        }
+      ],
+      "result_panel_groups": [
+        4,
+        4,
+        6
+      ],
+      "individual_related_works": 4,
+      "bibliography_entries": 10,
+      "contribution_bullets": 3,
+      "conclusion_paragraphs": 2,
+      "numbered_equations": 5,
+      "blank_text_pages": []
+    },
+    "referencia": {
+      "path": "/home/tavares/Downloads/5904_Versao_final_de_artigo_aceito (2).pdf",
+      "sha256": "02136fd741e43030f502a6757d93ae7ffcc3183a5ad6eba8e384065c678ed31a",
+      "pages": 14,
+      "sections": [
+        {
+          "number": 1,
+          "title": "Introdução"
+        },
+        {
+          "number": 2,
+          "title": "Fundamentação Teórica"
+        },
+        {
+          "number": 3,
+          "title": "Trabalhos Relacionados"
+        },
+        {
+          "number": 4,
+          "title": "Estratégia de Agendamento de Purificação Híbrida"
+        },
+        {
+          "number": 5,
+          "title": "Avaliação e Resultados"
+        },
+        {
+          "number": 6,
+          "title": "Conclusão e Trabalhos Futuros"
+        }
+      ],
+      "figures": [
+        {
+          "number": 1,
+          "page": 5
+        },
+        {
+          "number": 2,
+          "page": 6
+        },
+        {
+          "number": 3,
+          "page": 9
+        },
+        {
+          "number": 4,
+          "page": 11
+        },
+        {
+          "number": 5,
+          "page": 12
+        },
+        {
+          "number": 6,
+          "page": 13
+        }
+      ],
+      "tables": [
+        {
+          "number": 1,
+          "page": 4
+        }
+      ],
+      "result_panel_groups": [
+        4,
+        4,
+        6
+      ],
+      "individual_related_works": 4,
+      "bibliography_entries": 10,
+      "contribution_bullets": 3,
+      "conclusion_paragraphs": 2,
+      "numbered_equations": 8,
+      "blank_text_pages": []
+    }
+  },
+  "findings": {
+    "current_results_integrated": true,
+    "figure6_before_conclusion": true,
+    "line_before_figure6": "Current page 13 ends with the first line of the paragraph on Figure 6(b); continuation on page 15.",
+    "hyphenation_symptoms": {
+      "page": 2,
+      "examples": [
+        "proced-imento",
+        "Recon-hecer"
+      ],
+      "babel_cause": "Not confirmed without current main TeX preamble."
+    },
+    "scientific_priority": "Sensitivity measurement without sending root CA; not yet measured.",
+    "page_limit_2027": "Not checked; reference length is not a submission rule."
+  }
+}

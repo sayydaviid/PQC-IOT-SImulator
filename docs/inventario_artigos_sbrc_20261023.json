@@ -1,0 +1,442 @@
+{
+  "atual": {
+    "path": "/home/tavares/Downloads/sbrc_27_iot_corrigido (3).pdf",
+    "sha256": "74216891ad03e4312c797fb099d81a546aefbf78eb4a7ebe9fc0a8b4a455f63c",
+    "pages": [
+      {
+        "page": 1,
+        "words": 389,
+        "characters": 2873,
+        "headings": [],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 2,
+        "words": 529,
+        "characters": 3580,
+        "headings": [
+          "1. Introdução"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 3,
+        "words": 401,
+        "characters": 2871,
+        "headings": [
+          "2. Fundamentação Teórica",
+          "2.1. Criptografia Pós-Quântica e Sessões Seguras",
+          "2.1.1. Estabelecimento Completo e Retomada"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 4,
+        "words": 362,
+        "characters": 2892,
+        "headings": [
+          "2.1.2. Reinícios e Restauração de Estado"
+        ],
+        "figures": [],
+        "tables": [
+          "Tabela 1. Modalidades de estabelecimento de sessão. DH indica uma troca Diffie–"
+        ],
+        "panels": []
+      },
+      {
+        "page": 5,
+        "words": 375,
+        "characters": 2772,
+        "headings": [
+          "2.2. Persistência e Deduplicação de Leituras"
+        ],
+        "figures": [
+          "Figura 1. Reserva de números de controle. O limite é salvo antes do uso; após"
+        ],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 6,
+        "words": 336,
+        "characters": 2696,
+        "headings": [
+          "3. Trabalhos Relacionados"
+        ],
+        "figures": [
+          "Figura 2. Reconhecimento de uma leitura repetida após perda da confirmação. O"
+        ],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 7,
+        "words": 518,
+        "characters": 3578,
+        "headings": [],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 8,
+        "words": 490,
+        "characters": 3292,
+        "headings": [
+          "4. Estratégia de Recuperação de Sessões Pós-Quânticas",
+          "4.1. Modelagem do Problema",
+          "4.2. Estratégia de Recuperação e Confirmação de Leituras"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 9,
+        "words": 270,
+        "characters": 2723,
+        "headings": [],
+        "figures": [
+          "Figura 3. Recuperação da sessão e confirmação da leitura. O código da leitura"
+        ],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 10,
+        "words": 453,
+        "characters": 3142,
+        "headings": [
+          "5. Avaliação e Resultados",
+          "5.1. Falhas de Estado e Unicidade de Chave e Nonce"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 11,
+        "words": 247,
+        "characters": 1758,
+        "headings": [
+          "5.2. Interrupções, Fallback e Confirmação Perdida"
+        ],
+        "figures": [
+          "Figura 4. Reutilizações de chave e nonce: totais de dez traços com oito leituras após a",
+          "Figura 4. Restauração de estado (continuação): (c) total de textos recuperados em dez"
+        ],
+        "tables": [],
+        "panels": [
+          "(a) Queda de energia modelada.                   (b) Rollback do armazenamento.",
+          "(c) Textos recuperados no rollback.                    (d) Escritas na fase estável."
+        ]
+      },
+      {
+        "page": 12,
+        "words": 208,
+        "characters": 1549,
+        "headings": [
+          "5.3. Custos e Deduplicação com TLS"
+        ],
+        "figures": [
+          "Figura 5. Protocolo experimental: (a) mediana de bytes em dez repetições; (b) total de",
+          "Figura 5. Protocolo experimental (continuação): (c) economia mediana de bytes; (d)"
+        ],
+        "tables": [],
+        "panels": [
+          "(a) Bytes por ponto de interrupção.           (b) Autenticações completas com PSK+KEM.",
+          "(c) Economia condicionada ao estado.           (d) Duplicação após confirmação perdida."
+        ]
+      },
+      {
+        "page": 13,
+        "words": 310,
+        "characters": 2360,
+        "headings": [],
+        "figures": [
+          "Figura 6. Piloto TLS: (a) mediana do handshake com contexto disponível; (b) tráfego"
+        ],
+        "tables": [
+          "Tabela 2. Configuração do piloto TLS. As perdas são aplicadas independente-"
+        ],
+        "panels": [
+          "(a) Handshake com contexto disponível.                 (b) Tráfego IPv4 por ensaio."
+        ]
+      },
+      {
+        "page": 14,
+        "words": 235,
+        "characters": 1690,
+        "headings": [],
+        "figures": [
+          "Figura 6. Piloto TLS (continuação): tempos com deduplicação ativa, calculados como",
+          "Figura 7. Piloto TLS: (a) mediana de retransmissões por ensaio com deduplicação"
+        ],
+        "tables": [],
+        "panels": [
+          "(c) Tempo até confirmação da leitura.               (d) Tempo de recuperação no host.",
+          "(a) Retransmissões TCP.                       (b) Efeitos duplicados no banco."
+        ]
+      },
+      {
+        "page": 15,
+        "words": 444,
+        "characters": 3072,
+        "headings": [
+          "6. Conclusão e Trabalhos Futuros"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 16,
+        "words": 362,
+        "characters": 2602,
+        "headings": [],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      }
+    ],
+    "main_sections": 6,
+    "introduction_contributions": 3,
+    "theory_main_subsections": 2,
+    "theory_subsubsections": 2,
+    "approach_subsections": 2,
+    "evaluation_subsections": 3,
+    "theory_figures": 2,
+    "approach_figures": 1,
+    "unique_figures": 7,
+    "caption_blocks": 10,
+    "tables": 2,
+    "numbered_equations": 5,
+    "evaluation_panels_by_figure": {
+      "4": 4,
+      "5": 4,
+      "6": 4,
+      "7": 2
+    },
+    "evaluation_panels": 14,
+    "references": 10,
+    "related_work_discussed_individually": 5,
+    "conclusion_paragraphs": 2,
+    "intro_words_extraction_approx": 614,
+    "abstract_words_extraction_approx": 166,
+    "resumo_words_extraction_approx": 194,
+    "pdf_not_modified": true
+  },
+  "aprovado": {
+    "path": "/home/tavares/Downloads/5904_Versao_final_de_artigo_aceito (2).pdf",
+    "sha256": "02136fd741e43030f502a6757d93ae7ffcc3183a5ad6eba8e384065c678ed31a",
+    "pages": [
+      {
+        "page": 1,
+        "words": 417,
+        "characters": 3072,
+        "headings": [
+          "1. Introdução"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 2,
+        "words": 474,
+        "characters": 3149,
+        "headings": [
+          "2. Fundamentação Teórica",
+          "2.1. Purificação de Entrelaçamento"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 3,
+        "words": 480,
+        "characters": 3189,
+        "headings": [
+          "2.1.1. Purificação em Canais de Bit-Flip"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 4,
+        "words": 313,
+        "characters": 2673,
+        "headings": [
+          "2.1.2. Purificação em Canais Werner"
+        ],
+        "figures": [],
+        "tables": [
+          "Tabela 1. Possíveis combinações de entrada e saída durante o processo de puri-"
+        ],
+        "panels": []
+      },
+      {
+        "page": 5,
+        "words": 401,
+        "characters": 3272,
+        "headings": [
+          "2.2. Agendamento de Purificação"
+        ],
+        "figures": [
+          "Figura 1. Estratégia de Agendamento de Purificação Simétrica."
+        ],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 6,
+        "words": 417,
+        "characters": 2942,
+        "headings": [],
+        "figures": [
+          "Figura 2. Estratégia de Agendamento de Purificação do tipo Pumping."
+        ],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 7,
+        "words": 487,
+        "characters": 3281,
+        "headings": [
+          "3. Trabalhos Relacionados"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 8,
+        "words": 532,
+        "characters": 3550,
+        "headings": [
+          "4. Estratégia de Agendamento de Purificação Híbrida",
+          "4.1. Modelagem do Problema"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 9,
+        "words": 322,
+        "characters": 2993,
+        "headings": [
+          "4.2. Estratégia de Agendamento Híbrida"
+        ],
+        "figures": [
+          "Figura 3. Estratégia de Agendamento de Purificação Híbrida."
+        ],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 10,
+        "words": 514,
+        "characters": 3429,
+        "headings": [
+          "5. Avaliação e Resultados",
+          "5.1. Sobredimensionamento de Rodadas de Purificação"
+        ],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      },
+      {
+        "page": 11,
+        "words": 379,
+        "characters": 9237,
+        "headings": [
+          "5.2. Subdimensionamento de Rodadas de Purificação",
+          "5.3. Resultados com a Estratégia de Agendamento Proposta"
+        ],
+        "figures": [
+          "Figura 4. Cenário com Sobredimensionamento considerando todos os canais"
+        ],
+        "tables": [],
+        "panels": [
+          "(a) Pumping - Canal Werner.                     (b) Simétrica - Canal Werner.",
+          "(c) Pumping - Canal bitflip.                       (d) Simétrica - Canal bitflip."
+        ]
+      },
+      {
+        "page": 12,
+        "words": 361,
+        "characters": 8849,
+        "headings": [
+          "6. Conclusão e Trabalhos Futuros"
+        ],
+        "figures": [
+          "Figura 5. Cenário de Subdimensionamento considerando todos os canais como"
+        ],
+        "tables": [],
+        "panels": [
+          "(a) Pumping - Canal Werner                      (b) Simétrica - Canal Werner",
+          "(c) Pumping - Canal misto                        (d) Simétrica - Canal misto"
+        ]
+      },
+      {
+        "page": 13,
+        "words": 312,
+        "characters": 9595,
+        "headings": [],
+        "figures": [
+          "Figura 6. Resultados obtidos com a estratégia proposta. Fidelidade Inicial (Eixo"
+        ],
+        "tables": [],
+        "panels": [
+          "(a) Proposta com pumping - Canal bitflip.        (b) Proposta com simétrica - Canal bitflip.",
+          "(c) Proposta com pumping - Canal Werner.       (d) Proposta com simétrica - Canal Werner.",
+          "(e) Proposta com pumping - Canal misto.          (f) Proposta com simétrica - Canal misto."
+        ]
+      },
+      {
+        "page": 14,
+        "words": 334,
+        "characters": 2417,
+        "headings": [],
+        "figures": [],
+        "tables": [],
+        "panels": []
+      }
+    ],
+    "main_sections": 6,
+    "introduction_contributions": 3,
+    "theory_main_subsections": 2,
+    "theory_subsubsections": 2,
+    "approach_subsections": 2,
+    "evaluation_subsections": 3,
+    "theory_figures": 2,
+    "approach_figures": 1,
+    "unique_figures": 6,
+    "caption_blocks": 6,
+    "tables": 1,
+    "numbered_equations": 8,
+    "evaluation_panels_by_figure": {
+      "4": 4,
+      "5": 4,
+      "6": 6
+    },
+    "evaluation_panels": 14,
+    "references": 10,
+    "related_work_discussed_individually": 4,
+    "conclusion_paragraphs": 2,
+    "intro_words_extraction_approx": 475,
+    "abstract_words_extraction_approx": 151,
+    "resumo_words_extraction_approx": 170,
+    "pdf_not_modified": true
+  }
+}

@@ -18,6 +18,12 @@ O Mininet-WiFi é o motor de rede obrigatório. Cada ciclo transmite mensagens e
 - execução obrigatória no Mininet-WiFi;
 - captura PCAP e exportação em JSON e CSV.
 
+Experimento adicional: **retomada PQC após reinício e rollback de estado**, com criptografia real, seis políticas de persistência/retomada e validação por processos no Mininet-WiFi. Consulte o [protocolo e os comandos](docs/experimento_retomada.md) e o [resultado da hipótese](docs/resultado_hipotese_retomada.md). A avaliação registra escritas e bytes; não estima energia do ESP32 para armazenamento persistente.
+
+A avaliação seguinte cobre interrupções durante o handshake, tentativas rejeitadas e confirmação de leitura perdida. Veja os [próximos passos e critérios de publicação](docs/proximos_passos_retomada.md) e o [resultado das transições](docs/resultado_transicoes_retomada.md).
+
+O backend adicional executa **TLS 1.3 nativo com X25519MLKEM768 e ML-DSA-44**, tickets autenticados restaurados pelo cliente e deduplicação durável de leituras. Consulte a [reprodução do runtime TLS](docs/tls_reproducao.md), o [resultado do piloto](docs/resultado_tls_piloto.md) e o [manuscrito para WQuNets](docs/artigo_retomada_wqunets.md). Esta avaliação não mede energia do ESP32. A [revisão dirigida](docs/revisao_retomada.md) delimita os antecedentes e a novidade ainda pendente.
+
 ## Estrutura
 
 ```text

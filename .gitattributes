@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preserve experimental CSV bytes and their recorded hashes.
+*.csv -text
