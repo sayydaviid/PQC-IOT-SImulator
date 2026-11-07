@@ -1,0 +1,23 @@
+{
+  "scope": "Postprocessing-only correction; no measurement, source configuration, raw capture or completed case changed",
+  "file": "pqc_iot_simulator/pqc_iot_sim/research/analysis/continuity.py",
+  "before_sha256": "58b9bbe766c536e89b8ed71e37a06ba1dff66f6521a5400b7893870182449c85",
+  "after_sha256": "e05d09a0e84cdc2cdf5096f3c56bff9b7c54e7b499d511129742c203250dd4ea",
+  "reason": "Client ephemeral port equals server port; filter the client IP selected by the initial SYN before parsing ClientHello",
+  "regression_cases": [
+    {
+      "phase": "core",
+      "case_id": "l0_b5_r1_a1_classical_resume_volatile_d0",
+      "capture_sha256": "c31dd8cd8dd0460a04ef1e9808be5adb2b9f3d3dc992e405c74a3f1dc39d9249",
+      "matched_clienthellos": 17
+    },
+    {
+      "phase": "core",
+      "case_id": "l0_b8_r1_a0_pqc_resume_volatile_d1",
+      "capture_sha256": "fac79352765bff978d64ceeb3920edf0b148c12c8d853d09a5c77fd70bba3109",
+      "matched_clienthellos": 9
+    }
+  ],
+  "phase_at_correction": "chains; continuity measurements already complete; continuity analysis not yet started",
+  "expected_executor_guard": "The original notebook kernel imported the old analysis during pytest before this fix. If its later analysis fails on these two captures, retain that failure and continue only postprocessing in a new kernel using the corrected reader. No measurement needs to be rerun or discarded."
+}

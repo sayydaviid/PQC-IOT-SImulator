@@ -10,7 +10,9 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from pqc_iot_simulator.pqc_iot_sim.research.tls.ticket_sizes import capture_hellos
+from pqc_iot_simulator.pqc_iot_sim.research.tls.context_capture import (
+    capture_client_hellos as capture_hellos,
+)
 
 
 def interval(values, seed=20261018, resamples=10000):
