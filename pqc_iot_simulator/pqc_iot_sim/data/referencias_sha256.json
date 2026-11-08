@@ -1,0 +1,14 @@
+{
+  "diagnostico_tickets_20261106.json": "28b71cc0685286b3f495a64625b038a02725f034ea434464a70df599a8327eb0",
+  "context/amortizacao_comparacoes_mesma_repeticao.csv": "516f37a2b27ab3e4bd5949513cdb63b9284255593669dd52f4c7eb38bcf0965c",
+  "context/amortizacao_custos_absolutos.csv": "f347f435c6c524ceab3a2b4f122c1db83f4a4c19bd56b2158b4aa706f942f85a",
+  "context/cadeias_comparacoes_mesma_repeticao.csv": "83caaf603fffd2d6d62ff8898fad74c9c5a596baf06b9baa8a2d2d41802a8db0",
+  "context/cadeias_custos_absolutos.csv": "7516fea7f11d8bbafe4094de64a0839d8c480bf46e5e734c686b04bd5ec6b189",
+  "context/efeito_retirada_raiz.csv": "08c690e23b62aa33b7ba4e96ea4d966a96d420257bf5f00230f216dc5281e52d",
+  "continuity/contrastes_pareados.csv": "9222a9a76ce9ad755e3e3e41fc8f371aae1719fee4faf6f235343beb1abfefb0",
+  "continuity/custos_migracao.csv": "a17d58ba541edcc4e1ec27736d898a60270916b913650619af7254a0e0ebe21a",
+  "continuity/ensaios.csv": "83db4e6626f0e3de2ffec00fefd0f3fa80b3f8df09ccc176bf4af0e3eb9a66ae",
+  "continuity/interacoes_falhas.csv": "b8e4e115d5b11ca56665f26bac40640278071a7820b08600e7910cece0b33a1f",
+  "continuity/medianas.csv": "417731c7786e66cd98100cc54f7c38e31bb9babf83b595dd667729d260bc9b01",
+  "continuity/preservacao_contexto.csv": "8dec79c5702a3539f0ef4998013ca7970d03df8b5e7af8be0fa28ca7b2345766"
+}

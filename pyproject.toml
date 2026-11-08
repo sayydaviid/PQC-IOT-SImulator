@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
-testpaths = ["pqc_iot_simulator/pqc_iot_sim/research/validation/checks"]
+testpaths = ["pqc_iot_simulator/pqc_iot_sim/validation/checks"]
 norecursedirs = ["results", "analysis_outputs", "output", ".git", "history"]
 
 [tool.ruff]
-extend-exclude = ["pqc_iot_simulator/pqc_iot_sim/research/history"]
+extend-exclude = ["pqc_iot_simulator/pqc_iot_sim/data"]

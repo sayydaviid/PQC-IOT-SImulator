@@ -9,21 +9,19 @@ from pathlib import Path
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from ..components.recovery import (
-    ClientHandshake,
-    Gateway,
-    Identity,
-    Observer,
-    Rejected,
-    Root,
-    SealedStore,
-    Sender,
-    b64,
-    derive,
-    encode,
-    handshake,
-    unb64,
-)
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import ClientHandshake
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Gateway
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Identity
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Observer
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Rejected
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Root
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import SealedStore
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Sender
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import b64
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import derive
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import encode
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import handshake
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import unb64
 
 FAULTS = ("clean_restart", "power_loss", "client_storage_rollback", "torn_checkpoint")
 

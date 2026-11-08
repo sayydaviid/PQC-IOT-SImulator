@@ -7,17 +7,28 @@ from copy import deepcopy
 from time import perf_counter
 from typing import Any
 
-from .crypto import CryptoManager, CryptoOperation, CryptoResult, SessionEstablishmentResult
-from .energy import Battery, BatteryDepletedError, CalibrationRecord, EnergyEvent, EnergyModel, PowerState
-from .protocol import (
-    CoAPConfig,
-    HTTPConfig,
-    MQTTConfig,
-    ProtocolModel,
-    RadioConfig,
-    RadioModel,
+from pqc_iot_simulator.pqc_iot_sim.components.crypto import CryptoManager
+from pqc_iot_simulator.pqc_iot_sim.components.crypto import CryptoOperation
+from pqc_iot_simulator.pqc_iot_sim.components.crypto import CryptoResult
+from pqc_iot_simulator.pqc_iot_sim.components.crypto import SessionEstablishmentResult
+from pqc_iot_simulator.pqc_iot_sim.components.energy import Battery
+from pqc_iot_simulator.pqc_iot_sim.components.energy import BatteryDepletedError
+from pqc_iot_simulator.pqc_iot_sim.components.energy import CalibrationRecord
+from pqc_iot_simulator.pqc_iot_sim.components.energy import EnergyEvent
+from pqc_iot_simulator.pqc_iot_sim.components.energy import EnergyModel
+from pqc_iot_simulator.pqc_iot_sim.components.energy import PowerState
+from pqc_iot_simulator.pqc_iot_sim.components.protocol import CoAPConfig
+from pqc_iot_simulator.pqc_iot_sim.components.protocol import HTTPConfig
+from pqc_iot_simulator.pqc_iot_sim.components.protocol import MQTTConfig
+from pqc_iot_simulator.pqc_iot_sim.components.protocol import ProtocolModel
+from pqc_iot_simulator.pqc_iot_sim.components.protocol import RadioConfig
+from pqc_iot_simulator.pqc_iot_sim.components.protocol import RadioModel
+from pqc_iot_simulator.pqc_iot_sim.components.workload import (
+    EnvironmentalWorkloadGenerator,
 )
-from .workload import EnvironmentalWorkloadGenerator, WorkloadConfig, serialize_payload, workload_from_mapping
+from pqc_iot_simulator.pqc_iot_sim.components.workload import WorkloadConfig
+from pqc_iot_simulator.pqc_iot_sim.components.workload import serialize_payload
+from pqc_iot_simulator.pqc_iot_sim.components.workload import workload_from_mapping
 
 
 REQUIRED_POWER_STATES = {
@@ -37,6 +48,7 @@ REQUIRED_POWER_STATES = {
 @dataclass(frozen=True)
 class BatteryProfile:
     """Descreve os parâmetros elétricos de uma bateria."""
+
     chemistry: str
     nominal_voltage_v: float
     capacity_mah: float
@@ -52,6 +64,7 @@ class BatteryProfile:
 @dataclass(frozen=True)
 class SensorProfile:
     """Descreve o sensor e seus parâmetros de consumo."""
+
     model: str
     sampling_rate_hz: float
     average_current_ua: float
@@ -62,6 +75,7 @@ class SensorProfile:
 @dataclass(frozen=True)
 class CryptoSessionPolicy:
     """Define quando uma sessão criptográfica deve ser renovada."""
+
     lifetime_seconds: float = 3600.0
     max_messages: int = 100
     rekey_on_restart: bool = True
@@ -83,7 +97,10 @@ class CryptoSessionPolicy:
             if parameters is None:
                 continue
             missing = {
-                "duration_seconds", "current_ma", "voltage_v", "source"
+                "duration_seconds",
+                "current_ma",
+                "voltage_v",
+                "source",
             }.difference(parameters)
             if missing:
                 raise ValueError(f"{name} is missing parameters: {sorted(missing)}")
@@ -94,6 +111,7 @@ class CryptoSessionPolicy:
 @dataclass
 class DeviceProfile:
     """Agrupa os parâmetros físicos e lógicos de um dispositivo IoT."""
+
     name: str
     board: str
     sensor: SensorProfile
@@ -115,7 +133,9 @@ class DeviceProfile:
             raise ValueError("device supply_voltage_v must be positive")
         missing = REQUIRED_POWER_STATES.difference(self.power_states)
         if missing:
-            raise ValueError(f"device profile is missing power states: {sorted(missing)}")
+            raise ValueError(
+                f"device profile is missing power states: {sorted(missing)}"
+            )
 
     @classmethod
     def from_mapping(cls, name: str, data: dict[str, Any]) -> "DeviceProfile":
@@ -164,7 +184,9 @@ class DeviceProfile:
                 capacity_mah=float(battery_data["capacity_mah"]),
                 usable_fraction=float(battery_data["usable_fraction"]),
                 regulator_efficiency=float(battery_data["regulator_efficiency"]),
-                initial_soc_percent=float(battery_data.get("initial_soc_percent", 100.0)),
+                initial_soc_percent=float(
+                    battery_data.get("initial_soc_percent", 100.0)
+                ),
                 minimum_voltage_v=float(battery_data.get("minimum_voltage_v", 3.2)),
                 maximum_voltage_v=float(battery_data.get("maximum_voltage_v", 4.2)),
                 source=str(battery_data.get("source", "user_configured")),
@@ -184,7 +206,9 @@ class DeviceProfile:
                 username=mqtt_data.get("username"),
                 password=mqtt_data.get("password"),
                 version=str(mqtt_data.get("version", "3.1.1")),
-                tcp_ack_policy=str(mqtt_data.get("tcp_ack_policy", "response_piggyback")),
+                tcp_ack_policy=str(
+                    mqtt_data.get("tcp_ack_policy", "response_piggyback")
+                ),
                 connection_close_policy=str(
                     mqtt_data.get(
                         "connection_close_policy",
@@ -209,9 +233,7 @@ class DeviceProfile:
                 content_type=str(
                     http_data.get("content_type", "application/octet-stream")
                 ),
-                response_status=str(
-                    http_data.get("response_status", "204 No Content")
-                ),
+                response_status=str(http_data.get("response_status", "204 No Content")),
                 tcp_ack_policy=str(
                     http_data.get("tcp_ack_policy", "response_piggyback")
                 ),
@@ -226,11 +248,17 @@ class DeviceProfile:
                 effective_bitrate_bps=float(radio_data["effective_bitrate_bps"]),
                 retry_model=str(radio_data.get("retry_model", "expected")),
                 max_retries=int(radio_data.get("max_retries", 4)),
-                association_duration_seconds=float(radio_data.get("association_duration_seconds", 0.25)),
-                mqtt_ack_wait_seconds=float(radio_data.get("mqtt_ack_wait_seconds", 0.05)),
+                association_duration_seconds=float(
+                    radio_data.get("association_duration_seconds", 0.25)
+                ),
+                mqtt_ack_wait_seconds=float(
+                    radio_data.get("mqtt_ack_wait_seconds", 0.05)
+                ),
                 handshake_round_trips=int(radio_data.get("handshake_round_trips", 1)),
                 wifi_reconnect_energy_model=str(
-                    radio_data.get("wifi_reconnect_energy_model", "incremental_direct_proxy")
+                    radio_data.get(
+                        "wifi_reconnect_energy_model", "incremental_direct_proxy"
+                    )
                 ),
                 wifi_reconnect_proxy_multiplier=float(
                     radio_data.get("wifi_reconnect_proxy_multiplier", 1.0)
@@ -252,6 +280,7 @@ class DeviceProfile:
 @dataclass
 class DeviceCycleResult:
     """Registra as métricas produzidas por um ciclo do dispositivo."""
+
     device_id: str
     crypto_mode: str
     sequence: int
@@ -367,6 +396,7 @@ class DeviceCycleResult:
 
 class PhysicalIoTDevice:
     """Simula o ciclo físico e energético de um dispositivo IoT."""
+
     def __init__(
         self,
         device_id: str,
@@ -459,9 +489,16 @@ class PhysicalIoTDevice:
             )
         if isinstance(calibration, dict) and "duration_seconds" in calibration:
             calibration_metadata = {"operation": operation}
-            calibration_metadata["energy_model"] = str(calibration.get("energy_model", "v_i_t"))
-            if calibration_metadata["energy_model"] == "direct_event" and "energy_j" in calibration:
-                calibration_metadata["calibrated_load_energy_j"] = float(calibration["energy_j"])
+            calibration_metadata["energy_model"] = str(
+                calibration.get("energy_model", "v_i_t")
+            )
+            if (
+                calibration_metadata["energy_model"] == "direct_event"
+                and "energy_j" in calibration
+            ):
+                calibration_metadata["calibrated_load_energy_j"] = float(
+                    calibration["energy_j"]
+                )
             return (
                 PowerState(
                     name=default_state_name,
@@ -495,7 +532,9 @@ class PhysicalIoTDevice:
         if model == "disabled_for_sensitivity":
             return (
                 PowerState(
-                    "wifi_association", default.voltage_v, 0.0,
+                    "wifi_association",
+                    default.voltage_v,
+                    0.0,
                     "configured_disabled_for_sensitivity",
                     metadata={
                         "energy_model": model,
@@ -522,7 +561,9 @@ class PhysicalIoTDevice:
         multiplier = self.profile.radio.wifi_reconnect_proxy_multiplier
         return (
             PowerState(
-                "wifi_reconnect_initialization_proxy", default.voltage_v, 0.0,
+                "wifi_reconnect_initialization_proxy",
+                default.voltage_v,
+                0.0,
                 source,
                 metadata={
                     "calibrated_load_energy_j": base_energy * multiplier,
@@ -585,8 +626,12 @@ class PhysicalIoTDevice:
                 # gateway/server energy from IoT battery autonomy.
                 operation.energy_j = None
                 continue
-            voltage = float(operation.metadata.get("voltage_v", default_state.voltage_v))
-            current = float(operation.metadata.get("current_ma", default_state.current_ma))
+            voltage = float(
+                operation.metadata.get("voltage_v", default_state.voltage_v)
+            )
+            current = float(
+                operation.metadata.get("current_ma", default_state.current_ma)
+            )
             source = operation.timing_source
             state = PowerState(
                 name="crypto_processing",
@@ -596,7 +641,11 @@ class PhysicalIoTDevice:
                 metadata={
                     "operation": operation.operation,
                     **(
-                        {"calibrated_load_energy_j": operation.metadata["calibrated_load_energy_j"]}
+                        {
+                            "calibrated_load_energy_j": operation.metadata[
+                                "calibrated_load_energy_j"
+                            ]
+                        }
                         if "calibrated_load_energy_j" in operation.metadata
                         else {}
                     ),
@@ -642,13 +691,19 @@ class PhysicalIoTDevice:
             current_ma=float(parameters["current_ma"]),
             source=str(parameters["source"]),
             metadata={
-                "parameter_status": str(parameters.get("parameter_status", "configured")),
+                "parameter_status": str(
+                    parameters.get("parameter_status", "configured")
+                ),
                 "scope": "iot_client_rtc_session_state",
             },
         )
         event = self._consume(
-            "crypto_processing", duration, component="rtc_state",
-            reason=state_name, started_at=started_at, override_state=state,
+            "crypto_processing",
+            duration,
+            component="rtc_state",
+            reason=state_name,
+            started_at=started_at,
+            override_state=state,
         )
         return duration, event.battery_energy_j, "configured_included"
 
@@ -703,15 +758,19 @@ class PhysicalIoTDevice:
         phase_waits: dict[str, float] = {}
         association_wait_seconds = 0.0
         session_preexisting_at_cycle_start = (
-            (self.device_id, self.destination) in self.crypto_manager.sessions
-        )
+            self.device_id,
+            self.destination,
+        ) in self.crypto_manager.sessions
         rtc_energy: dict[str, float | None] = {
-            "write": None, "restore": None, "validation": None,
+            "write": None,
+            "restore": None,
+            "validation": None,
         }
         rtc_status = {
             "write": (
                 "excluded_preexisting_state_creation_outside_measurement"
-                if session_preexisting_at_cycle_start else "not_applicable"
+                if session_preexisting_at_cycle_start
+                else "not_applicable"
             ),
             "restore": "not_applicable",
             "validation": "not_applicable",
@@ -719,7 +778,13 @@ class PhysicalIoTDevice:
 
         try:
             workload = self.profile.workload
-            self._consume("wake_up", workload.wake_up_seconds, component="cpu", reason="wake_up", started_at=cursor)
+            self._consume(
+                "wake_up",
+                workload.wake_up_seconds,
+                component="cpu",
+                reason="wake_up",
+                started_at=cursor,
+            )
             cursor += workload.wake_up_seconds
             active_duration += workload.wake_up_seconds
 
@@ -729,33 +794,54 @@ class PhysicalIoTDevice:
                     ("validation", self.profile.crypto_session.rtc_state_validation),
                 ):
                     seconds, energy, status_value = self._consume_optional_rtc_state(
-                        f"rtc_state_{short_name}", parameters, started_at=cursor,
+                        f"rtc_state_{short_name}",
+                        parameters,
+                        started_at=cursor,
                     )
                     cursor += seconds
                     active_duration += seconds
                     rtc_energy[short_name] = energy
                     rtc_status[short_name] = status_value
 
-            self._consume("sensor_measurement", workload.sensor_measurement_seconds, component="sensor", reason=f"{self.profile.sensor.model}_forced_measurement", started_at=cursor)
+            self._consume(
+                "sensor_measurement",
+                workload.sensor_measurement_seconds,
+                component="sensor",
+                reason=f"{self.profile.sensor.model}_forced_measurement",
+                started_at=cursor,
+            )
             cursor += workload.sensor_measurement_seconds
             active_duration += workload.sensor_measurement_seconds
 
-            payload = deepcopy(payload_override) if payload_override is not None else self.workload_generator.generate(
-                device_id=self.device_id,
-                sequence=self.sequence,
-                simulation_time_seconds=simulation_time_seconds,
-                battery_voltage_v=self._battery_voltage(),
-                battery_soc_percent=self.battery.state_of_charge_percent,
+            payload = (
+                deepcopy(payload_override)
+                if payload_override is not None
+                else self.workload_generator.generate(
+                    device_id=self.device_id,
+                    sequence=self.sequence,
+                    simulation_time_seconds=simulation_time_seconds,
+                    battery_voltage_v=self._battery_voltage(),
+                    battery_soc_percent=self.battery.state_of_charge_percent,
+                )
             )
-            self._consume("cpu_processing", workload.cpu_processing_seconds, component="cpu", reason="serialize_compact_json", started_at=cursor)
+            self._consume(
+                "cpu_processing",
+                workload.cpu_processing_seconds,
+                component="cpu",
+                reason="serialize_compact_json",
+                started_at=cursor,
+            )
             cursor += workload.cpu_processing_seconds
             active_duration += workload.cpu_processing_seconds
 
-            association_required = workload.reconnect_wifi_each_cycle or not self.wifi_connected
+            association_required = (
+                workload.reconnect_wifi_each_cycle or not self.wifi_connected
+            )
             if association_required:
                 association_state, association_seconds = self._wifi_reconnect_state()
                 self._consume(
-                    "wifi_association", association_seconds,
+                    "wifi_association",
+                    association_seconds,
                     component="wifi_association",
                     reason="wifi_reconnect_initialization_proxy",
                     started_at=cursor,
@@ -798,13 +884,19 @@ class PhysicalIoTDevice:
                 crypto_payload_bytes=message_result.protected_size_bytes,
                 handshake_flights=(
                     handshake.handshake_plan.wire_flights()
-                    if handshake and handshake.handshake_plan else ()
+                    if handshake and handshake.handshake_plan
+                    else ()
                 ),
                 include_tcp_connect=association_required,
                 include_mqtt_connect=association_required,
             )
-            loss = self._link_value(conditions, "packet_loss_percent", "loss_percent") or 0.0
-            bandwidth_mbps = self._link_value(conditions, "bandwidth_mbps", "configured_bandwidth_mbps")
+            loss = (
+                self._link_value(conditions, "packet_loss_percent", "loss_percent")
+                or 0.0
+            )
+            bandwidth_mbps = self._link_value(
+                conditions, "bandwidth_mbps", "configured_bandwidth_mbps"
+            )
             bitrate = self.profile.radio.effective_bitrate_bps
             if bandwidth_mbps is not None and bandwidth_mbps > 0:
                 bitrate = min(bitrate, bandwidth_mbps * 1_000_000.0)
@@ -818,16 +910,19 @@ class PhysicalIoTDevice:
                 include_handshake_wait=handshake is not None,
             )
             handshake_iot = [
-                operation for operation in (handshake.operations if handshake else [])
+                operation
+                for operation in (handshake.operations if handshake else [])
                 if operation.participant in {"source", "iot_client"}
             ]
             client_flight_names = {"x25519_keygen", "ml_kem_encaps"}
             client_flight_ops = [
-                operation for operation in handshake_iot
+                operation
+                for operation in handshake_iot
                 if operation.operation in client_flight_names
             ]
             post_response_ops = [
-                operation for operation in handshake_iot
+                operation
+                for operation in handshake_iot
                 if operation.operation not in client_flight_names
             ]
             handshake_energy = 0.0
@@ -837,9 +932,13 @@ class PhysicalIoTDevice:
             for wire in transfer.wire_messages:
                 logical_type = str(wire["logical_type"])
                 wire_metadata = dict(wire.get("metadata") or {})
-                if logical_type == "client_key_establishment" and not client_ops_consumed:
+                if (
+                    logical_type == "client_key_establishment"
+                    and not client_ops_consumed
+                ):
                     seconds, energy = self._consume_crypto_operations(
-                        client_flight_ops, started_at=cursor,
+                        client_flight_ops,
+                        started_at=cursor,
                         reason_prefix="crypto_handshake_client_flight",
                     )
                     cursor += seconds
@@ -851,7 +950,8 @@ class PhysicalIoTDevice:
                     and not post_ops_consumed
                 ):
                     seconds, energy = self._consume_crypto_operations(
-                        post_response_ops, started_at=cursor,
+                        post_response_ops,
+                        started_at=cursor,
                         reason_prefix="crypto_handshake_post_response",
                     )
                     cursor += seconds
@@ -875,7 +975,8 @@ class PhysicalIoTDevice:
                     and not message_ops_consumed
                 ):
                     seconds, energy = self._consume_crypto_operations(
-                        message_result.operations, started_at=cursor,
+                        message_result.operations,
+                        started_at=cursor,
                         reason_prefix="crypto_message",
                     )
                     cursor += seconds
@@ -894,26 +995,35 @@ class PhysicalIoTDevice:
                     if wait_seconds:
                         wait_state = (
                             "mqtt_wait_ack"
-                            if wait_phase in {
-                                "mqtt_publish", "coap_response", "http_response"
-                            }
+                            if wait_phase
+                            in {"mqtt_publish", "coap_response", "http_response"}
                             else "wifi_rx"
                         )
                         self._consume(
-                            wait_state, wait_seconds, component="rx",
+                            wait_state,
+                            wait_seconds,
+                            component="rx",
                             reason=f"{wait_phase}_response_wait",
                             started_at=cursor,
-                            metadata={"rtt_source": "network_conditions", "rtt_ms": rtt_ms},
+                            metadata={
+                                "rtt_source": "network_conditions",
+                                "rtt_ms": rtt_ms,
+                            },
                         )
                         cursor += wait_seconds
                         active_duration += wait_seconds
 
                 wire_seconds = float(wire["effective_wire_bytes"]) * 8.0 / bitrate
-                state_name = "wifi_tx" if wire["direction"] == "iot_to_server" else "wifi_rx"
+                state_name = (
+                    "wifi_tx" if wire["direction"] == "iot_to_server" else "wifi_rx"
+                )
                 component = "tx" if state_name == "wifi_tx" else "rx"
                 self._consume(
-                    state_name, wire_seconds, component=component,
-                    reason=f"wire_message:{logical_type}", started_at=cursor,
+                    state_name,
+                    wire_seconds,
+                    component=component,
+                    reason=f"wire_message:{logical_type}",
+                    started_at=cursor,
                     metadata={
                         "wire_message_sequence": wire["sequence"],
                         "protocol": wire["protocol"],
@@ -941,7 +1051,13 @@ class PhysicalIoTDevice:
             deadline_missed = active_duration > interval
             sleep_duration = max(0.0, interval - active_duration)
             if sleep_duration:
-                self._consume("deep_sleep", sleep_duration, component="sleep", reason="cycle_deep_sleep", started_at=cursor)
+                self._consume(
+                    "deep_sleep",
+                    sleep_duration,
+                    component="sleep",
+                    reason="cycle_deep_sleep",
+                    started_at=cursor,
+                )
             self._woke_from_deep_sleep = sleep_duration > 0
             if workload.reconnect_wifi_each_cycle:
                 self.wifi_connected = False
@@ -958,19 +1074,39 @@ class PhysicalIoTDevice:
         new_events = self.energy_model.events_since(event_index)
         component_energy = self.energy_model.energy_by_component(new_events)
         total_iot = battery_before - self.battery.remaining_j
-        elapsed_for_average = max(simulation_time_seconds + max(interval, active_duration), 1e-12)
+        elapsed_for_average = max(
+            simulation_time_seconds + max(interval, active_duration), 1e-12
+        )
         average_power_w = self.battery.consumed_j / elapsed_for_average
-        lifetime_seconds = self.battery.estimated_runtime(average_power_w) if average_power_w > 0 else None
-        total_radio = sum(component_energy.get(name, 0.0) for name in ("wifi_association", "tx", "rx"))
+        lifetime_seconds = (
+            self.battery.estimated_runtime(average_power_w)
+            if average_power_w > 0
+            else None
+        )
+        total_radio = sum(
+            component_energy.get(name, 0.0) for name in ("wifi_association", "tx", "rx")
+        )
         energy_crypto = component_energy.get("crypto", 0.0)
-        calibration_status = message_result.calibration_status if message_result else "required"
-        confidence = message_result.energy_confidence if message_result else "provisional"
+        calibration_status = (
+            message_result.calibration_status if message_result else "required"
+        )
+        confidence = (
+            message_result.energy_confidence if message_result else "provisional"
+        )
         if handshake and handshake.calibration_status == "required":
             calibration_status = "required"
             confidence = "provisional"
         session = self.crypto_manager.sessions.get((self.device_id, self.destination))
-        application_payload_bytes = sizes.application_payload_bytes if sizes else len(serialize_payload(payload)) if payload else 0
-        operations = (handshake.operations if handshake else []) + (message_result.operations if message_result else [])
+        application_payload_bytes = (
+            sizes.application_payload_bytes
+            if sizes
+            else len(serialize_payload(payload))
+            if payload
+            else 0
+        )
+        operations = (handshake.operations if handshake else []) + (
+            message_result.operations if message_result else []
+        )
         result = DeviceCycleResult(
             device_id=self.device_id,
             crypto_mode=self.crypto_manager.mode,
@@ -1002,8 +1138,12 @@ class PhysicalIoTDevice:
             battery_remaining_j=self.battery.remaining_j,
             battery_remaining_wh=self.battery.remaining_wh,
             battery_soc_percent=self.battery.state_of_charge_percent,
-            estimated_battery_lifetime_hours=lifetime_seconds / 3600.0 if lifetime_seconds is not None else None,
-            estimated_battery_lifetime_days=lifetime_seconds / 86_400.0 if lifetime_seconds is not None else None,
+            estimated_battery_lifetime_hours=lifetime_seconds / 3600.0
+            if lifetime_seconds is not None
+            else None,
+            estimated_battery_lifetime_days=lifetime_seconds / 86_400.0
+            if lifetime_seconds is not None
+            else None,
             application_payload_bytes=application_payload_bytes,
             protected_message_bytes=sizes.crypto_payload_bytes if sizes else 0,
             crypto_payload_bytes=sizes.crypto_payload_bytes if sizes else 0,
@@ -1016,7 +1156,9 @@ class PhysicalIoTDevice:
             mqtt_publish_bytes=sizes.mqtt_publish_bytes if sizes else 0,
             mqtt_ack_bytes=sizes.mqtt_ack_bytes if sizes else 0,
             mqtt_bytes=sizes.mqtt_bytes if sizes else 0,
-            application_protocol=sizes.protocol_name if sizes else self.profile.protocol,
+            application_protocol=sizes.protocol_name
+            if sizes
+            else self.profile.protocol,
             protocol_request_bytes=sizes.protocol_request_bytes if sizes else 0,
             protocol_response_bytes=sizes.protocol_response_bytes if sizes else 0,
             application_protocol_bytes=(
@@ -1040,16 +1182,28 @@ class PhysicalIoTDevice:
             energy_confidence=confidence,
             calibration_status=calibration_status,
             energy_per_delivered_message_j=total_iot if delivered else None,
-            energy_per_application_byte_j=total_iot / application_payload_bytes if application_payload_bytes else None,
+            energy_per_application_byte_j=total_iot / application_payload_bytes
+            if application_payload_bytes
+            else None,
             handshake_energy_in_measurement_j=handshake_energy if handshake else 0.0,
-            amortized_handshake_energy_j=self.handshake_energy_j / max(self.messages_attempted, 1),
-            crypto_energy_percent=100.0 * energy_crypto / total_iot if total_iot else 0.0,
-            communication_energy_percent=100.0 * total_radio / total_iot if total_iot else 0.0,
+            amortized_handshake_energy_j=self.handshake_energy_j
+            / max(self.messages_attempted, 1),
+            crypto_energy_percent=100.0 * energy_crypto / total_iot
+            if total_iot
+            else 0.0,
+            communication_energy_percent=100.0 * total_radio / total_iot
+            if total_iot
+            else 0.0,
             radio_energy_percent=100.0 * total_radio / total_iot if total_iot else 0.0,
             link_latency_ms=self._link_value(conditions, "latency_ms"),
             link_rtt_ms=self._link_value(conditions, "rtt_avg_ms"),
-            link_packet_loss_percent=self._link_value(conditions, "packet_loss_percent", "loss_percent") or 0.0,
-            effective_bitrate_bps=transfer.effective_bitrate_bps if transfer else self.profile.radio.effective_bitrate_bps,
+            link_packet_loss_percent=self._link_value(
+                conditions, "packet_loss_percent", "loss_percent"
+            )
+            or 0.0,
+            effective_bitrate_bps=transfer.effective_bitrate_bps
+            if transfer
+            else self.profile.radio.effective_bitrate_bps,
             association_wait_seconds=association_wait_seconds,
             tcp_connect_wait_seconds=phase_waits.get("tcp_connect", 0.0),
             crypto_handshake_wait_seconds=phase_waits.get("crypto_handshake", 0.0),
@@ -1059,9 +1213,7 @@ class PhysicalIoTDevice:
                 phase_waits.get(name, 0.0)
                 for name in ("mqtt_publish", "coap_response", "http_response")
             ),
-            tcp_ack_policy=(
-                sizes.tcp_ack_policy if sizes else "not_available"
-            ),
+            tcp_ack_policy=(sizes.tcp_ack_policy if sizes else "not_available"),
             connection_close_policy=(
                 sizes.connection_close_policy if sizes else "not_available"
             ),
@@ -1087,7 +1239,8 @@ class PhysicalIoTDevice:
             wire_messages=(transfer.wire_messages if transfer else []),
             handshake_plan=(
                 handshake.handshake_plan.to_dict()
-                if handshake and handshake.handshake_plan else None
+                if handshake and handshake.handshake_plan
+                else None
             ),
             crypto_energy_cost=energy_crypto,
             total_energy_consumed=total_iot,

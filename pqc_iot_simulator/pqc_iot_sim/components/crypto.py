@@ -13,8 +13,8 @@ import os
 import time
 import uuid
 
-from .energy import CalibrationRecord
-from .logger import Logger
+from pqc_iot_simulator.pqc_iot_sim.components.energy import CalibrationRecord
+from pqc_iot_simulator.pqc_iot_sim.components.logger import Logger
 
 
 ALGORITHM_WIRE_SIZES: dict[str, dict[str, int]] = {
@@ -39,6 +39,7 @@ HYSECURE_FULL_HANDSHAKE = {
 @dataclass
 class ParticipantOperation:
     """Representa uma operação criptográfica executada por um participante."""
+
     participant: str
     operation: str
     algorithm: str
@@ -50,6 +51,7 @@ class ParticipantOperation:
 @dataclass
 class HandshakeMessage:
     """Representa uma mensagem lógica trocada durante o handshake."""
+
     logical_type: str
     materials: list[dict[str, Any]]
     cryptographic_material_bytes: int
@@ -68,6 +70,7 @@ class HandshakeMessage:
 @dataclass
 class HandshakeFlight:
     """Agrupa mensagens enviadas na mesma etapa do handshake."""
+
     flight_number: int
     origin: str
     destination: str
@@ -101,6 +104,7 @@ class HandshakeFlight:
 @dataclass
 class HandshakePlan:
     """Descreve mensagens, etapas e tamanhos de um handshake."""
+
     model_version: str
     mode: str
     authentication_model: str
@@ -152,6 +156,7 @@ class HandshakePlan:
 @dataclass
 class CryptoOperation:
     """Registra uma operação criptográfica e seu custo."""
+
     operation: str
     participant: str
     algorithm: str
@@ -175,6 +180,7 @@ class CryptoOperation:
 @dataclass
 class CryptoSession:
     """Mantém o estado de uma sessão criptográfica reutilizável."""
+
     session_id: str
     source: str
     destination: str
@@ -198,6 +204,7 @@ class CryptoSession:
 @dataclass
 class SessionEstablishmentResult:
     """Reúne o resultado da criação de uma sessão criptográfica."""
+
     session: CryptoSession
     handshake_bytes: int
     handshake_tx_bytes: int
@@ -223,6 +230,7 @@ class SessionEstablishmentResult:
 @dataclass
 class CryptoResult:
     """Reúne o resultado da proteção criptográfica de uma mensagem."""
+
     mode: str
     backend: str
     algorithm: str
@@ -427,7 +435,9 @@ class CryptoManager:
         if session is None or session.closed or device_restarted:
             return True
         age = simulation_time_seconds - session.established_at_seconds
-        return age >= session.lifetime_seconds or session.messages >= session.max_messages
+        return (
+            age >= session.lifetime_seconds or session.messages >= session.max_messages
+        )
 
     def establish_session(
         self,
@@ -479,8 +489,11 @@ class CryptoManager:
             materials.update(pqc_materials)
             if not pqc_materials:
                 materials["ml_kem_ciphertext"] = self._analytical_bytes(
-                    source, destination, simulation_time_seconds,
-                    "ml-kem-ciphertext", 768,
+                    source,
+                    destination,
+                    simulation_time_seconds,
+                    "ml-kem-ciphertext",
+                    768,
                 )
 
         transcript_fields = self._transcript_fields(source, destination, materials)
@@ -494,8 +507,15 @@ class CryptoManager:
             )
         )
         for operation in operations:
-            if operation.operation in {"ed25519_sign", "ed25519_verify", "ml_dsa_sign", "ml_dsa_verify"}:
-                operation.metadata["authenticated_transcript_hash"] = transcript_hash.hex()
+            if operation.operation in {
+                "ed25519_sign",
+                "ed25519_verify",
+                "ml_dsa_sign",
+                "ml_dsa_verify",
+            }:
+                operation.metadata["authenticated_transcript_hash"] = (
+                    transcript_hash.hex()
+                )
                 operation.input_bytes = len(transcript_hash)
 
         encoded_secrets = b"".join(
@@ -504,20 +524,30 @@ class CryptoManager:
         salt = hashlib.sha256(
             (HANDSHAKE_MODEL_VERSION + "|" + source + "|" + destination).encode("utf-8")
         ).digest()
-        info = HKDF_DOMAIN_LABEL + transcript_hash + self.session_context.encode("utf-8")
+        info = (
+            HKDF_DOMAIN_LABEL + transcript_hash + self.session_context.encode("utf-8")
+        )
         prk = self._hkdf_extract(salt, encoded_secrets)
         session_key = self._hkdf_expand(prk, info, 32)
         for participant, host_id in (("iot_client", source), ("server", destination)):
             operations.extend(
                 [
                     self._operation(
-                        "hkdf_extract", participant, "HKDF-Extract/HMAC-SHA-256",
-                        len(encoded_secrets), len(prk), host_id=host_id,
+                        "hkdf_extract",
+                        participant,
+                        "HKDF-Extract/HMAC-SHA-256",
+                        len(encoded_secrets),
+                        len(prk),
+                        host_id=host_id,
                         callback=lambda: self._hkdf_extract(salt, encoded_secrets),
                     ),
                     self._operation(
-                        "hkdf_expand", participant, "HKDF-Expand/HMAC-SHA-256",
-                        len(info), len(session_key), host_id=host_id,
+                        "hkdf_expand",
+                        participant,
+                        "HKDF-Expand/HMAC-SHA-256",
+                        len(info),
+                        len(session_key),
+                        host_id=host_id,
                         callback=lambda: self._hkdf_expand(prk, info, 32),
                     ),
                 ]
@@ -527,11 +557,13 @@ class CryptoManager:
             source, destination, transcript_fields, transcript_hash, operations
         )
         tx_bytes = sum(
-            flight.message.payload_bytes for flight in plan.flights
+            flight.message.payload_bytes
+            for flight in plan.flights
             if flight.direction == "iot_to_server"
         )
         rx_bytes = sum(
-            flight.message.payload_bytes for flight in plan.flights
+            flight.message.payload_bytes
+            for flight in plan.flights
             if flight.direction == "server_to_iot"
         )
 
@@ -551,7 +583,9 @@ class CryptoManager:
             handshake_plan=plan,
             transcript_hash=transcript_hash,
             nonce_prefix=hashlib.sha256(
-                (source + "|" + destination + "|" + transcript_hash.hex()).encode("utf-8")
+                (source + "|" + destination + "|" + transcript_hash.hex()).encode(
+                    "utf-8"
+                )
             ).digest()[:8],
         )
         self.sessions[(source, destination)] = session
@@ -641,7 +675,9 @@ class CryptoManager:
                 len(ciphertext),
                 len(message),
                 host_id=destination,
-                callback=lambda: aes.decrypt(nonce, ciphertext, None) if aes is not None else None,
+                callback=lambda: (
+                    aes.decrypt(nonce, ciphertext, None) if aes is not None else None
+                ),
             )
         else:
             # No substitute cipher is executed in analytical mode.  Only the
@@ -684,7 +720,8 @@ class CryptoManager:
             "protection_size_model_applied": True,
             "ciphertext": (
                 base64.b64encode(ciphertext).decode("ascii")
-                if ciphertext is not None else None
+                if ciphertext is not None
+                else None
             ),
             "nonce": base64.b64encode(nonce).decode("ascii"),
             "original_size_bytes": len(message),
@@ -751,7 +788,9 @@ class CryptoManager:
         )
         result.handshake_size_bytes = establishment.handshake_bytes
         result.operations = establishment.operations + result.operations
-        result.operation_time_seconds = sum(op.duration_seconds for op in result.operations)
+        result.operation_time_seconds = sum(
+            op.duration_seconds for op in result.operations
+        )
         result.protected_size_bytes += establishment.handshake_bytes
         result.overhead_bytes = result.protected_size_bytes - result.original_size_bytes
         result.payload["protected_size_bytes"] = result.protected_size_bytes
@@ -772,7 +811,16 @@ class CryptoManager:
                 ("x25519_exchange", "iot_client", "X25519", 32, 32, source),
                 ("x25519_exchange", "server", "X25519", 32, 32, destination),
             ]:
-                operations.append(self._operation(name, participant, algorithm, input_size, output_size, host_id=host_id))
+                operations.append(
+                    self._operation(
+                        name,
+                        participant,
+                        algorithm,
+                        input_size,
+                        output_size,
+                        host_id=host_id,
+                    )
+                )
             return os.urandom(32), operations, {}
 
         from cryptography.hazmat.primitives.asymmetric import x25519
@@ -780,20 +828,70 @@ class CryptoManager:
 
         source_key: dict[str, Any] = {}
         destination_key: dict[str, Any] = {}
-        operations.append(self._operation("x25519_keygen", "iot_client", "X25519", 0, 32, host_id=source, callback=lambda: source_key.setdefault("key", x25519.X25519PrivateKey.generate())))
-        operations.append(self._operation("x25519_keygen", "server", "X25519", 0, 32, host_id=destination, callback=lambda: destination_key.setdefault("key", x25519.X25519PrivateKey.generate())))
+        operations.append(
+            self._operation(
+                "x25519_keygen",
+                "iot_client",
+                "X25519",
+                0,
+                32,
+                host_id=source,
+                callback=lambda: source_key.setdefault(
+                    "key", x25519.X25519PrivateKey.generate()
+                ),
+            )
+        )
+        operations.append(
+            self._operation(
+                "x25519_keygen",
+                "server",
+                "X25519",
+                0,
+                32,
+                host_id=destination,
+                callback=lambda: destination_key.setdefault(
+                    "key", x25519.X25519PrivateKey.generate()
+                ),
+            )
+        )
         shared: dict[str, bytes] = {}
-        operations.append(self._operation("x25519_exchange", "iot_client", "X25519", 32, 32, host_id=source, callback=lambda: shared.setdefault("source", source_key["key"].exchange(destination_key["key"].public_key()))))
-        operations.append(self._operation("x25519_exchange", "server", "X25519", 32, 32, host_id=destination, callback=lambda: shared.setdefault("destination", destination_key["key"].exchange(source_key["key"].public_key()))))
+        operations.append(
+            self._operation(
+                "x25519_exchange",
+                "iot_client",
+                "X25519",
+                32,
+                32,
+                host_id=source,
+                callback=lambda: shared.setdefault(
+                    "source",
+                    source_key["key"].exchange(destination_key["key"].public_key()),
+                ),
+            )
+        )
+        operations.append(
+            self._operation(
+                "x25519_exchange",
+                "server",
+                "X25519",
+                32,
+                32,
+                host_id=destination,
+                callback=lambda: shared.setdefault(
+                    "destination",
+                    destination_key["key"].exchange(source_key["key"].public_key()),
+                ),
+            )
+        )
         if shared["source"] != shared["destination"]:
             raise RuntimeError("X25519 participants derived different secrets")
         materials = {
-            "x25519_client_public": source_key["key"].public_key().public_bytes(
-                Encoding.Raw, PublicFormat.Raw
-            ),
-            "x25519_server_public": destination_key["key"].public_key().public_bytes(
-                Encoding.Raw, PublicFormat.Raw
-            ),
+            "x25519_client_public": source_key["key"]
+            .public_key()
+            .public_bytes(Encoding.Raw, PublicFormat.Raw),
+            "x25519_server_public": destination_key["key"]
+            .public_key()
+            .public_bytes(Encoding.Raw, PublicFormat.Raw),
         }
         return shared["source"], operations, materials
 
@@ -804,10 +902,26 @@ class CryptoManager:
         operations: list[CryptoOperation] = []
         kem_sizes = self._algorithm_sizes(self.kem)
         if self.timing_mode in {"target_profile", "analytical_size_only"}:
-            operations.extend([
-                self._operation("ml_kem_encaps", "iot_client", self.kem, kem_sizes["public_key"], kem_sizes["ciphertext"], host_id=source),
-                self._operation("ml_kem_decaps", "server", self.kem, kem_sizes["ciphertext"], 32, host_id=destination),
-            ])
+            operations.extend(
+                [
+                    self._operation(
+                        "ml_kem_encaps",
+                        "iot_client",
+                        self.kem,
+                        kem_sizes["public_key"],
+                        kem_sizes["ciphertext"],
+                        host_id=source,
+                    ),
+                    self._operation(
+                        "ml_kem_decaps",
+                        "server",
+                        self.kem,
+                        kem_sizes["ciphertext"],
+                        32,
+                        host_id=destination,
+                    ),
+                ]
+            )
             return os.urandom(32), operations, {}
 
         oqs = self._import_oqs()
@@ -829,8 +943,30 @@ class CryptoManager:
             values["source_secret"] = secret
             return ciphertext
 
-        operations.append(self._operation("ml_kem_encaps", "iot_client", self.kem, len(values["public"]), kem_sizes["ciphertext"], host_id=source, callback=encapsulate))
-        operations.append(self._operation("ml_kem_decaps", "server", self.kem, len(values["ciphertext"]), 32, host_id=destination, callback=lambda: values.setdefault("destination_secret", server.decap_secret(values["ciphertext"]))))
+        operations.append(
+            self._operation(
+                "ml_kem_encaps",
+                "iot_client",
+                self.kem,
+                len(values["public"]),
+                kem_sizes["ciphertext"],
+                host_id=source,
+                callback=encapsulate,
+            )
+        )
+        operations.append(
+            self._operation(
+                "ml_kem_decaps",
+                "server",
+                self.kem,
+                len(values["ciphertext"]),
+                32,
+                host_id=destination,
+                callback=lambda: values.setdefault(
+                    "destination_secret", server.decap_secret(values["ciphertext"])
+                ),
+            )
+        )
         if values["source_secret"] != values["destination_secret"]:
             raise RuntimeError("ML-KEM participants derived different secrets")
         return (
@@ -846,45 +982,112 @@ class CryptoManager:
         operations: list[CryptoOperation] = []
         if self.timing_mode in {"target_profile", "analytical_size_only"}:
             if self.mode in {"classical", "hybrid"} and self.use_classical_signature:
-                operations.extend([
-                    self._operation("ed25519_sign", "server", "Ed25519", 32, 64, host_id=destination),
-                    self._operation("ed25519_verify", "iot_client", "Ed25519", 32, 0, host_id=source),
-                ])
+                operations.extend(
+                    [
+                        self._operation(
+                            "ed25519_sign",
+                            "server",
+                            "Ed25519",
+                            32,
+                            64,
+                            host_id=destination,
+                        ),
+                        self._operation(
+                            "ed25519_verify",
+                            "iot_client",
+                            "Ed25519",
+                            32,
+                            0,
+                            host_id=source,
+                        ),
+                    ]
+                )
             if self.mode in {"pqc", "hybrid"} and self.use_pqc_signature:
-                operations.extend([
-                    self._operation("ml_dsa_sign", "server", self.pqc_signature, 32, 2420, host_id=destination),
-                    self._operation("ml_dsa_verify", "iot_client", self.pqc_signature, 32, 0, host_id=source),
-                ])
+                operations.extend(
+                    [
+                        self._operation(
+                            "ml_dsa_sign",
+                            "server",
+                            self.pqc_signature,
+                            32,
+                            2420,
+                            host_id=destination,
+                        ),
+                        self._operation(
+                            "ml_dsa_verify",
+                            "iot_client",
+                            self.pqc_signature,
+                            32,
+                            0,
+                            host_id=source,
+                        ),
+                    ]
+                )
             return operations
 
         if self.mode in {"classical", "hybrid"} and self.use_classical_signature:
             from cryptography.hazmat.primitives.asymmetric import ed25519
+
             signer = ed25519.Ed25519PrivateKey.generate()  # provisioned outside timing
             signature: dict[str, bytes] = {}
-            operations.extend([
-                self._operation("ed25519_sign", "server", "Ed25519", 32, 64,
-                                host_id=destination,
-                                callback=lambda: signature.setdefault("value", signer.sign(transcript_hash))),
-                self._operation("ed25519_verify", "iot_client", "Ed25519", 32, 0,
-                                host_id=source,
-                                callback=lambda: signer.public_key().verify(signature["value"], transcript_hash)),
-            ])
+            operations.extend(
+                [
+                    self._operation(
+                        "ed25519_sign",
+                        "server",
+                        "Ed25519",
+                        32,
+                        64,
+                        host_id=destination,
+                        callback=lambda: signature.setdefault(
+                            "value", signer.sign(transcript_hash)
+                        ),
+                    ),
+                    self._operation(
+                        "ed25519_verify",
+                        "iot_client",
+                        "Ed25519",
+                        32,
+                        0,
+                        host_id=source,
+                        callback=lambda: signer.public_key().verify(
+                            signature["value"], transcript_hash
+                        ),
+                    ),
+                ]
+            )
         if self.mode in {"pqc", "hybrid"} and self.use_pqc_signature:
             oqs = self._import_oqs()
             signer = oqs.Signature(self.pqc_signature)
             public = signer.generate_keypair()  # provisioned outside timing
             signature: dict[str, bytes] = {}
-            operations.extend([
-                self._operation("ml_dsa_sign", "server", self.pqc_signature, 32, 2420,
-                                host_id=destination,
-                                callback=lambda: signature.setdefault("value", signer.sign(transcript_hash))),
-                self._operation("ml_dsa_verify", "iot_client", self.pqc_signature, 32, 0,
-                                host_id=source,
-                                callback=lambda: self._require_true(
-                                    signer.verify(transcript_hash, signature["value"], public),
-                                    "ML-DSA transcript signature verification failed",
-                                )),
-            ])
+            operations.extend(
+                [
+                    self._operation(
+                        "ml_dsa_sign",
+                        "server",
+                        self.pqc_signature,
+                        32,
+                        2420,
+                        host_id=destination,
+                        callback=lambda: signature.setdefault(
+                            "value", signer.sign(transcript_hash)
+                        ),
+                    ),
+                    self._operation(
+                        "ml_dsa_verify",
+                        "iot_client",
+                        self.pqc_signature,
+                        32,
+                        0,
+                        host_id=source,
+                        callback=lambda: self._require_true(
+                            signer.verify(transcript_hash, signature["value"], public),
+                            "ML-DSA transcript signature verification failed",
+                        ),
+                    ),
+                ]
+            )
         return operations
 
     @staticmethod
@@ -915,8 +1118,11 @@ class CryptoManager:
 
     @staticmethod
     def _analytical_bytes(
-        source: str, destination: str, simulation_time_seconds: float,
-        label: str, length: int,
+        source: str,
+        destination: str,
+        simulation_time_seconds: float,
+        label: str,
+        length: int,
     ) -> bytes:
         """Obtém o tamanho analítico de uma mensagem de handshake."""
         seed = (
@@ -931,12 +1137,18 @@ class CryptoManager:
         """Monta os campos autenticados do transcript do handshake."""
         algorithms = {
             "key_agreement": (
-                ["X25519", self.kem] if self.mode == "hybrid"
-                else ["X25519"] if self.mode == "classical" else [self.kem]
+                ["X25519", self.kem]
+                if self.mode == "hybrid"
+                else ["X25519"]
+                if self.mode == "classical"
+                else [self.kem]
             ),
             "authentication": (
-                ["Ed25519", self.pqc_signature] if self.mode == "hybrid"
-                else ["Ed25519"] if self.mode == "classical" else [self.pqc_signature]
+                ["Ed25519", self.pqc_signature]
+                if self.mode == "hybrid"
+                else ["Ed25519"]
+                if self.mode == "classical"
+                else [self.pqc_signature]
             ),
             "kdf": "HKDF-SHA-256",
             "record_protection": "AES-256-GCM",
@@ -949,28 +1161,34 @@ class CryptoManager:
             "algorithms": algorithms,
             "x25519_client_public_b64": (
                 base64.b64encode(materials["x25519_client_public"]).decode("ascii")
-                if "x25519_client_public" in materials else None
+                if "x25519_client_public" in materials
+                else None
             ),
             "x25519_server_public_b64": (
                 base64.b64encode(materials["x25519_server_public"]).decode("ascii")
-                if "x25519_server_public" in materials else None
+                if "x25519_server_public" in materials
+                else None
             ),
             "ml_kem_ciphertext_b64": (
                 base64.b64encode(materials["ml_kem_ciphertext"]).decode("ascii")
-                if "ml_kem_ciphertext" in materials else None
+                if "ml_kem_ciphertext" in materials
+                else None
             ),
             "provisioned_credential_ids": {
                 "classical_identity": (
                     self.server_classical_credential_id
-                    if self.mode in {"classical", "hybrid"} else None
+                    if self.mode in {"classical", "hybrid"}
+                    else None
                 ),
                 "pqc_identity": (
                     self.server_pqc_credential_id
-                    if self.mode in {"pqc", "hybrid"} else None
+                    if self.mode in {"pqc", "hybrid"}
+                    else None
                 ),
                 "server_kem": (
                     self.server_kem_credential_id
-                    if self.mode in {"pqc", "hybrid"} else None
+                    if self.mode in {"pqc", "hybrid"}
+                    else None
                 ),
             },
             "session_context": self.session_context,
@@ -991,8 +1209,12 @@ class CryptoManager:
         )
 
     def _build_handshake_plan(
-        self, source: str, destination: str, transcript_fields: dict[str, Any],
-        transcript_hash: bytes, operations: list[CryptoOperation],
+        self,
+        source: str,
+        destination: str,
+        transcript_fields: dict[str, Any],
+        transcript_hash: bytes,
+        operations: list[CryptoOperation],
     ) -> HandshakePlan:
         """Cria o plano de mensagens do handshake selecionado."""
         by_name: dict[str, list[CryptoOperation]] = {}
@@ -1016,21 +1238,46 @@ class CryptoManager:
                 self._participant_operation(
                     operation, "authenticated_handshake", before_send
                 )
-                for name in names for operation in by_name.get(name, [])
+                for name in names
+                for operation in by_name.get(name, [])
                 if operation.participant == participant
             ]
 
         client_materials: list[dict[str, Any]] = []
         server_materials: list[dict[str, Any]] = []
         if self.mode in {"classical", "hybrid"}:
-            client_materials.append({"name": "x25519_client_ephemeral_public", "bytes": 32, "algorithm": "X25519"})
-            server_materials.extend([
-                {"name": "x25519_server_ephemeral_public", "bytes": 32, "algorithm": "X25519"},
-                {"name": "ed25519_transcript_signature", "bytes": 64, "algorithm": "Ed25519"},
-            ])
+            client_materials.append(
+                {
+                    "name": "x25519_client_ephemeral_public",
+                    "bytes": 32,
+                    "algorithm": "X25519",
+                }
+            )
+            server_materials.extend(
+                [
+                    {
+                        "name": "x25519_server_ephemeral_public",
+                        "bytes": 32,
+                        "algorithm": "X25519",
+                    },
+                    {
+                        "name": "ed25519_transcript_signature",
+                        "bytes": 64,
+                        "algorithm": "Ed25519",
+                    },
+                ]
+            )
         if self.mode in {"pqc", "hybrid"}:
-            client_materials.append({"name": "ml_kem_512_ciphertext", "bytes": 768, "algorithm": self.kem})
-            server_materials.append({"name": "ml_dsa_44_transcript_signature", "bytes": 2420, "algorithm": self.pqc_signature})
+            client_materials.append(
+                {"name": "ml_kem_512_ciphertext", "bytes": 768, "algorithm": self.kem}
+            )
+            server_materials.append(
+                {
+                    "name": "ml_dsa_44_transcript_signature",
+                    "bytes": 2420,
+                    "algorithm": self.pqc_signature,
+                }
+            )
         provisioning_status = (
             "certificate_bundle_transmitted"
             if self.handshake_variant == "full_certificate"
@@ -1048,13 +1295,17 @@ class CryptoManager:
         if self.handshake_variant == "full_certificate":
             reference = HYSECURE_FULL_HANDSHAKE[self.mode]
             certificate_bytes = int(reference["certificate_bytes"])
-            server_materials.append({
-                "name": "server_certificate_and_identity_key_bundle",
-                "bytes": certificate_bytes,
-                "algorithm": "HySecure certificate traffic envelope",
-            })
+            server_materials.append(
+                {
+                    "name": "server_certificate_and_identity_key_bundle",
+                    "bytes": certificate_bytes,
+                    "algorithm": "HySecure certificate traffic envelope",
+                }
+            )
             reference_total = int(reference["total_traffic_bytes"])
-            material_total = sum(item["bytes"] for item in client_materials + server_materials)
+            material_total = sum(
+                item["bytes"] for item in client_materials + server_materials
+            )
             protocol_overhead = reference_total - material_total
             if protocol_overhead < 0:
                 raise ValueError(
@@ -1063,21 +1314,45 @@ class CryptoManager:
             reference_source = "HySecure_Electronics_2025_Table_4"
         flights = [
             HandshakeFlight(
-                1, source, destination, "iot_to_server", "client_key_establishment",
-                HandshakeMessage("client_key_establishment", client_materials,
-                                 sum(item["bytes"] for item in client_materials)),
+                1,
+                source,
+                destination,
+                "iot_to_server",
+                "client_key_establishment",
+                HandshakeMessage(
+                    "client_key_establishment",
+                    client_materials,
+                    sum(item["bytes"] for item in client_materials),
+                ),
                 selected({"x25519_keygen", "ml_kem_encaps"}, "iot_client"),
-                0.0, provisioning,
+                0.0,
+                provisioning,
                 [item["algorithm"] for item in client_materials],
             ),
             HandshakeFlight(
-                2, destination, source, "server_to_iot", "server_authenticated_response",
-                HandshakeMessage("server_authenticated_response", server_materials,
-                                 sum(item["bytes"] for item in server_materials),
-                                 protocol_overhead_bytes=protocol_overhead),
-                selected({"x25519_keygen", "x25519_exchange", "ml_kem_decaps",
-                          "ed25519_sign", "ml_dsa_sign"}, "server"),
-                1.0, provisioning,
+                2,
+                destination,
+                source,
+                "server_to_iot",
+                "server_authenticated_response",
+                HandshakeMessage(
+                    "server_authenticated_response",
+                    server_materials,
+                    sum(item["bytes"] for item in server_materials),
+                    protocol_overhead_bytes=protocol_overhead,
+                ),
+                selected(
+                    {
+                        "x25519_keygen",
+                        "x25519_exchange",
+                        "ml_kem_decaps",
+                        "ed25519_sign",
+                        "ml_dsa_sign",
+                    },
+                    "server",
+                ),
+                1.0,
+                provisioning,
                 [item["algorithm"] for item in server_materials],
             ),
         ]
@@ -1091,8 +1366,14 @@ class CryptoManager:
             flights=flights,
             protocol_overhead_bytes=protocol_overhead,
             post_response_operations=selected(
-                {"x25519_exchange", "ed25519_verify", "ml_dsa_verify",
-                 "hkdf_extract", "hkdf_expand"}, "iot_client",
+                {
+                    "x25519_exchange",
+                    "ed25519_verify",
+                    "ml_dsa_verify",
+                    "hkdf_extract",
+                    "hkdf_expand",
+                },
+                "iot_client",
                 before_send=False,
             ),
             handshake_variant=self.handshake_variant,
@@ -1114,11 +1395,17 @@ class CryptoManager:
         """Executa ou estima uma operação criptográfica e registra seu custo."""
         metadata: dict[str, Any] = {
             "host_id": host_id,
-            **{key: value for key, value in self.target_metadata.items() if value is not None},
+            **{
+                key: value
+                for key, value in self.target_metadata.items()
+                if value is not None
+            },
         }
         if self.timing_mode == "host_wallclock":
             if callback is None:
-                raise RuntimeError(f"host_wallclock operation {name} has no implementation")
+                raise RuntimeError(
+                    f"host_wallclock operation {name} has no implementation"
+                )
             started = time.perf_counter()
             callback()
             duration = time.perf_counter() - started
@@ -1147,9 +1434,7 @@ class CryptoManager:
         # timings therefore remain excluded until a participant-specific
         # profile is supplied.
         calibration = (
-            self.target_operations.get(name)
-            if participant == "iot_client"
-            else None
+            self.target_operations.get(name) if participant == "iot_client" else None
         )
         if isinstance(calibration, CalibrationRecord):
             duration = (
@@ -1158,30 +1443,53 @@ class CryptoManager:
                 if calibration.throughput_bytes_per_second is not None
                 else calibration.duration_seconds
             )
-            metadata.update({
-                "device": calibration.device,
-                "voltage_v": calibration.voltage_v,
-                "current_ma": calibration.current_ma,
-                "energy_model": calibration.energy_model,
-                "calibration_status": "available",
-                "estimation_status": calibration.estimation_status,
-                "throughput_bytes_per_second": calibration.throughput_bytes_per_second,
-                "fixed_cost_seconds": calibration.fixed_cost_seconds,
-                **calibration.metadata,
-            })
-            if calibration.energy_model == "direct_event" and calibration.throughput_bytes_per_second is None:
+            metadata.update(
+                {
+                    "device": calibration.device,
+                    "voltage_v": calibration.voltage_v,
+                    "current_ma": calibration.current_ma,
+                    "energy_model": calibration.energy_model,
+                    "calibration_status": "available",
+                    "estimation_status": calibration.estimation_status,
+                    "throughput_bytes_per_second": calibration.throughput_bytes_per_second,
+                    "fixed_cost_seconds": calibration.fixed_cost_seconds,
+                    **calibration.metadata,
+                }
+            )
+            if (
+                calibration.energy_model == "direct_event"
+                and calibration.throughput_bytes_per_second is None
+            ):
                 metadata["calibrated_load_energy_j"] = calibration.energy_j
             source = calibration.source
         elif isinstance(calibration, dict):
             duration = float(calibration.get("duration_seconds", 0.0))
             source = str(calibration.get("source", "user_configured"))
-            metadata.update({key: calibration[key] for key in ("device", "voltage_v", "current_ma", "energy_j", "firmware", "compiler", "implementation") if key in calibration})
-            metadata["calibration_status"] = "available" if "duration_seconds" in calibration else "required"
+            metadata.update(
+                {
+                    key: calibration[key]
+                    for key in (
+                        "device",
+                        "voltage_v",
+                        "current_ma",
+                        "energy_j",
+                        "firmware",
+                        "compiler",
+                        "implementation",
+                    )
+                    if key in calibration
+                }
+            )
+            metadata["calibration_status"] = (
+                "available" if "duration_seconds" in calibration else "required"
+            )
         else:
             duration = 0.0
             source = "target_profile_missing"
             metadata["calibration_status"] = (
-                "required" if participant == "iot_client" else "excluded_unknown_server_timing"
+                "required"
+                if participant == "iot_client"
+                else "excluded_unknown_server_timing"
             )
         if duration < 0:
             raise ValueError(f"negative target duration for {name}")
@@ -1194,10 +1502,14 @@ class CryptoManager:
                 f"strict_target_calibration_missing:{self.mode}:{participant}:{name}"
             )
         current_ma = (
-            float(metadata["current_ma"]) if metadata.get("current_ma") is not None else None
+            float(metadata["current_ma"])
+            if metadata.get("current_ma") is not None
+            else None
         )
         voltage_v = (
-            float(metadata["voltage_v"]) if metadata.get("voltage_v") is not None else None
+            float(metadata["voltage_v"])
+            if metadata.get("voltage_v") is not None
+            else None
         )
         return CryptoOperation(
             operation=name,
@@ -1223,14 +1535,24 @@ class CryptoManager:
             wire_size_model="algorithm_or_protocol_size_contract",
         )
 
-    def _calibration_assessment(self, operations: list[CryptoOperation]) -> tuple[str, str]:
+    def _calibration_assessment(
+        self, operations: list[CryptoOperation]
+    ) -> tuple[str, str]:
         """Avalia se a calibração necessária está disponível."""
-        source_ops = [operation for operation in operations if operation.participant == "iot_client"]
+        source_ops = [
+            operation
+            for operation in operations
+            if operation.participant == "iot_client"
+        ]
         if self.timing_mode == "host_wallclock":
             return "host_only", "provisional"
-        if any(op.metadata.get("calibration_status") == "required" for op in source_ops):
+        if any(
+            op.metadata.get("calibration_status") == "required" for op in source_ops
+        ):
             return "required", "provisional"
-        if source_ops and all(op.timing_source == "hardware_measurement" for op in source_ops):
+        if source_ops and all(
+            op.timing_source == "hardware_measurement" for op in source_ops
+        ):
             return "calibrated", "measured"
         return "configured", "provisional"
 
@@ -1247,7 +1569,11 @@ class CryptoManager:
         """Valida algoritmos, modo e parâmetros criptográficos."""
         if self.mode not in self.valid_modes:
             raise ValueError(f"invalid crypto mode {self.mode}; use {self.valid_modes}")
-        if self.timing_mode not in {"host_wallclock", "target_profile", "analytical_size_only"}:
+        if self.timing_mode not in {
+            "host_wallclock",
+            "target_profile",
+            "analytical_size_only",
+        }:
             raise ValueError(
                 "timing_mode must be host_wallclock, target_profile or analytical_size_only"
             )
@@ -1264,15 +1590,22 @@ class CryptoManager:
         if self.kem not in ALGORITHM_WIRE_SIZES:
             raise ValueError(f"unknown KEM size profile: {self.kem}")
         if self.pqc_signature not in ALGORITHM_WIRE_SIZES:
-            raise ValueError(f"unknown PQC signature size profile: {self.pqc_signature}")
+            raise ValueError(
+                f"unknown PQC signature size profile: {self.pqc_signature}"
+            )
         self.backend = self._backend_from_mode(self.mode)
 
     def _validate_liboqs(self, oqs: Any) -> None:
         """Confirma que os algoritmos exigidos existem na liboqs."""
         if self.kem not in oqs.get_enabled_kem_mechanisms():
             raise ValueError(f"KEM is unavailable in liboqs: {self.kem}")
-        if self.use_pqc_signature and self.pqc_signature not in oqs.get_enabled_sig_mechanisms():
-            raise ValueError(f"signature is unavailable in liboqs: {self.pqc_signature}")
+        if (
+            self.use_pqc_signature
+            and self.pqc_signature not in oqs.get_enabled_sig_mechanisms()
+        ):
+            raise ValueError(
+                f"signature is unavailable in liboqs: {self.pqc_signature}"
+            )
 
     @staticmethod
     def _import_oqs() -> Any:
@@ -1334,6 +1667,7 @@ class CryptoManager:
             "calibration_status": (
                 "required"
                 if self.timing_mode in {"target_profile", "analytical_size_only"}
-                and not self.target_operations else "configured"
+                and not self.target_operations
+                else "configured"
             ),
         }

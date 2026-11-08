@@ -1,0 +1,5 @@
+{
+  "article_zip_sha256": "81c73bdd9b2d7fc6f289f444a10187cc85f51afce1dfb60f87e93108511a69a9",
+  "article_source_commit": "76bf3cd",
+  "note": "Article and historical reports remain in Git at this checkpoint; simulation needs only the numeric observations and reference tables."
+}

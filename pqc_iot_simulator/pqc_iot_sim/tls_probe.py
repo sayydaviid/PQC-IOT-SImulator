@@ -13,8 +13,11 @@ from pathlib import Path
 
 import _pqc_tls as native
 
-from .components.reading_ledger import ReadingConflict, ReadingLedger
-from .components.recovery import SealedStore, b64, unb64
+from pqc_iot_simulator.pqc_iot_sim.components.reading_ledger import ReadingConflict
+from pqc_iot_simulator.pqc_iot_sim.components.reading_ledger import ReadingLedger
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import SealedStore
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import b64
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import unb64
 
 LENGTH = struct.Struct("!I")
 

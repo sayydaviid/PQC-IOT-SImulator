@@ -21,3 +21,8 @@ analysis_outputs/
 # Arquivos temporários do Mininet-WiFi
 mn*_*.apconf
 mn*_*.staconf
+
+# Configuracoes locais de ferramentas
+.agents/
+.aws/
+.codex/

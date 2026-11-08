@@ -9,15 +9,20 @@ import random
 
 import networkx as nx
 
-from .logger import Logger
-from .host import Host, IoTNode, GatewayNode, ApplicationServer, Packet
-from .metrics import MetricsCollector
-from .crypto import CryptoManager
+from pqc_iot_simulator.pqc_iot_sim.components.logger import Logger
+from pqc_iot_simulator.pqc_iot_sim.components.host import Host
+from pqc_iot_simulator.pqc_iot_sim.components.host import IoTNode
+from pqc_iot_simulator.pqc_iot_sim.components.host import GatewayNode
+from pqc_iot_simulator.pqc_iot_sim.components.host import ApplicationServer
+from pqc_iot_simulator.pqc_iot_sim.components.host import Packet
+from pqc_iot_simulator.pqc_iot_sim.components.metrics import MetricsCollector
+from pqc_iot_simulator.pqc_iot_sim.components.crypto import CryptoManager
 
 
 @dataclass
 class NetworkConfig:
     """Armazena as escolhas de configuração de uma rede."""
+
     engine: str | None = None
     topology_name: str | None = None
     topology_params: dict[str, Any] = field(default_factory=dict)
@@ -31,18 +36,20 @@ class NetworkConfig:
 @dataclass
 class TopologyData:
     """Armazena os nós e enlaces de uma topologia."""
+
     nodes: list[str] = field(default_factory=list)
     links: list[tuple[str, str]] = field(default_factory=list)
 
 
 class Network:
     """Modela e configura a rede lógica usada pela simulação."""
+
     def __init__(
         self,
         name: str = "default_network",
         logger: Logger | None = None,
         verbose: bool = True,
-        log_level: str = "info"
+        log_level: str = "info",
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -56,8 +63,7 @@ class Network:
 
         if log_level not in valid_log_levels:
             raise ValueError(
-                f"Nivel de log invalido: {log_level}. "
-                f"Use um destes: {valid_log_levels}"
+                f"Nivel de log invalido: {log_level}. Use um destes: {valid_log_levels}"
             )
 
         self.name = name
@@ -74,22 +80,13 @@ class Network:
 
         self.logger = logger or Logger(name="Network", verbose=verbose)
         self.metrics_collector = MetricsCollector(logger=self.logger)
-        self.crypto_manager = CryptoManager(
-            mode="classical",
-            logger=self.logger
-        )
+        self.crypto_manager = CryptoManager(mode="classical", logger=self.logger)
 
-        self._log_info(
-            "Rede criada e pronta para configuracao"
-        )
+        self._log_info("Rede criada e pronta para configuracao")
 
     def _crypto_label(self, crypto_mode: str | None):
         """Converte o modo criptográfico em um rótulo legível."""
-        labels = {
-            "classical": "classica",
-            "hybrid": "hibrida",
-            "pqc": "pos quantica"
-        }
+        labels = {"classical": "classica", "hybrid": "hibrida", "pqc": "pos quantica"}
 
         if crypto_mode is None:
             return "nao definida"
@@ -114,43 +111,31 @@ class Network:
         self,
         message: str,
         data: dict[str, Any] | None = None,
-        component: str = "Network"
+        component: str = "Network",
     ):
         """Registra uma mensagem informativa quando o nível permite."""
         if self.log_level in ["info", "debug"]:
-            self.logger.log(
-                message,
-                data=data or {},
-                component=component
-            )
+            self.logger.log(message, data=data or {}, component=component)
 
     def _log_debug(
         self,
         message: str,
         data: dict[str, Any] | None = None,
-        component: str = "Network"
+        component: str = "Network",
     ):
         """Registra uma mensagem de depuração quando o nível permite."""
         if self.log_level == "debug":
-            self.logger.log(
-                message,
-                data=data or {},
-                component=component
-            )
+            self.logger.log(message, data=data or {}, component=component)
 
     def _log_error(
         self,
         message: str,
         data: dict[str, Any] | None = None,
-        component: str = "Network"
+        component: str = "Network",
     ):
         """Registra uma mensagem de erro quando o nível permite."""
         if self.log_level != "silent":
-            self.logger.log(
-                message,
-                data=data or {},
-                component=component
-            )
+            self.logger.log(message, data=data or {}, component=component)
 
     def set_runtime_engine(self, engine: Any):
         """Conecta à rede o motor concreto de execução.
@@ -170,11 +155,7 @@ class Network:
 
         return self
 
-    def collect_link_metrics(
-        self,
-        source: str,
-        destination: str
-    ):
+    def collect_link_metrics(self, source: str, destination: str):
         """Coleta métricas do enlace entre dois nós.
 
         Parâmetros:
@@ -198,8 +179,7 @@ class Network:
             )
         if getattr(engine, "engine_type", None) != "mininet_wifi":
             raise RuntimeError(
-                "Mininet-WiFi e obrigatorio: a engine conectada nao e "
-                "mininet_wifi"
+                "Mininet-WiFi e obrigatorio: a engine conectada nao e mininet_wifi"
             )
         if not hasattr(engine, "is_running") or not engine.is_running():
             raise RuntimeError(
@@ -228,18 +208,22 @@ class Network:
         try:
             try:
                 link_metrics = engine.collect_link_metrics(
-                    source=source,
-                    destination=destination
+                    source=source, destination=destination
                 )
 
             except TypeError:
-                link_metrics = engine.collect_link_metrics(
-                    source,
-                    destination
-                )
+                link_metrics = engine.collect_link_metrics(source, destination)
 
-            latency = link_metrics.get("latency_ms") if isinstance(link_metrics, dict) else None
-            loss = link_metrics.get("packet_loss_percent") if isinstance(link_metrics, dict) else None
+            latency = (
+                link_metrics.get("latency_ms")
+                if isinstance(link_metrics, dict)
+                else None
+            )
+            loss = (
+                link_metrics.get("packet_loss_percent")
+                if isinstance(link_metrics, dict)
+                else None
+            )
 
             self._log_debug(
                 (
@@ -265,9 +249,7 @@ class Network:
         """
         self.logger.set_verbose(verbose)
 
-        self._log_debug(
-            f"Modo verbose alterado para {verbose}"
-        )
+        self._log_debug(f"Modo verbose alterado para {verbose}")
 
         return self
 
@@ -279,23 +261,18 @@ class Network:
             *args: Argumentos posicionais adicionais.
             **kwargs: Argumentos nomeados adicionais.
         """
-        self._log_debug(
-            f"Preparando topologia {topology_name}"
-        )
+        self._log_debug(f"Preparando topologia {topology_name}")
 
         self.config.topology_name = topology_name
 
         params = self._normalize_topology_params(
-            topology_name=topology_name,
-            args=args,
-            kwargs=kwargs
+            topology_name=topology_name, args=args, kwargs=kwargs
         )
 
         self.config.topology_params = params
 
         self.topology_data = self._build_ready_topology(
-            topology_name=topology_name,
-            params=params
+            topology_name=topology_name, params=params
         )
 
         self.hosts = {}
@@ -325,8 +302,7 @@ class Network:
 
         if mode not in valid_modes:
             raise ValueError(
-                f"Modo criptografico invalido: {mode}. "
-                f"Use um destes: {valid_modes}"
+                f"Modo criptografico invalido: {mode}. Use um destes: {valid_modes}"
             )
 
         self.config.crypto_mode = mode
@@ -344,12 +320,11 @@ class Network:
             target_operations=params.get("target_operations"),
             target_metadata=params.get("target_metadata"),
             session_lifetime_seconds=params.get("session_lifetime_seconds"),
-            session_max_messages=params.get("session_max_messages")
+            session_max_messages=params.get("session_max_messages"),
         )
 
         for host in self.hosts.values():
             host.set_crypto_mode(mode)
-
 
         return self
 
@@ -364,8 +339,7 @@ class Network:
 
         if protocol_name not in valid_protocols:
             raise ValueError(
-                f"Protocolo invalido: {protocol_name}. "
-                f"Use um destes: {valid_protocols}"
+                f"Protocolo invalido: {protocol_name}. Use um destes: {valid_protocols}"
             )
 
         self.config.protocol_name = protocol_name
@@ -373,7 +347,6 @@ class Network:
 
         for host in self.hosts.values():
             host.set_protocol(protocol_name)
-
 
         return self
 
@@ -394,13 +367,10 @@ class Network:
             "message_overhead",
             "link_metrics",
             "rtt",
-            "real_latency"
+            "real_latency",
         ]
 
-        invalid_metrics = [
-            metric for metric in metrics
-            if metric not in valid_metrics
-        ]
+        invalid_metrics = [metric for metric in metrics if metric not in valid_metrics]
 
         if invalid_metrics:
             raise ValueError(
@@ -410,9 +380,7 @@ class Network:
 
         self.config.metrics = metrics
 
-        self._log_info(
-            f"Metricas configuradas: {', '.join(metrics)}"
-        )
+        self._log_info(f"Metricas configuradas: {', '.join(metrics)}")
 
         return self
 
@@ -430,9 +398,7 @@ class Network:
         if self.hosts:
             self.hosts[node_id] = self._create_host_from_node(node_id)
 
-        self._log_info(
-            f"No {node_id} adicionado a rede"
-        )
+        self._log_info(f"No {node_id} adicionado a rede")
 
         return self
 
@@ -450,9 +416,7 @@ class Network:
         for node_id in self.topology_data.nodes:
             self.hosts[node_id] = self._create_host_from_node(node_id)
 
-        self._log_info(
-            f"{len(self.hosts)} hosts criados com sucesso"
-        )
+        self._log_info(f"{len(self.hosts)} hosts criados com sucesso")
 
         return self
 
@@ -463,9 +427,7 @@ class Network:
             host_id: Identificador do host.
         """
         if not self.hosts:
-            self._log_debug(
-                "Hosts ainda nao existiam, criando automaticamente"
-            )
+            self._log_debug("Hosts ainda nao existiam, criando automaticamente")
             self.create_hosts()
 
         if host_id not in self.hosts:
@@ -478,7 +440,7 @@ class Network:
         source: str,
         destination: str,
         payload: dict[str, Any],
-        link_metrics: dict[str, Any] | None = None
+        link_metrics: dict[str, Any] | None = None,
     ):
         """Envia dados entre dois nós pelo caminho da topologia.
 
@@ -559,13 +521,10 @@ class Network:
                 destination=destination,
                 payload=protected_payload,
                 protocol=self.config.protocol_name,
-                crypto_mode=self.config.crypto_mode
+                crypto_mode=self.config.crypto_mode,
             )
 
-            result = self._deliver_to_destination(
-                host=host,
-                packet=packet
-            )
+            result = self._deliver_to_destination(host=host, packet=packet)
 
             duration_seconds, finished_at = self.metrics_collector.finish_timer(
                 timer_start
@@ -573,8 +532,7 @@ class Network:
 
             if link_metrics is None:
                 link_metrics = self._collect_link_metrics_if_available(
-                    source=source,
-                    destination=destination
+                    source=source, destination=destination
                 )
 
             send_result = {
@@ -598,21 +556,15 @@ class Network:
                 started_at=started_at,
                 finished_at=finished_at,
                 duration_seconds=duration_seconds,
-                link_metrics=link_metrics
+                link_metrics=link_metrics,
             )
 
-            self._log_info(
-                f"Pacote entregue localmente em {source}"
-            )
+            self._log_info(f"Pacote entregue localmente em {source}")
 
             return send_result
 
         try:
-            path = nx.shortest_path(
-                self.graph,
-                source=source,
-                target=destination
-            )
+            path = nx.shortest_path(self.graph, source=source, target=destination)
 
         except nx.NetworkXNoPath:
             duration_seconds, finished_at = self.metrics_collector.finish_timer(
@@ -621,8 +573,7 @@ class Network:
 
             if link_metrics is None:
                 link_metrics = self._collect_link_metrics_if_available(
-                    source=source,
-                    destination=destination
+                    source=source, destination=destination
                 )
 
             self.metrics_collector.record_transmission(
@@ -642,8 +593,8 @@ class Network:
                 result={
                     "reason": "no_path",
                     "crypto": crypto_result.to_dict(),
-                    "link_metrics": link_metrics
-                }
+                    "link_metrics": link_metrics,
+                },
             )
 
             self._log_error(
@@ -658,22 +609,18 @@ class Network:
                 "packet": None,
                 "protocol": self.config.protocol_name,
                 "crypto_mode": self.config.crypto_mode,
-                "result": {
-                    "reason": "no_path"
-                },
+                "result": {"reason": "no_path"},
                 "crypto": crypto_result.to_dict(),
-                "link_metrics": link_metrics
+                "link_metrics": link_metrics,
             }
 
-        self._log_debug(
-            f"Caminho calculado para envio: {self._format_path(path)}"
-        )
+        self._log_debug(f"Caminho calculado para envio: {self._format_path(path)}")
 
         packet = source_host.send_data(
             destination=destination,
             payload=protected_payload,
             protocol=self.config.protocol_name,
-            crypto_mode=self.config.crypto_mode
+            crypto_mode=self.config.crypto_mode,
         )
 
         for current_node in path[1:]:
@@ -681,10 +628,7 @@ class Network:
             is_destination = current_node == destination
 
             if is_destination:
-                result = self._deliver_to_destination(
-                    host=current_host,
-                    packet=packet
-                )
+                result = self._deliver_to_destination(host=current_host, packet=packet)
 
                 duration_seconds, finished_at = self.metrics_collector.finish_timer(
                     timer_start
@@ -692,8 +636,7 @@ class Network:
 
                 if link_metrics is None:
                     link_metrics = self._collect_link_metrics_if_available(
-                        source=source,
-                        destination=destination
+                        source=source, destination=destination
                     )
 
                 send_result = {
@@ -717,7 +660,7 @@ class Network:
                     started_at=started_at,
                     finished_at=finished_at,
                     duration_seconds=duration_seconds,
-                    link_metrics=link_metrics
+                    link_metrics=link_metrics,
                 )
 
                 self._log_info(
@@ -733,19 +676,14 @@ class Network:
             current_host.receive_data(packet)
 
             packet = self._forward_packet(
-                host=current_host,
-                packet=packet,
-                destination=destination
+                host=current_host, packet=packet, destination=destination
             )
 
-        duration_seconds, finished_at = self.metrics_collector.finish_timer(
-            timer_start
-        )
+        duration_seconds, finished_at = self.metrics_collector.finish_timer(timer_start)
 
         if link_metrics is None:
             link_metrics = self._collect_link_metrics_if_available(
-                source=source,
-                destination=destination
+                source=source, destination=destination
             )
 
         send_result = {
@@ -769,7 +707,7 @@ class Network:
             started_at=started_at,
             finished_at=finished_at,
             duration_seconds=duration_seconds,
-            link_metrics=link_metrics
+            link_metrics=link_metrics,
         )
 
         self._log_error(
@@ -812,9 +750,7 @@ class Network:
 
     def build(self):
         """Prepara o componente para execução."""
-        self._log_debug(
-            "Preparando build da rede"
-        )
+        self._log_debug("Preparando build da rede")
 
         self._validate_before_build()
 
@@ -838,9 +774,7 @@ class Network:
 
     def run(self):
         """Executa o componente e retorna seus resultados."""
-        self._log_debug(
-            "Execucao solicitada"
-        )
+        self._log_debug("Execucao solicitada")
 
         if not self.is_built:
             self.build()
@@ -867,10 +801,7 @@ class Network:
         try:
             import warnings
 
-            warnings.filterwarnings(
-                "ignore",
-                message="Unable to import Axes3D.*"
-            )
+            warnings.filterwarnings("ignore", message="Unable to import Axes3D.*")
 
             import matplotlib.pyplot as plt
         except Exception as exc:
@@ -901,13 +832,13 @@ class Network:
             if layout_graph.has_edge(current, neighbor):
                 layout_graph[current][neighbor]["layout_weight"] = 1.6
             else:
-                layout_graph.add_edge(
-                    current,
-                    neighbor,
-                    layout_weight=0.25
-                )
+                layout_graph.add_edge(current, neighbor, layout_weight=0.25)
 
-        if self.config.topology_name == "grade" and isinstance(rows, int) and isinstance(cols, int):
+        if (
+            self.config.topology_name == "grade"
+            and isinstance(rows, int)
+            and isinstance(cols, int)
+        ):
             expected_nodes = rows * cols
 
             if expected_nodes == len(self.topology_data.nodes):
@@ -920,21 +851,15 @@ class Network:
 
                     initial_pos[node] = (
                         float(col) + random.uniform(-jitter, jitter),
-                        float(-row) + random.uniform(-jitter, jitter)
+                        float(-row) + random.uniform(-jitter, jitter),
                     )
 
                 pos = nx.spring_layout(
-                    layout_graph,
-                    pos=initial_pos,
-                    weight="layout_weight",
-                    iterations=50
+                    layout_graph, pos=initial_pos, weight="layout_weight", iterations=50
                 )
 
         if pos is None:
-            pos = nx.spring_layout(
-                layout_graph,
-                weight="layout_weight"
-            )
+            pos = nx.spring_layout(layout_graph, weight="layout_weight")
 
         node_colors = []
 
@@ -952,7 +877,7 @@ class Network:
             with_labels=True,
             node_size=1300,
             font_size=8,
-            node_color=node_colors
+            node_color=node_colors,
         )
 
         if output_path:
@@ -960,13 +885,9 @@ class Network:
             path.parent.mkdir(parents=True, exist_ok=True)
             figure.savefig(path, bbox_inches="tight")
 
-            self._log_info(
-                f"Imagem da topologia salva em {output_path}"
-            )
+            self._log_info(f"Imagem da topologia salva em {output_path}")
 
-        self._log_debug(
-            "Desenho da topologia finalizado"
-        )
+        self._log_debug("Desenho da topologia finalizado")
 
         if show:
             try:
@@ -1014,7 +935,7 @@ class Network:
             "hosts": list(self.hosts.keys()),
             "total_nodes": len(self.topology_data.nodes),
             "total_links": len(self.topology_data.links),
-            "total_hosts": len(self.hosts)
+            "total_hosts": len(self.hosts),
         }
 
     def apply_to_config(self, config: dict[str, Any]) -> dict[str, Any]:
@@ -1047,29 +968,17 @@ class Network:
             )
         return config
 
-    def _deliver_to_destination(
-        self,
-        host: Host,
-        packet: Packet
-    ):
+    def _deliver_to_destination(self, host: Host, packet: Packet):
         """Entrega o pacote ao comportamento específico do destino."""
         if isinstance(host, ApplicationServer):
             return host.process_data(packet)
 
         return host.receive_data(packet)
 
-    def _forward_packet(
-        self,
-        host: Host,
-        packet: Packet,
-        destination: str
-    ):
+    def _forward_packet(self, host: Host, packet: Packet, destination: str):
         """Encaminha o pacote por um nó intermediário."""
         if isinstance(host, GatewayNode):
-            return host.forward_data(
-                packet=packet,
-                destination=destination
-            )
+            return host.forward_data(packet=packet, destination=destination)
 
         host.forwarded_packets.append(packet)
 
@@ -1079,7 +988,7 @@ class Network:
                 f"para {destination}, protocolo: {packet.protocol}, "
                 f"criptografia: {self._crypto_label(packet.crypto_mode)}"
             ),
-            component=host.host_id
+            component=host.host_id,
         )
 
         return Packet(
@@ -1087,7 +996,7 @@ class Network:
             destination=destination,
             payload=packet.payload,
             protocol=packet.protocol,
-            crypto_mode=packet.crypto_mode
+            crypto_mode=packet.crypto_mode,
         )
 
     def _create_host_from_node(self, node_id: str):
@@ -1097,7 +1006,7 @@ class Network:
                 host_id=node_id,
                 logger=self.logger,
                 protocol=self.config.protocol_name,
-                crypto_mode=self.config.crypto_mode
+                crypto_mode=self.config.crypto_mode,
             )
 
         if node_id.startswith("server"):
@@ -1105,21 +1014,18 @@ class Network:
                 host_id=node_id,
                 logger=self.logger,
                 protocol=self.config.protocol_name,
-                crypto_mode=self.config.crypto_mode
+                crypto_mode=self.config.crypto_mode,
             )
 
         return IoTNode(
             host_id=node_id,
             logger=self.logger,
             protocol=self.config.protocol_name,
-            crypto_mode=self.config.crypto_mode
+            crypto_mode=self.config.crypto_mode,
         )
 
     def _normalize_topology_params(
-        self,
-        topology_name: str,
-        args: tuple,
-        kwargs: dict[str, Any]
+        self, topology_name: str, args: tuple, kwargs: dict[str, Any]
     ):
         """Valida e normaliza os parâmetros da topologia escolhida."""
         params = dict(kwargs)
@@ -1136,8 +1042,7 @@ class Network:
             params["rows"] = self._validate_positive_int(params["rows"], "rows")
             params["cols"] = self._validate_positive_int(params["cols"], "cols")
             params["snake_path"] = self._validate_bool(
-                params["snake_path"],
-                "snake_path"
+                params["snake_path"], "snake_path"
             )
 
         elif topology_name == "star":
@@ -1155,14 +1060,10 @@ class Network:
             params.setdefault("levels", 2)
             params.setdefault("children", 2)
 
-            params["levels"] = self._validate_positive_int(
-                params["levels"],
-                "levels"
-            )
+            params["levels"] = self._validate_positive_int(params["levels"], "levels")
 
             params["children"] = self._validate_positive_int(
-                params["children"],
-                "children"
+                params["children"], "children"
             )
 
         elif topology_name == "mesh":
@@ -1175,8 +1076,7 @@ class Network:
 
             if params["mesh_degree"] is not None:
                 params["mesh_degree"] = self._validate_positive_int(
-                    params["mesh_degree"],
-                    "mesh_degree"
+                    params["mesh_degree"], "mesh_degree"
                 )
 
                 if params["mesh_degree"] >= params["nodes"]:
@@ -1190,34 +1090,26 @@ class Network:
 
         return params
 
-    def _build_ready_topology(
-        self,
-        topology_name: str,
-        params: dict[str, Any]
-    ):
+    def _build_ready_topology(self, topology_name: str, params: dict[str, Any]):
         """Constrói os dados da topologia pronta selecionada."""
         if topology_name == "grade":
             return self._build_grade_topology(
                 rows=params["rows"],
                 cols=params["cols"],
-                snake_path=params["snake_path"]
+                snake_path=params["snake_path"],
             )
 
         if topology_name == "star":
-            return self._build_star_topology(
-                nodes=params["nodes"]
-            )
+            return self._build_star_topology(nodes=params["nodes"])
 
         if topology_name == "tree":
             return self._build_tree_topology(
-                levels=params["levels"],
-                children=params["children"]
+                levels=params["levels"], children=params["children"]
             )
 
         if topology_name == "mesh":
             return self._build_mesh_topology(
-                nodes=params["nodes"],
-                mesh_degree=params.get("mesh_degree")
+                nodes=params["nodes"], mesh_degree=params.get("mesh_degree")
             )
 
         raise ValueError(f"Topologia nao suportada: {topology_name}")
@@ -1295,16 +1187,11 @@ class Network:
 
         links = list(links_set)
 
-        return TopologyData(
-            nodes=nodes,
-            links=links
-        )
+        return TopologyData(nodes=nodes, links=links)
 
     def _build_star_topology(self, nodes: int):
         """Constrói nós e enlaces de uma topologia em estrela."""
-        self._log_debug(
-            f"Gerando topologia estrela com {nodes} nos IoT"
-        )
+        self._log_debug(f"Gerando topologia estrela com {nodes} nos IoT")
 
         topology_nodes = []
         links = []
@@ -1322,10 +1209,7 @@ class Network:
             topology_nodes.append(node_id)
             links.append((node_id, gateway))
 
-        return TopologyData(
-            nodes=topology_nodes,
-            links=links
-        )
+        return TopologyData(nodes=topology_nodes, links=links)
 
     def _build_tree_topology(self, levels: int, children: int):
         """Constrói nós e enlaces de uma topologia em árvore."""
@@ -1353,16 +1237,11 @@ class Network:
 
             current_level = next_level
 
-        return TopologyData(
-            nodes=nodes,
-            links=links
-        )
+        return TopologyData(nodes=nodes, links=links)
 
     def _build_mesh_topology(self, nodes: int, mesh_degree: int | None = None):
         """Constrói nós e enlaces de uma topologia em malha."""
-        self._log_debug(
-            f"Gerando topologia em malha com {nodes} nos IoT"
-        )
+        self._log_debug(f"Gerando topologia em malha com {nodes} nos IoT")
 
         topology_nodes = ["gateway_1", "server_1"]
         links = [("gateway_1", "server_1")]
@@ -1382,10 +1261,7 @@ class Network:
                 neighbor = f"iot_{neighbor_index}"
                 links.append((current, neighbor))
 
-        return TopologyData(
-            nodes=topology_nodes,
-            links=links
-        )
+        return TopologyData(nodes=topology_nodes, links=links)
 
     def _sync_graph(self):
         """Sincroniza o grafo NetworkX com os nós e enlaces configurados."""
@@ -1420,7 +1296,9 @@ class Network:
     def _normalize_link(self, source: str, target: str):
         """Ordena e valida as extremidades de um enlace."""
         if source == target:
-            raise ValueError("Nao e permitido criar link com o mesmo no de origem e destino.")
+            raise ValueError(
+                "Nao e permitido criar link com o mesmo no de origem e destino."
+            )
 
         return tuple(sorted((source, target)))
 
@@ -1438,8 +1316,7 @@ class Network:
         """Valida se um parâmetro é booleano."""
         if not isinstance(value, bool):
             raise ValueError(
-                f"Parametro '{param_name}' invalido: {value}. "
-                "Use true ou false."
+                f"Parametro '{param_name}' invalido: {value}. Use true ou false."
             )
 
         return value
@@ -1458,11 +1335,11 @@ class Network:
         if not self.config.crypto_mode:
             self.config.crypto_mode = "classical"
 
-            self.crypto_manager.configure(
-                mode=self.config.crypto_mode
-            )
+            self.crypto_manager.configure(mode=self.config.crypto_mode)
 
-            defaults_applied.append(f"criptografia: {self._crypto_label(self.config.crypto_mode)}")
+            defaults_applied.append(
+                f"criptografia: {self._crypto_label(self.config.crypto_mode)}"
+            )
 
         if not self.config.protocol_name:
             self.config.protocol_name = "mqtt"
@@ -1476,7 +1353,7 @@ class Network:
                 "energy",
                 "crypto_time",
                 "message_overhead",
-                "link_metrics"
+                "link_metrics",
             ]
 
             defaults_applied.append("metricas padrao")
@@ -1488,6 +1365,7 @@ class Network:
 
     def _ordered_iot_nodes(self):
         """Retorna os nós IoT em ordem numérica."""
+
         def sort_key(node_name: str):
             """Extrai a parte numérica usada na ordenação dos nós IoT.
 
@@ -1506,5 +1384,5 @@ class Network:
 
         return sorted(
             [node for node in self.graph.nodes() if node.startswith("iot_")],
-            key=sort_key
+            key=sort_key,
         )

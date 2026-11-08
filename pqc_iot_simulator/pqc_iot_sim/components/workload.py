@@ -15,6 +15,7 @@ import math
 @dataclass(frozen=True)
 class EnvironmentalBounds:
     """Define limites válidos para variáveis ambientais."""
+
     temperature_c: tuple[float, float] = (-40.0, 85.0)
     humidity_percent: tuple[float, float] = (0.0, 100.0)
     pressure_hpa: tuple[float, float] = (300.0, 1100.0)
@@ -23,6 +24,7 @@ class EnvironmentalBounds:
 @dataclass
 class WorkloadConfig:
     """Armazena parâmetros da carga de trabalho ambiental."""
+
     sample_interval_seconds: float = 60.0
     reconnect_wifi_each_cycle: bool = True
     payload_format: str = "compact_json"
@@ -62,7 +64,9 @@ class WorkloadConfig:
             raise ValueError("only compact_json is currently supported")
 
 
-def serialize_payload(payload: dict[str, Any], payload_format: str = "compact_json") -> bytes:
+def serialize_payload(
+    payload: dict[str, Any], payload_format: str = "compact_json"
+) -> bytes:
     """Serializa a telemetria no formato configurado.
 
     Parâmetros:
@@ -85,6 +89,7 @@ def serialize_payload(payload: dict[str, Any], payload_format: str = "compact_js
 
 class EnvironmentalWorkloadGenerator:
     """Gera telemetria ambiental sintética e reproduzível."""
+
     def __init__(
         self,
         config: WorkloadConfig,
@@ -198,7 +203,9 @@ class EnvironmentalWorkloadGenerator:
         payload: dict[str, Any] = {
             "device_id": device_id,
             "sequence": sequence,
-            "timestamp": (self.start_datetime + timedelta(seconds=simulation_time_seconds)).isoformat(),
+            "timestamp": (
+                self.start_datetime + timedelta(seconds=simulation_time_seconds)
+            ).isoformat(),
             "temperature_c": round(
                 self._clamp(temperature, self.config.bounds.temperature_c), 2
             ),
@@ -239,11 +246,19 @@ def workload_from_mapping(data: dict[str, Any]) -> WorkloadConfig:
         base_temperature_c=float(data.get("base_temperature_c", 28.0)),
         base_humidity_percent=float(data.get("base_humidity_percent", 75.0)),
         base_pressure_hpa=float(data.get("base_pressure_hpa", 1008.0)),
-        daily_temperature_amplitude_c=float(data.get("daily_temperature_amplitude_c", 0.0)),
-        daily_humidity_amplitude_percent=float(data.get("daily_humidity_amplitude_percent", 0.0)),
-        daily_pressure_amplitude_hpa=float(data.get("daily_pressure_amplitude_hpa", 0.0)),
+        daily_temperature_amplitude_c=float(
+            data.get("daily_temperature_amplitude_c", 0.0)
+        ),
+        daily_humidity_amplitude_percent=float(
+            data.get("daily_humidity_amplitude_percent", 0.0)
+        ),
+        daily_pressure_amplitude_hpa=float(
+            data.get("daily_pressure_amplitude_hpa", 0.0)
+        ),
         temperature_noise_stddev_c=float(data.get("temperature_noise_stddev_c", 0.2)),
-        humidity_noise_stddev_percent=float(data.get("humidity_noise_stddev_percent", 0.5)),
+        humidity_noise_stddev_percent=float(
+            data.get("humidity_noise_stddev_percent", 0.5)
+        ),
         pressure_noise_stddev_hpa=float(data.get("pressure_noise_stddev_hpa", 0.2)),
         synthetic_padding_bytes=int(data.get("synthetic_padding_bytes", 0)),
         csv_input=data.get("csv_input"),

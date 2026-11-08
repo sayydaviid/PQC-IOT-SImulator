@@ -1,7 +1,5 @@
 """Expõe os componentes públicos deste pacote."""
 
-from .simulation import Simulation
+from pqc_iot_simulator.pqc_iot_sim.core.simulation import Simulation
 
-__all__ = [
-    "Simulation"
-]
+__all__ = ["Simulation"]

@@ -4,12 +4,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from .logger import Logger
+from pqc_iot_simulator.pqc_iot_sim.components.logger import Logger
 
 
 @dataclass
 class Packet:
     """Representa um pacote lógico transmitido pela rede."""
+
     source: str
     destination: str
     payload: dict[str, Any]
@@ -22,6 +23,7 @@ class Packet:
 
 class Host:
     """Representa um nó lógico capaz de enviar e receber dados."""
+
     def __init__(
         self,
         host_id: str,
@@ -30,7 +32,7 @@ class Host:
         initial_energy: float | None = None,
         protocol: str | None = None,
         crypto_mode: str | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -47,7 +49,9 @@ class Host:
         self.host_type = host_type
         self.logger = logger or Logger(name="Host")
         if initial_energy is not None and initial_energy < 0:
-            raise ValueError("initial_energy is expressed in joules and cannot be negative")
+            raise ValueError(
+                "initial_energy is expressed in joules and cannot be negative"
+            )
         self.initial_energy = float(initial_energy or 0.0)
         self.energy = self.initial_energy
         self.energy_is_calibrated = initial_energy is not None
@@ -66,7 +70,7 @@ class Host:
                 f"protocolo: {self._safe_label(self.protocol)}, "
                 f"modo de criptografia: {self._crypto_label(self.crypto_mode)}"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
     def _label(self):
@@ -85,21 +89,13 @@ class Host:
 
         prefix, number = parts
 
-        labels = {
-            "iot": "IOT",
-            "gateway": "Gateway",
-            "server": "Servidor"
-        }
+        labels = {"iot": "IOT", "gateway": "Gateway", "server": "Servidor"}
 
         return f"{labels.get(prefix, prefix)} {number}"
 
     def _crypto_label(self, crypto_mode: str | None):
         """Converte o modo criptográfico em um rótulo legível."""
-        labels = {
-            "classical": "classica",
-            "hybrid": "hibrida",
-            "pqc": "pos quantica"
-        }
+        labels = {"classical": "classica", "hybrid": "hibrida", "pqc": "pos quantica"}
 
         if crypto_mode is None:
             return "nao definido"
@@ -148,7 +144,7 @@ class Host:
 
         self.logger.log(
             f"{self._label()} configurado para usar o protocolo {protocol}",
-            component=self.host_id
+            component=self.host_id,
         )
 
         return self
@@ -166,7 +162,7 @@ class Host:
                 f"{self._label()} configurado com modo de criptografia "
                 f"{self._crypto_label(crypto_mode)}"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
         return self
@@ -197,7 +193,7 @@ class Host:
                 f"por {self._reason_label(reason)}, "
                 f"energia restante: {self._format_number(self.energy)} J"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
         return self.energy
@@ -207,7 +203,7 @@ class Host:
         destination: str,
         payload: dict[str, Any],
         protocol: str | None = None,
-        crypto_mode: str | None = None
+        crypto_mode: str | None = None,
     ):
         """Cria e envia dados para outro nó.
 
@@ -225,7 +221,7 @@ class Host:
             destination=destination,
             payload=payload,
             protocol=selected_protocol,
-            crypto_mode=selected_crypto
+            crypto_mode=selected_crypto,
         )
 
         self.sent_packets.append(packet)
@@ -236,7 +232,7 @@ class Host:
                 f"protocolo: {self._safe_label(packet.protocol)}, "
                 f"criptografia: {self._crypto_label(packet.crypto_mode)}"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
         return packet
@@ -256,7 +252,7 @@ class Host:
                 f"protocolo: {self._safe_label(packet.protocol)}, "
                 f"criptografia: {self._crypto_label(packet.crypto_mode)}"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
         return packet
@@ -265,14 +261,18 @@ class Host:
         """Retorna o estado atual do componente."""
         initial_j = self.initial_energy if self.energy_is_calibrated else None
         current_j = self.energy if self.energy_is_calibrated else None
-        consumed_j = self.initial_energy - self.energy if self.energy_is_calibrated else None
+        consumed_j = (
+            self.initial_energy - self.energy if self.energy_is_calibrated else None
+        )
         return {
             "host_id": self.host_id,
             "host_type": self.host_type,
             "initial_energy_j": initial_j,
             "current_energy_j": current_j,
             "energy_consumed_j": consumed_j,
-            "energy_model_status": "legacy_explicit_joules" if self.energy_is_calibrated else "not_calibrated",
+            "energy_model_status": "legacy_explicit_joules"
+            if self.energy_is_calibrated
+            else "not_calibrated",
             "initial_energy": initial_j,
             "current_energy": current_j,
             "energy_consumed": consumed_j,
@@ -282,12 +282,13 @@ class Host:
             "sent_packets": len(self.sent_packets),
             "received_packets": len(self.received_packets),
             "forwarded_packets": len(self.forwarded_packets),
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 class IoTNode(Host):
     """Representa um dispositivo IoT na topologia lógica."""
+
     def __init__(
         self,
         host_id: str,
@@ -295,7 +296,7 @@ class IoTNode(Host):
         initial_energy: float | None = None,
         protocol: str | None = None,
         crypto_mode: str | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -314,12 +315,13 @@ class IoTNode(Host):
             initial_energy=initial_energy,
             protocol=protocol,
             crypto_mode=crypto_mode,
-            metadata=metadata
+            metadata=metadata,
         )
 
 
 class GatewayNode(Host):
     """Representa um gateway que encaminha dados na topologia."""
+
     def __init__(
         self,
         host_id: str,
@@ -327,7 +329,7 @@ class GatewayNode(Host):
         initial_energy: float | None = None,
         protocol: str | None = None,
         crypto_mode: str | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -346,14 +348,10 @@ class GatewayNode(Host):
             initial_energy=initial_energy,
             protocol=protocol,
             crypto_mode=crypto_mode,
-            metadata=metadata
+            metadata=metadata,
         )
 
-    def forward_data(
-        self,
-        packet: Packet,
-        destination: str
-    ):
+    def forward_data(self, packet: Packet, destination: str):
         """Encaminha um pacote ao próximo nó do caminho.
 
         Parâmetros:
@@ -365,7 +363,7 @@ class GatewayNode(Host):
             destination=destination,
             payload=packet.payload,
             protocol=packet.protocol,
-            crypto_mode=packet.crypto_mode
+            crypto_mode=packet.crypto_mode,
         )
 
         self.forwarded_packets.append(forwarded_packet)
@@ -377,7 +375,7 @@ class GatewayNode(Host):
                 f"protocolo: {self._safe_label(packet.protocol)}, "
                 f"criptografia: {self._crypto_label(packet.crypto_mode)}"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
         return forwarded_packet
@@ -385,6 +383,7 @@ class GatewayNode(Host):
 
 class ApplicationServer(Host):
     """Representa o servidor que recebe e processa telemetria."""
+
     def __init__(
         self,
         host_id: str,
@@ -392,7 +391,7 @@ class ApplicationServer(Host):
         initial_energy: float | None = None,
         protocol: str | None = None,
         crypto_mode: str | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -411,7 +410,7 @@ class ApplicationServer(Host):
             initial_energy=initial_energy,
             protocol=protocol,
             crypto_mode=crypto_mode,
-            metadata=metadata
+            metadata=metadata,
         )
 
         self.application_data: list[dict[str, Any]] = []
@@ -430,7 +429,7 @@ class ApplicationServer(Host):
             "payload": packet.payload,
             "protocol": packet.protocol,
             "crypto_mode": packet.crypto_mode,
-            "received_at": datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+            "received_at": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
         }
 
         self.application_data.append(record)
@@ -441,7 +440,7 @@ class ApplicationServer(Host):
                 f"protocolo: {self._safe_label(packet.protocol)}, "
                 f"criptografia: {self._crypto_label(packet.crypto_mode)}"
             ),
-            component=self.host_id
+            component=self.host_id,
         )
 
         return record

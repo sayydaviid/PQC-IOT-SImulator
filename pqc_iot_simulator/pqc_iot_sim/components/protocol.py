@@ -30,6 +30,7 @@ def mqtt_remaining_length_bytes(remaining_length: int) -> int:
 @dataclass(frozen=True)
 class MQTTConfig:
     """Armazena parâmetros do modelo MQTT 3.1.1."""
+
     topic: str
     qos: int = 1
     persistent_session: bool = True
@@ -56,6 +57,7 @@ class MQTTConfig:
 @dataclass(frozen=True)
 class CoAPConfig:
     """Armazena parâmetros do modelo CoAP."""
+
     resource_path: str = "sensors/environment"
     confirmable: bool = True
     token_length_bytes: int = 2
@@ -77,6 +79,7 @@ class CoAPConfig:
 @dataclass(frozen=True)
 class HTTPConfig:
     """Armazena parâmetros do modelo HTTP/1.1."""
+
     host: str = "server.local"
     path: str = "/telemetry"
     method: str = "POST"
@@ -103,6 +106,7 @@ class HTTPConfig:
 @dataclass
 class WireMessage:
     """Representa uma mensagem lógica pronta para o transporte."""
+
     sequence: int
     direction: str
     protocol: str
@@ -148,6 +152,7 @@ class WireMessage:
 @dataclass
 class MessageSizeBreakdown:
     """Detalha os bytes de aplicação, transporte e enlace."""
+
     application_payload_bytes: int
     crypto_payload_bytes: int
     crypto_handshake_bytes: int
@@ -200,8 +205,14 @@ class MessageSizeBreakdown:
         Retorna:
             Valor numérico calculado.
         """
-        return sum((self.mqtt_connect_bytes, self.mqtt_connack_bytes,
-                    self.mqtt_publish_bytes, self.mqtt_ack_bytes))
+        return sum(
+            (
+                self.mqtt_connect_bytes,
+                self.mqtt_connack_bytes,
+                self.mqtt_publish_bytes,
+                self.mqtt_ack_bytes,
+            )
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Converte o objeto em um dicionário serializável.
@@ -215,10 +226,15 @@ class MessageSizeBreakdown:
 class MQTTProtocolModel:
     """Modela MQTT 3.1.1 sobre TCP/IPv4 e Wi-Fi analítico."""
 
-    def __init__(self, config: MQTTConfig, *, ip_header_bytes: int = 20,
-                 tcp_header_bytes: int = 20,
-                 link_overhead_bytes_per_frame: int = 38,
-                 link_mtu_bytes: int = 1500) -> None:
+    def __init__(
+        self,
+        config: MQTTConfig,
+        *,
+        ip_header_bytes: int = 20,
+        tcp_header_bytes: int = 20,
+        link_overhead_bytes_per_frame: int = 38,
+        link_mtu_bytes: int = 1500,
+    ) -> None:
         """Inicializa a instância e prepara seu estado interno.
 
         Parâmetros:
@@ -296,13 +312,22 @@ class MQTTProtocolModel:
         """
         return 0 if self.config.qos == 0 else 4 if self.config.qos == 1 else 8
 
-    def _message(self, *, sequence: int, direction: str, protocol: str,
-                 logical_type: str, payload_bytes: int,
-                 wait_phase: str | None = None, wait_rtt_fraction: float = 0.0,
-                 handshake_material_bytes: int = 0,
-                 handshake_protocol_overhead_bytes: int = 0,
-                 mqtt_bytes: int = 0, force_segment: bool = False,
-                 metadata: Mapping[str, Any] | None = None) -> WireMessage:
+    def _message(
+        self,
+        *,
+        sequence: int,
+        direction: str,
+        protocol: str,
+        logical_type: str,
+        payload_bytes: int,
+        wait_phase: str | None = None,
+        wait_rtt_fraction: float = 0.0,
+        handshake_material_bytes: int = 0,
+        handshake_protocol_overhead_bytes: int = 0,
+        mqtt_bytes: int = 0,
+        force_segment: bool = False,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> WireMessage:
         """Cria uma mensagem lógica com metadados de protocolo e transporte."""
         if payload_bytes < 0:
             raise ValueError("logical payload bytes cannot be negative")
@@ -313,17 +338,35 @@ class MQTTProtocolModel:
         wifi = segments * self.link_overhead_bytes_per_frame
         total = payload_bytes + tcp + ip + wifi
         return WireMessage(
-            sequence, direction, protocol, logical_type, payload_bytes, segments,
-            tcp, ip, segments, wifi, total, wait_phase, wait_rtt_fraction,
-            handshake_material_bytes, handshake_protocol_overhead_bytes,
-            mqtt_bytes, effective_wire_bytes=float(total), metadata=dict(metadata or {}),
+            sequence,
+            direction,
+            protocol,
+            logical_type,
+            payload_bytes,
+            segments,
+            tcp,
+            ip,
+            segments,
+            wifi,
+            total,
+            wait_phase,
+            wait_rtt_fraction,
+            handshake_material_bytes,
+            handshake_protocol_overhead_bytes,
+            mqtt_bytes,
+            effective_wire_bytes=float(total),
+            metadata=dict(metadata or {}),
             application_protocol_bytes=mqtt_bytes,
         )
 
-    def build_cycle_messages(self, *, crypto_payload_bytes: int,
-                             handshake_flights: Sequence[Mapping[str, Any]] = (),
-                             include_tcp_connect: bool = True,
-                             include_mqtt_connect: bool = True) -> list[WireMessage]:
+    def build_cycle_messages(
+        self,
+        *,
+        crypto_payload_bytes: int,
+        handshake_flights: Sequence[Mapping[str, Any]] = (),
+        include_tcp_connect: bool = True,
+        include_mqtt_connect: bool = True,
+    ) -> list[WireMessage]:
         """Cria as mensagens lógicas de um ciclo.
 
         Parâmetros:
@@ -337,94 +380,165 @@ class MQTTProtocolModel:
         """
         messages: list[WireMessage] = []
         if include_tcp_connect:
-            messages.extend([
-                self._message(sequence=0, direction="iot_to_server", protocol="tcp",
-                              logical_type="tcp_syn", payload_bytes=0,
-                              force_segment=True, metadata={"tcp_control": True}),
-                self._message(sequence=0, direction="server_to_iot", protocol="tcp",
-                              logical_type="tcp_syn_ack", payload_bytes=0,
-                              wait_phase="tcp_connect", wait_rtt_fraction=1.0,
-                              force_segment=True, metadata={"tcp_control": True}),
-                self._message(sequence=0, direction="iot_to_server", protocol="tcp",
-                              logical_type="tcp_ack", payload_bytes=0,
-                              force_segment=True, metadata={"tcp_control": True}),
-            ])
+            messages.extend(
+                [
+                    self._message(
+                        sequence=0,
+                        direction="iot_to_server",
+                        protocol="tcp",
+                        logical_type="tcp_syn",
+                        payload_bytes=0,
+                        force_segment=True,
+                        metadata={"tcp_control": True},
+                    ),
+                    self._message(
+                        sequence=0,
+                        direction="server_to_iot",
+                        protocol="tcp",
+                        logical_type="tcp_syn_ack",
+                        payload_bytes=0,
+                        wait_phase="tcp_connect",
+                        wait_rtt_fraction=1.0,
+                        force_segment=True,
+                        metadata={"tcp_control": True},
+                    ),
+                    self._message(
+                        sequence=0,
+                        direction="iot_to_server",
+                        protocol="tcp",
+                        logical_type="tcp_ack",
+                        payload_bytes=0,
+                        force_segment=True,
+                        metadata={"tcp_control": True},
+                    ),
+                ]
+            )
         for flight in handshake_flights:
-            material = int(flight.get("cryptographic_material_bytes", flight.get("payload_bytes", 0)))
+            material = int(
+                flight.get(
+                    "cryptographic_material_bytes", flight.get("payload_bytes", 0)
+                )
+            )
             overhead = int(flight.get("protocol_overhead_bytes", 0))
             payload = int(flight.get("payload_bytes", material + overhead))
             rtt_fraction = float(flight.get("wait_rtt_fraction", 0.0))
-            messages.append(self._message(
-                sequence=0, direction=str(flight["direction"]),
-                protocol="authenticated_key_establishment",
-                logical_type=str(flight["logical_type"]), payload_bytes=payload,
-                wait_phase="crypto_handshake" if rtt_fraction else None,
-                wait_rtt_fraction=rtt_fraction,
-                handshake_material_bytes=material,
-                handshake_protocol_overhead_bytes=overhead,
-                metadata={"flight_number": flight.get("flight_number")},
-            ))
+            messages.append(
+                self._message(
+                    sequence=0,
+                    direction=str(flight["direction"]),
+                    protocol="authenticated_key_establishment",
+                    logical_type=str(flight["logical_type"]),
+                    payload_bytes=payload,
+                    wait_phase="crypto_handshake" if rtt_fraction else None,
+                    wait_rtt_fraction=rtt_fraction,
+                    handshake_material_bytes=material,
+                    handshake_protocol_overhead_bytes=overhead,
+                    metadata={"flight_number": flight.get("flight_number")},
+                )
+            )
         if include_mqtt_connect:
             connect, connack = self.connect_size_bytes(), self.connack_size_bytes()
-            messages.extend([
-                self._message(sequence=0, direction="iot_to_server", protocol="mqtt_3_1_1",
-                              logical_type="mqtt_connect", payload_bytes=connect,
-                              mqtt_bytes=connect, metadata={
-                                  "client_id": self.config.client_id,
-                                  "clean_session": self.config.clean_session,
-                                  "persistent_session": self.config.persistent_session,
-                                  "username_present": self.config.username is not None,
-                                  "password_present": self.config.password is not None,
-                                  "tls_included": False,
-                                  "post_handshake_operations_boundary": True,
-                              }),
-                self._message(sequence=0, direction="server_to_iot", protocol="mqtt_3_1_1",
-                              logical_type="mqtt_connack", payload_bytes=connack,
-                              mqtt_bytes=connack, wait_phase="mqtt_connect",
-                              wait_rtt_fraction=1.0),
-            ])
+            messages.extend(
+                [
+                    self._message(
+                        sequence=0,
+                        direction="iot_to_server",
+                        protocol="mqtt_3_1_1",
+                        logical_type="mqtt_connect",
+                        payload_bytes=connect,
+                        mqtt_bytes=connect,
+                        metadata={
+                            "client_id": self.config.client_id,
+                            "clean_session": self.config.clean_session,
+                            "persistent_session": self.config.persistent_session,
+                            "username_present": self.config.username is not None,
+                            "password_present": self.config.password is not None,
+                            "tls_included": False,
+                            "post_handshake_operations_boundary": True,
+                        },
+                    ),
+                    self._message(
+                        sequence=0,
+                        direction="server_to_iot",
+                        protocol="mqtt_3_1_1",
+                        logical_type="mqtt_connack",
+                        payload_bytes=connack,
+                        mqtt_bytes=connack,
+                        wait_phase="mqtt_connect",
+                        wait_rtt_fraction=1.0,
+                    ),
+                ]
+            )
         publish = self.publish_size_bytes(crypto_payload_bytes)
-        messages.append(self._message(
-            sequence=0, direction="iot_to_server", protocol="mqtt_3_1_1",
-            logical_type="mqtt_publish_qos1" if self.config.qos == 1 else "mqtt_publish",
-            payload_bytes=publish, mqtt_bytes=publish,
-            metadata={
-                "qos": self.config.qos,
-                "topic": self.config.topic,
-                "crypto_message_carrier": True,
-                "post_handshake_operations_boundary": True,
-            },
-        ))
+        messages.append(
+            self._message(
+                sequence=0,
+                direction="iot_to_server",
+                protocol="mqtt_3_1_1",
+                logical_type="mqtt_publish_qos1"
+                if self.config.qos == 1
+                else "mqtt_publish",
+                payload_bytes=publish,
+                mqtt_bytes=publish,
+                metadata={
+                    "qos": self.config.qos,
+                    "topic": self.config.topic,
+                    "crypto_message_carrier": True,
+                    "post_handshake_operations_boundary": True,
+                },
+            )
+        )
         ack = self.ack_size_bytes()
         if ack:
-            messages.append(self._message(
-                sequence=0, direction="server_to_iot", protocol="mqtt_3_1_1",
-                logical_type="mqtt_puback" if self.config.qos == 1 else "mqtt_qos2_acknowledgements",
-                payload_bytes=ack, mqtt_bytes=ack, wait_phase="mqtt_publish",
-                wait_rtt_fraction=1.0,
-            ))
+            messages.append(
+                self._message(
+                    sequence=0,
+                    direction="server_to_iot",
+                    protocol="mqtt_3_1_1",
+                    logical_type="mqtt_puback"
+                    if self.config.qos == 1
+                    else "mqtt_qos2_acknowledgements",
+                    payload_bytes=ack,
+                    mqtt_bytes=ack,
+                    wait_phase="mqtt_publish",
+                    wait_rtt_fraction=1.0,
+                )
+            )
         if self.config.tcp_ack_policy == "explicit_ack":
             expanded: list[WireMessage] = []
             for message in messages:
                 expanded.append(message)
                 if message.logical_payload_bytes and message.protocol != "tcp":
-                    reverse = "server_to_iot" if message.direction == "iot_to_server" else "iot_to_server"
-                    expanded.append(self._message(
-                        sequence=0, direction=reverse, protocol="tcp",
-                        logical_type=f"tcp_ack_for_{message.logical_type}",
-                        payload_bytes=0, force_segment=True,
-                        metadata={"tcp_control": True, "explicit_ack": True},
-                    ))
+                    reverse = (
+                        "server_to_iot"
+                        if message.direction == "iot_to_server"
+                        else "iot_to_server"
+                    )
+                    expanded.append(
+                        self._message(
+                            sequence=0,
+                            direction=reverse,
+                            protocol="tcp",
+                            logical_type=f"tcp_ack_for_{message.logical_type}",
+                            payload_bytes=0,
+                            force_segment=True,
+                            metadata={"tcp_control": True, "explicit_ack": True},
+                        )
+                    )
             messages = expanded
         for number, message in enumerate(messages, 1):
             message.sequence = number
         return messages
 
-    def size_cycle(self, *, application_payload_bytes: int,
-                   crypto_payload_bytes: int,
-                   handshake_flights: Sequence[Mapping[str, Any]] = (),
-                   include_tcp_connect: bool = True,
-                   include_mqtt_connect: bool = True) -> MessageSizeBreakdown:
+    def size_cycle(
+        self,
+        *,
+        application_payload_bytes: int,
+        crypto_payload_bytes: int,
+        handshake_flights: Sequence[Mapping[str, Any]] = (),
+        include_tcp_connect: bool = True,
+        include_mqtt_connect: bool = True,
+    ) -> MessageSizeBreakdown:
         """Calcula os tamanhos das mensagens de um ciclo.
 
         Parâmetros:
@@ -450,32 +564,53 @@ class MQTTProtocolModel:
         wifi = sum(m.wifi_link_overhead_bytes for m in messages)
         # TCP control bytes are TCP bytes only.  IP and Wi-Fi envelopes are
         # already exported separately and must not be hidden in this field.
-        tcp_control = sum(m.tcp_header_bytes for m in messages if m.metadata.get("tcp_control"))
-        logical = lambda kind: sum(m.logical_payload_bytes for m in messages if m.logical_type == kind)
+        tcp_control = sum(
+            m.tcp_header_bytes for m in messages if m.metadata.get("tcp_control")
+        )
+        logical = lambda kind: sum(
+            m.logical_payload_bytes for m in messages if m.logical_type == kind
+        )
         return MessageSizeBreakdown(
             application_payload_bytes=application_payload_bytes,
             crypto_payload_bytes=crypto_payload_bytes,
             crypto_handshake_bytes=sum(m.handshake_material_bytes for m in messages),
-            handshake_protocol_overhead_bytes=sum(m.handshake_protocol_overhead_bytes for m in messages),
+            handshake_protocol_overhead_bytes=sum(
+                m.handshake_protocol_overhead_bytes for m in messages
+            ),
             mqtt_connect_bytes=logical("mqtt_connect"),
             mqtt_connack_bytes=logical("mqtt_connack"),
-            mqtt_publish_bytes=sum(m.mqtt_bytes for m in messages if m.logical_type.startswith("mqtt_publish")),
-            mqtt_ack_bytes=sum(m.mqtt_bytes for m in messages if m.logical_type in {"mqtt_puback", "mqtt_qos2_acknowledgements"}),
-            tcp_control_bytes=tcp_control, tcp_header_bytes=tcp_headers,
-            ip_header_bytes=ip_headers, wifi_link_overhead_bytes=wifi,
+            mqtt_publish_bytes=sum(
+                m.mqtt_bytes
+                for m in messages
+                if m.logical_type.startswith("mqtt_publish")
+            ),
+            mqtt_ack_bytes=sum(
+                m.mqtt_bytes
+                for m in messages
+                if m.logical_type in {"mqtt_puback", "mqtt_qos2_acknowledgements"}
+            ),
+            tcp_control_bytes=tcp_control,
+            tcp_header_bytes=tcp_headers,
+            ip_header_bytes=ip_headers,
+            wifi_link_overhead_bytes=wifi,
             transport_overhead_bytes=tcp_headers + ip_headers,
-            link_overhead_bytes=wifi, retransmitted_bytes=0.0,
-            total_wire_bytes=float(tx + rx), tx_base_wire_bytes=tx,
-            rx_base_wire_bytes=rx, wire_messages=messages,
+            link_overhead_bytes=wifi,
+            retransmitted_bytes=0.0,
+            total_wire_bytes=float(tx + rx),
+            tx_base_wire_bytes=tx,
+            rx_base_wire_bytes=rx,
+            wire_messages=messages,
             tcp_ack_policy=self.config.tcp_ack_policy,
             connection_close_policy=self.config.connection_close_policy,
             protocol_name="mqtt",
             protocol_request_bytes=sum(
-                m.application_protocol_bytes for m in messages
+                m.application_protocol_bytes
+                for m in messages
                 if m.direction == "iot_to_server"
             ),
             protocol_response_bytes=sum(
-                m.application_protocol_bytes for m in messages
+                m.application_protocol_bytes
+                for m in messages
                 if m.direction == "server_to_iot"
             ),
             application_protocol_bytes=sum(
@@ -483,9 +618,14 @@ class MQTTProtocolModel:
             ),
         )
 
-    def size_message(self, *, application_payload_bytes: int,
-                     crypto_payload_bytes: int, handshake_tx_bytes: int = 0,
-                     handshake_rx_bytes: int = 0) -> MessageSizeBreakdown:
+    def size_message(
+        self,
+        *,
+        application_payload_bytes: int,
+        crypto_payload_bytes: int,
+        handshake_tx_bytes: int = 0,
+        handshake_rx_bytes: int = 0,
+    ) -> MessageSizeBreakdown:
         """Mantém compatibilidade e separa a entrada em duas etapas.
 
         Parâmetros:
@@ -499,28 +639,45 @@ class MQTTProtocolModel:
         """
         flights = []
         if handshake_tx_bytes:
-            flights.append({"flight_number": 1, "direction": "iot_to_server",
-                            "logical_type": "compatibility_handshake_client_flight",
-                            "payload_bytes": handshake_tx_bytes,
-                            "cryptographic_material_bytes": handshake_tx_bytes})
+            flights.append(
+                {
+                    "flight_number": 1,
+                    "direction": "iot_to_server",
+                    "logical_type": "compatibility_handshake_client_flight",
+                    "payload_bytes": handshake_tx_bytes,
+                    "cryptographic_material_bytes": handshake_tx_bytes,
+                }
+            )
         if handshake_rx_bytes:
-            flights.append({"flight_number": 2, "direction": "server_to_iot",
-                            "logical_type": "compatibility_handshake_server_flight",
-                            "payload_bytes": handshake_rx_bytes,
-                            "cryptographic_material_bytes": handshake_rx_bytes,
-                            "wait_rtt_fraction": 1.0})
-        return self.size_cycle(application_payload_bytes=application_payload_bytes,
-                               crypto_payload_bytes=crypto_payload_bytes,
-                               handshake_flights=flights)
+            flights.append(
+                {
+                    "flight_number": 2,
+                    "direction": "server_to_iot",
+                    "logical_type": "compatibility_handshake_server_flight",
+                    "payload_bytes": handshake_rx_bytes,
+                    "cryptographic_material_bytes": handshake_rx_bytes,
+                    "wait_rtt_fraction": 1.0,
+                }
+            )
+        return self.size_cycle(
+            application_payload_bytes=application_payload_bytes,
+            crypto_payload_bytes=crypto_payload_bytes,
+            handshake_flights=flights,
+        )
 
 
 class CoAPProtocolModel:
     """Modela CoAP confirmável sobre UDP/IPv4 e Wi-Fi."""
 
-    def __init__(self, config: CoAPConfig, *, ip_header_bytes: int = 20,
-                 udp_header_bytes: int = 8,
-                 link_overhead_bytes_per_frame: int = 38,
-                 link_mtu_bytes: int = 1500) -> None:
+    def __init__(
+        self,
+        config: CoAPConfig,
+        *,
+        ip_header_bytes: int = 20,
+        udp_header_bytes: int = 8,
+        link_overhead_bytes_per_frame: int = 38,
+        link_mtu_bytes: int = 1500,
+    ) -> None:
         """Inicializa a instância e prepara seu estado interno.
 
         Parâmetros:
@@ -578,8 +735,11 @@ class CoAPProtocolModel:
         options += self._option_size(12 - previous_number, content_format_length)
         payload_marker = 1 if payload_bytes else 0
         return (
-            4 + self.config.token_length_bytes + options
-            + payload_marker + payload_bytes
+            4
+            + self.config.token_length_bytes
+            + options
+            + payload_marker
+            + payload_bytes
         )
 
     def response_size_bytes(self) -> int:
@@ -591,13 +751,21 @@ class CoAPProtocolModel:
         """
         return 4 + self.config.token_length_bytes
 
-    def _message(self, *, sequence: int, direction: str, protocol: str,
-                 logical_type: str, payload_bytes: int,
-                 wait_phase: str | None = None, wait_rtt_fraction: float = 0.0,
-                 handshake_material_bytes: int = 0,
-                 handshake_protocol_overhead_bytes: int = 0,
-                 application_protocol_bytes: int = 0,
-                 metadata: Mapping[str, Any] | None = None) -> WireMessage:
+    def _message(
+        self,
+        *,
+        sequence: int,
+        direction: str,
+        protocol: str,
+        logical_type: str,
+        payload_bytes: int,
+        wait_phase: str | None = None,
+        wait_rtt_fraction: float = 0.0,
+        handshake_material_bytes: int = 0,
+        handshake_protocol_overhead_bytes: int = 0,
+        application_protocol_bytes: int = 0,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> WireMessage:
         """Cria uma mensagem lógica com metadados de protocolo e transporte."""
         if payload_bytes < 0:
             raise ValueError("logical payload bytes cannot be negative")
@@ -631,10 +799,14 @@ class CoAPProtocolModel:
             application_protocol_bytes=application_protocol_bytes,
         )
 
-    def build_cycle_messages(self, *, crypto_payload_bytes: int,
-                             handshake_flights: Sequence[Mapping[str, Any]] = (),
-                             include_tcp_connect: bool = True,
-                             include_mqtt_connect: bool = True) -> list[WireMessage]:
+    def build_cycle_messages(
+        self,
+        *,
+        crypto_payload_bytes: int,
+        handshake_flights: Sequence[Mapping[str, Any]] = (),
+        include_tcp_connect: bool = True,
+        include_mqtt_connect: bool = True,
+    ) -> list[WireMessage]:
         # Compatibility arguments are accepted intentionally. CoAP uses UDP,
         # so no TCP or MQTT connection exchange is emitted.
         """Cria as mensagens lógicas de um ciclo.
@@ -652,62 +824,74 @@ class CoAPProtocolModel:
         messages: list[WireMessage] = []
         for flight in handshake_flights:
             material = int(
-                flight.get("cryptographic_material_bytes", flight.get("payload_bytes", 0))
+                flight.get(
+                    "cryptographic_material_bytes", flight.get("payload_bytes", 0)
+                )
             )
             overhead = int(flight.get("protocol_overhead_bytes", 0))
             payload = int(flight.get("payload_bytes", material + overhead))
             rtt_fraction = float(flight.get("wait_rtt_fraction", 0.0))
-            messages.append(self._message(
-                sequence=0,
-                direction=str(flight["direction"]),
-                protocol="authenticated_key_establishment",
-                logical_type=str(flight["logical_type"]),
-                payload_bytes=payload,
-                wait_phase="crypto_handshake" if rtt_fraction else None,
-                wait_rtt_fraction=rtt_fraction,
-                handshake_material_bytes=material,
-                handshake_protocol_overhead_bytes=overhead,
-                metadata={"flight_number": flight.get("flight_number")},
-            ))
+            messages.append(
+                self._message(
+                    sequence=0,
+                    direction=str(flight["direction"]),
+                    protocol="authenticated_key_establishment",
+                    logical_type=str(flight["logical_type"]),
+                    payload_bytes=payload,
+                    wait_phase="crypto_handshake" if rtt_fraction else None,
+                    wait_rtt_fraction=rtt_fraction,
+                    handshake_material_bytes=material,
+                    handshake_protocol_overhead_bytes=overhead,
+                    metadata={"flight_number": flight.get("flight_number")},
+                )
+            )
         request = self.request_size_bytes(crypto_payload_bytes)
-        messages.append(self._message(
-            sequence=0,
-            direction="iot_to_server",
-            protocol="coap_1_udp",
-            logical_type="coap_confirmable_post",
-            payload_bytes=request,
-            application_protocol_bytes=request,
-            metadata={
-                "resource_path": self.config.resource_path,
-                "confirmable": self.config.confirmable,
-                "content_format": self.config.content_format,
-                "crypto_message_carrier": True,
-                "post_handshake_operations_boundary": True,
-                "dtls_included": False,
-                "oscore_included": False,
-            },
-        ))
+        messages.append(
+            self._message(
+                sequence=0,
+                direction="iot_to_server",
+                protocol="coap_1_udp",
+                logical_type="coap_confirmable_post",
+                payload_bytes=request,
+                application_protocol_bytes=request,
+                metadata={
+                    "resource_path": self.config.resource_path,
+                    "confirmable": self.config.confirmable,
+                    "content_format": self.config.content_format,
+                    "crypto_message_carrier": True,
+                    "post_handshake_operations_boundary": True,
+                    "dtls_included": False,
+                    "oscore_included": False,
+                },
+            )
+        )
         response = self.response_size_bytes()
-        messages.append(self._message(
-            sequence=0,
-            direction="server_to_iot",
-            protocol="coap_1_udp",
-            logical_type="coap_ack_2_04_changed",
-            payload_bytes=response,
-            application_protocol_bytes=response,
-            wait_phase="coap_response",
-            wait_rtt_fraction=1.0 if self.config.confirmable else 0.0,
-            metadata={"response_code": "2.04 Changed"},
-        ))
+        messages.append(
+            self._message(
+                sequence=0,
+                direction="server_to_iot",
+                protocol="coap_1_udp",
+                logical_type="coap_ack_2_04_changed",
+                payload_bytes=response,
+                application_protocol_bytes=response,
+                wait_phase="coap_response",
+                wait_rtt_fraction=1.0 if self.config.confirmable else 0.0,
+                metadata={"response_code": "2.04 Changed"},
+            )
+        )
         for number, message in enumerate(messages, 1):
             message.sequence = number
         return messages
 
-    def size_cycle(self, *, application_payload_bytes: int,
-                   crypto_payload_bytes: int,
-                   handshake_flights: Sequence[Mapping[str, Any]] = (),
-                   include_tcp_connect: bool = True,
-                   include_mqtt_connect: bool = True) -> MessageSizeBreakdown:
+    def size_cycle(
+        self,
+        *,
+        application_payload_bytes: int,
+        crypto_payload_bytes: int,
+        handshake_flights: Sequence[Mapping[str, Any]] = (),
+        include_tcp_connect: bool = True,
+        include_mqtt_connect: bool = True,
+    ) -> MessageSizeBreakdown:
         """Calcula os tamanhos das mensagens de um ciclo.
 
         Parâmetros:
@@ -726,23 +910,15 @@ class CoAPProtocolModel:
             include_tcp_connect=include_tcp_connect,
             include_mqtt_connect=include_mqtt_connect,
         )
-        tx = sum(
-            m.base_wire_bytes for m in messages
-            if m.direction == "iot_to_server"
-        )
-        rx = sum(
-            m.base_wire_bytes for m in messages
-            if m.direction == "server_to_iot"
-        )
+        tx = sum(m.base_wire_bytes for m in messages if m.direction == "iot_to_server")
+        rx = sum(m.base_wire_bytes for m in messages if m.direction == "server_to_iot")
         ip_headers = sum(m.ip_header_bytes for m in messages)
         udp_headers = sum(m.udp_header_bytes for m in messages)
         wifi = sum(m.wifi_link_overhead_bytes for m in messages)
         return MessageSizeBreakdown(
             application_payload_bytes=application_payload_bytes,
             crypto_payload_bytes=crypto_payload_bytes,
-            crypto_handshake_bytes=sum(
-                m.handshake_material_bytes for m in messages
-            ),
+            crypto_handshake_bytes=sum(m.handshake_material_bytes for m in messages),
             handshake_protocol_overhead_bytes=sum(
                 m.handshake_protocol_overhead_bytes for m in messages
             ),
@@ -765,11 +941,13 @@ class CoAPProtocolModel:
             connection_close_policy="connectionless_udp",
             protocol_name="coap",
             protocol_request_bytes=sum(
-                m.application_protocol_bytes for m in messages
+                m.application_protocol_bytes
+                for m in messages
                 if m.direction == "iot_to_server"
             ),
             protocol_response_bytes=sum(
-                m.application_protocol_bytes for m in messages
+                m.application_protocol_bytes
+                for m in messages
                 if m.direction == "server_to_iot"
             ),
             application_protocol_bytes=sum(
@@ -778,9 +956,14 @@ class CoAPProtocolModel:
             udp_header_bytes=udp_headers,
         )
 
-    def size_message(self, *, application_payload_bytes: int,
-                     crypto_payload_bytes: int, handshake_tx_bytes: int = 0,
-                     handshake_rx_bytes: int = 0) -> MessageSizeBreakdown:
+    def size_message(
+        self,
+        *,
+        application_payload_bytes: int,
+        crypto_payload_bytes: int,
+        handshake_tx_bytes: int = 0,
+        handshake_rx_bytes: int = 0,
+    ) -> MessageSizeBreakdown:
         """Calcula o tamanho de uma mensagem.
 
         Parâmetros:
@@ -794,20 +977,24 @@ class CoAPProtocolModel:
         """
         flights = []
         if handshake_tx_bytes:
-            flights.append({
-                "direction": "iot_to_server",
-                "logical_type": "compatibility_handshake_client_flight",
-                "payload_bytes": handshake_tx_bytes,
-                "cryptographic_material_bytes": handshake_tx_bytes,
-            })
+            flights.append(
+                {
+                    "direction": "iot_to_server",
+                    "logical_type": "compatibility_handshake_client_flight",
+                    "payload_bytes": handshake_tx_bytes,
+                    "cryptographic_material_bytes": handshake_tx_bytes,
+                }
+            )
         if handshake_rx_bytes:
-            flights.append({
-                "direction": "server_to_iot",
-                "logical_type": "compatibility_handshake_server_flight",
-                "payload_bytes": handshake_rx_bytes,
-                "cryptographic_material_bytes": handshake_rx_bytes,
-                "wait_rtt_fraction": 1.0,
-            })
+            flights.append(
+                {
+                    "direction": "server_to_iot",
+                    "logical_type": "compatibility_handshake_server_flight",
+                    "payload_bytes": handshake_rx_bytes,
+                    "cryptographic_material_bytes": handshake_rx_bytes,
+                    "wait_rtt_fraction": 1.0,
+                }
+            )
         return self.size_cycle(
             application_payload_bytes=application_payload_bytes,
             crypto_payload_bytes=crypto_payload_bytes,
@@ -818,10 +1005,15 @@ class CoAPProtocolModel:
 class HTTPProtocolModel(MQTTProtocolModel):
     """Modela HTTP/1.1 sobre TCP/IPv4 e Wi-Fi analítico."""
 
-    def __init__(self, config: HTTPConfig, *, ip_header_bytes: int = 20,
-                 tcp_header_bytes: int = 20,
-                 link_overhead_bytes_per_frame: int = 38,
-                 link_mtu_bytes: int = 1500) -> None:
+    def __init__(
+        self,
+        config: HTTPConfig,
+        *,
+        ip_header_bytes: int = 20,
+        tcp_header_bytes: int = 20,
+        link_overhead_bytes_per_frame: int = 38,
+        link_mtu_bytes: int = 1500,
+    ) -> None:
         """Inicializa a instância e prepara seu estado interno.
 
         Parâmetros:
@@ -873,16 +1065,22 @@ class HTTPProtocolModel(MQTTProtocolModel):
         Retorna:
             Valor numérico calculado.
         """
-        return len((
-            f"{self.config.version} {self.config.response_status}\r\n"
-            "Content-Length: 0\r\n"
-            "Connection: close\r\n\r\n"
-        ).encode("ascii"))
+        return len(
+            (
+                f"{self.config.version} {self.config.response_status}\r\n"
+                "Content-Length: 0\r\n"
+                "Connection: close\r\n\r\n"
+            ).encode("ascii")
+        )
 
-    def build_cycle_messages(self, *, crypto_payload_bytes: int,
-                             handshake_flights: Sequence[Mapping[str, Any]] = (),
-                             include_tcp_connect: bool = True,
-                             include_mqtt_connect: bool = True) -> list[WireMessage]:
+    def build_cycle_messages(
+        self,
+        *,
+        crypto_payload_bytes: int,
+        handshake_flights: Sequence[Mapping[str, Any]] = (),
+        include_tcp_connect: bool = True,
+        include_mqtt_connect: bool = True,
+    ) -> list[WireMessage]:
         """Cria as mensagens lógicas de um ciclo.
 
         Parâmetros:
@@ -897,71 +1095,94 @@ class HTTPProtocolModel(MQTTProtocolModel):
         del include_mqtt_connect
         messages: list[WireMessage] = []
         if include_tcp_connect:
-            messages.extend([
-                self._message(
-                    sequence=0, direction="iot_to_server", protocol="tcp",
-                    logical_type="tcp_syn", payload_bytes=0,
-                    force_segment=True, metadata={"tcp_control": True},
-                ),
-                self._message(
-                    sequence=0, direction="server_to_iot", protocol="tcp",
-                    logical_type="tcp_syn_ack", payload_bytes=0,
-                    wait_phase="tcp_connect", wait_rtt_fraction=1.0,
-                    force_segment=True, metadata={"tcp_control": True},
-                ),
-                self._message(
-                    sequence=0, direction="iot_to_server", protocol="tcp",
-                    logical_type="tcp_ack", payload_bytes=0,
-                    force_segment=True, metadata={"tcp_control": True},
-                ),
-            ])
+            messages.extend(
+                [
+                    self._message(
+                        sequence=0,
+                        direction="iot_to_server",
+                        protocol="tcp",
+                        logical_type="tcp_syn",
+                        payload_bytes=0,
+                        force_segment=True,
+                        metadata={"tcp_control": True},
+                    ),
+                    self._message(
+                        sequence=0,
+                        direction="server_to_iot",
+                        protocol="tcp",
+                        logical_type="tcp_syn_ack",
+                        payload_bytes=0,
+                        wait_phase="tcp_connect",
+                        wait_rtt_fraction=1.0,
+                        force_segment=True,
+                        metadata={"tcp_control": True},
+                    ),
+                    self._message(
+                        sequence=0,
+                        direction="iot_to_server",
+                        protocol="tcp",
+                        logical_type="tcp_ack",
+                        payload_bytes=0,
+                        force_segment=True,
+                        metadata={"tcp_control": True},
+                    ),
+                ]
+            )
         for flight in handshake_flights:
             material = int(
-                flight.get("cryptographic_material_bytes", flight.get("payload_bytes", 0))
+                flight.get(
+                    "cryptographic_material_bytes", flight.get("payload_bytes", 0)
+                )
             )
             overhead = int(flight.get("protocol_overhead_bytes", 0))
             payload = int(flight.get("payload_bytes", material + overhead))
             rtt_fraction = float(flight.get("wait_rtt_fraction", 0.0))
-            messages.append(self._message(
-                sequence=0,
-                direction=str(flight["direction"]),
-                protocol="authenticated_key_establishment",
-                logical_type=str(flight["logical_type"]),
-                payload_bytes=payload,
-                wait_phase="crypto_handshake" if rtt_fraction else None,
-                wait_rtt_fraction=rtt_fraction,
-                handshake_material_bytes=material,
-                handshake_protocol_overhead_bytes=overhead,
-                metadata={"flight_number": flight.get("flight_number")},
-            ))
+            messages.append(
+                self._message(
+                    sequence=0,
+                    direction=str(flight["direction"]),
+                    protocol="authenticated_key_establishment",
+                    logical_type=str(flight["logical_type"]),
+                    payload_bytes=payload,
+                    wait_phase="crypto_handshake" if rtt_fraction else None,
+                    wait_rtt_fraction=rtt_fraction,
+                    handshake_material_bytes=material,
+                    handshake_protocol_overhead_bytes=overhead,
+                    metadata={"flight_number": flight.get("flight_number")},
+                )
+            )
         request = self.request_size_bytes(crypto_payload_bytes)
-        messages.append(self._message(
-            sequence=0,
-            direction="iot_to_server",
-            protocol="http_1_1",
-            logical_type="http_post",
-            payload_bytes=request,
-            metadata={
-                "method": self.config.method,
-                "path": self.config.path,
-                "content_type": self.config.content_type,
-                "crypto_message_carrier": True,
-                "post_handshake_operations_boundary": True,
-                "tls_included": False,
-            },
-        ))
+        messages.append(
+            self._message(
+                sequence=0,
+                direction="iot_to_server",
+                protocol="http_1_1",
+                logical_type="http_post",
+                payload_bytes=request,
+                metadata={
+                    "method": self.config.method,
+                    "path": self.config.path,
+                    "content_type": self.config.content_type,
+                    "crypto_message_carrier": True,
+                    "post_handshake_operations_boundary": True,
+                    "tls_included": False,
+                },
+            )
+        )
         messages[-1].application_protocol_bytes = request
         response = self.response_size_bytes()
-        messages.append(self._message(
-            sequence=0,
-            direction="server_to_iot",
-            protocol="http_1_1",
-            logical_type="http_204_response",
-            payload_bytes=response,
-            wait_phase="http_response",
-            wait_rtt_fraction=1.0,
-            metadata={"status": self.config.response_status},
-        ))
+        messages.append(
+            self._message(
+                sequence=0,
+                direction="server_to_iot",
+                protocol="http_1_1",
+                logical_type="http_204_response",
+                payload_bytes=response,
+                wait_phase="http_response",
+                wait_rtt_fraction=1.0,
+                metadata={"status": self.config.response_status},
+            )
+        )
         messages[-1].application_protocol_bytes = response
         if self.config.tcp_ack_policy == "explicit_ack":
             expanded: list[WireMessage] = []
@@ -973,25 +1194,31 @@ class HTTPProtocolModel(MQTTProtocolModel):
                         if message.direction == "iot_to_server"
                         else "iot_to_server"
                     )
-                    expanded.append(self._message(
-                        sequence=0,
-                        direction=reverse,
-                        protocol="tcp",
-                        logical_type=f"tcp_ack_for_{message.logical_type}",
-                        payload_bytes=0,
-                        force_segment=True,
-                        metadata={"tcp_control": True, "explicit_ack": True},
-                    ))
+                    expanded.append(
+                        self._message(
+                            sequence=0,
+                            direction=reverse,
+                            protocol="tcp",
+                            logical_type=f"tcp_ack_for_{message.logical_type}",
+                            payload_bytes=0,
+                            force_segment=True,
+                            metadata={"tcp_control": True, "explicit_ack": True},
+                        )
+                    )
             messages = expanded
         for number, message in enumerate(messages, 1):
             message.sequence = number
         return messages
 
-    def size_cycle(self, *, application_payload_bytes: int,
-                   crypto_payload_bytes: int,
-                   handshake_flights: Sequence[Mapping[str, Any]] = (),
-                   include_tcp_connect: bool = True,
-                   include_mqtt_connect: bool = True) -> MessageSizeBreakdown:
+    def size_cycle(
+        self,
+        *,
+        application_payload_bytes: int,
+        crypto_payload_bytes: int,
+        handshake_flights: Sequence[Mapping[str, Any]] = (),
+        include_tcp_connect: bool = True,
+        include_mqtt_connect: bool = True,
+    ) -> MessageSizeBreakdown:
         """Calcula os tamanhos das mensagens de um ciclo.
 
         Parâmetros:
@@ -1010,27 +1237,18 @@ class HTTPProtocolModel(MQTTProtocolModel):
             include_tcp_connect=include_tcp_connect,
             include_mqtt_connect=include_mqtt_connect,
         )
-        tx = sum(
-            m.base_wire_bytes for m in messages
-            if m.direction == "iot_to_server"
-        )
-        rx = sum(
-            m.base_wire_bytes for m in messages
-            if m.direction == "server_to_iot"
-        )
+        tx = sum(m.base_wire_bytes for m in messages if m.direction == "iot_to_server")
+        rx = sum(m.base_wire_bytes for m in messages if m.direction == "server_to_iot")
         tcp_headers = sum(m.tcp_header_bytes for m in messages)
         ip_headers = sum(m.ip_header_bytes for m in messages)
         wifi = sum(m.wifi_link_overhead_bytes for m in messages)
         tcp_control = sum(
-            m.tcp_header_bytes for m in messages
-            if m.metadata.get("tcp_control")
+            m.tcp_header_bytes for m in messages if m.metadata.get("tcp_control")
         )
         return MessageSizeBreakdown(
             application_payload_bytes=application_payload_bytes,
             crypto_payload_bytes=crypto_payload_bytes,
-            crypto_handshake_bytes=sum(
-                m.handshake_material_bytes for m in messages
-            ),
+            crypto_handshake_bytes=sum(m.handshake_material_bytes for m in messages),
             handshake_protocol_overhead_bytes=sum(
                 m.handshake_protocol_overhead_bytes for m in messages
             ),
@@ -1053,11 +1271,13 @@ class HTTPProtocolModel(MQTTProtocolModel):
             connection_close_policy=self.config.connection_close_policy,
             protocol_name="http",
             protocol_request_bytes=sum(
-                m.application_protocol_bytes for m in messages
+                m.application_protocol_bytes
+                for m in messages
                 if m.direction == "iot_to_server"
             ),
             protocol_response_bytes=sum(
-                m.application_protocol_bytes for m in messages
+                m.application_protocol_bytes
+                for m in messages
                 if m.direction == "server_to_iot"
             ),
             application_protocol_bytes=sum(
@@ -1065,9 +1285,14 @@ class HTTPProtocolModel(MQTTProtocolModel):
             ),
         )
 
-    def size_message(self, *, application_payload_bytes: int,
-                     crypto_payload_bytes: int, handshake_tx_bytes: int = 0,
-                     handshake_rx_bytes: int = 0) -> MessageSizeBreakdown:
+    def size_message(
+        self,
+        *,
+        application_payload_bytes: int,
+        crypto_payload_bytes: int,
+        handshake_tx_bytes: int = 0,
+        handshake_rx_bytes: int = 0,
+    ) -> MessageSizeBreakdown:
         """Calcula o tamanho de uma mensagem.
 
         Parâmetros:
@@ -1081,20 +1306,24 @@ class HTTPProtocolModel(MQTTProtocolModel):
         """
         flights = []
         if handshake_tx_bytes:
-            flights.append({
-                "direction": "iot_to_server",
-                "logical_type": "compatibility_handshake_client_flight",
-                "payload_bytes": handshake_tx_bytes,
-                "cryptographic_material_bytes": handshake_tx_bytes,
-            })
+            flights.append(
+                {
+                    "direction": "iot_to_server",
+                    "logical_type": "compatibility_handshake_client_flight",
+                    "payload_bytes": handshake_tx_bytes,
+                    "cryptographic_material_bytes": handshake_tx_bytes,
+                }
+            )
         if handshake_rx_bytes:
-            flights.append({
-                "direction": "server_to_iot",
-                "logical_type": "compatibility_handshake_server_flight",
-                "payload_bytes": handshake_rx_bytes,
-                "cryptographic_material_bytes": handshake_rx_bytes,
-                "wait_rtt_fraction": 1.0,
-            })
+            flights.append(
+                {
+                    "direction": "server_to_iot",
+                    "logical_type": "compatibility_handshake_server_flight",
+                    "payload_bytes": handshake_rx_bytes,
+                    "cryptographic_material_bytes": handshake_rx_bytes,
+                    "wait_rtt_fraction": 1.0,
+                }
+            )
         return self.size_cycle(
             application_payload_bytes=application_payload_bytes,
             crypto_payload_bytes=crypto_payload_bytes,
@@ -1105,6 +1334,7 @@ class HTTPProtocolModel(MQTTProtocolModel):
 @dataclass(frozen=True)
 class RadioConfig:
     """Armazena os parâmetros do modelo de rádio."""
+
     effective_bitrate_bps: float
     retry_model: str = "expected"
     max_retries: int = 4
@@ -1123,7 +1353,9 @@ class RadioConfig:
         if self.association_duration_seconds < 0 or self.mqtt_ack_wait_seconds < 0:
             raise ValueError("radio durations cannot be negative")
         if self.wifi_reconnect_energy_model not in {
-            "incremental_direct_proxy", "state_based_vit", "disabled_for_sensitivity"
+            "incremental_direct_proxy",
+            "state_based_vit",
+            "disabled_for_sensitivity",
         }:
             raise ValueError("invalid Wi-Fi reconnect energy model")
         if self.wifi_reconnect_proxy_multiplier < 0:
@@ -1133,6 +1365,7 @@ class RadioConfig:
 @dataclass
 class RadioTransfer:
     """Registra tentativas, tempos e bytes de uma transferência."""
+
     effective_bitrate_bps: float
     packet_loss_percent: float
     tx_bytes: float
@@ -1150,6 +1383,7 @@ class RadioTransfer:
 
 class RadioModel:
     """Calcula tentativas e duração de transferências pelo rádio."""
+
     def __init__(self, config: RadioConfig, *, random_seed: int = 42) -> None:
         """Inicializa a instância e prepara seu estado interno.
 
@@ -1181,10 +1415,16 @@ class RadioModel:
                 return attempt, True
         return self.config.max_retries + 1, False
 
-    def transfer(self, sizes: MessageSizeBreakdown, *, packet_loss_percent: float = 0.0,
-                 effective_bitrate_bps: float | None = None,
-                 rtt_ms: float | None = None, wait_for_mqtt_ack: bool = True,
-                 include_handshake_wait: bool = False) -> RadioTransfer:
+    def transfer(
+        self,
+        sizes: MessageSizeBreakdown,
+        *,
+        packet_loss_percent: float = 0.0,
+        effective_bitrate_bps: float | None = None,
+        rtt_ms: float | None = None,
+        wait_for_mqtt_ack: bool = True,
+        include_handshake_wait: bool = False,
+    ) -> RadioTransfer:
         """Calcula duração, tentativas e bytes da transferência.
 
         Parâmetros:
@@ -1216,7 +1456,10 @@ class RadioModel:
             effective = message.base_wire_bytes * attempts
             retry_bytes = message.base_wire_bytes * max(0.0, attempts - 1.0)
             message.expected_attempts, message.delivered = attempts, success
-            message.effective_wire_bytes, message.retransmitted_bytes = effective, retry_bytes
+            message.effective_wire_bytes, message.retransmitted_bytes = (
+                effective,
+                retry_bytes,
+            )
             attempts_list.append(attempts)
             retransmitted += retry_bytes
             delivered = delivered and success
@@ -1225,14 +1468,24 @@ class RadioModel:
             elif success:
                 rx += effective
             if message.wait_phase and success:
-                waits[message.wait_phase] = waits.get(message.wait_phase, 0.0) + message.wait_rtt_fraction * rtt
+                waits[message.wait_phase] = (
+                    waits.get(message.wait_phase, 0.0) + message.wait_rtt_fraction * rtt
+                )
             output.append(message.to_dict())
         sizes.retransmitted_bytes, sizes.total_wire_bytes = retransmitted, tx + rx
         return RadioTransfer(
-            bitrate, packet_loss_percent, tx, rx, retransmitted,
-            tx * 8.0 / bitrate, rx * 8.0 / bitrate, sum(waits.values()),
+            bitrate,
+            packet_loss_percent,
+            tx,
+            rx,
+            retransmitted,
+            tx * 8.0 / bitrate,
+            rx * 8.0 / bitrate,
+            sum(waits.values()),
             sum(attempts_list) / len(attempts_list) if attempts_list else 1.0,
-            delivered, output, waits,
+            delivered,
+            output,
+            waits,
             "expected_attempts_per_logical_message_not_observed_events"
             if self.config.retry_model == "expected"
             else "seeded_stochastic_attempts_per_logical_message",

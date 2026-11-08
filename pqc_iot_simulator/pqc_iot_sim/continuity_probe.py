@@ -20,18 +20,22 @@ import _continuity_tls as native
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+
 def load_component(name, filename):
-    spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / "components" / filename)
+    spec = importlib.util.spec_from_file_location(
+        name, Path(__file__).parent / "components" / filename
+    )
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 
+
 _ledger = load_component("_continuity_ledger", "reading_ledger.py")
 _checkpoint = load_component("_continuity_checkpoint", "recovery.py")
 ReadingConflict, ReadingLedger = _ledger.ReadingConflict, _ledger.ReadingLedger
 SealedStore, b64, unb64 = _checkpoint.SealedStore, _checkpoint.b64, _checkpoint.unb64
-PROFILES = load_component("_continuity_design", "../research/tls/design.py").PROFILES
+PROFILES = load_component("_continuity_design", "tls/design.py").PROFILES
 
 LENGTH = struct.Struct("!I")
 
@@ -85,7 +89,9 @@ def context(args, server):
     profile = PROFILES[args.profile]
     ticket = b""
     if server:
-        ticket = Path(args.ticket_key).read_bytes() if args.ticket_key else os.urandom(80)
+        ticket = (
+            Path(args.ticket_key).read_bytes() if args.ticket_key else os.urandom(80)
+        )
     return native.context(
         str(private / ("server.crt" if server else "client.crt")),
         str(private / ("server.key" if server else "client.key")),
@@ -156,7 +162,9 @@ def client(args):
             result["duplicate"] = answer["duplicate"]
             result["ack_monotonic_ns"] = time.perf_counter_ns()
             result["rx_confirmed_tls_bytes"] = native.metadata(peer)["rx_tls_bytes"]
-            result["first_reading_ack_ms"] = (result["ack_monotonic_ns"] - started) / 1e6
+            result["first_reading_ack_ms"] = (
+                result["ack_monotonic_ns"] - started
+            ) / 1e6
         except (OSError, ValueError) as error:
             result["error"] = str(error)
         finally:

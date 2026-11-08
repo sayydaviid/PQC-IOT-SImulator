@@ -9,21 +9,19 @@ import socket
 import time
 from pathlib import Path
 
-from .components.recovery import (
-    ClientHandshake,
-    FRAME,
-    Gateway,
-    Identity,
-    Root,
-    SealedStore,
-    Sender,
-    encode,
-    mac,
-    receive_frame,
-    require_mac,
-    send_frame,
-    unb64,
-)
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import ClientHandshake
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import FRAME
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Gateway
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Identity
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Root
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import SealedStore
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Sender
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import encode
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import mac
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import receive_frame
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import require_mac
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import send_frame
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import unb64
 
 
 def server(args, credentials):

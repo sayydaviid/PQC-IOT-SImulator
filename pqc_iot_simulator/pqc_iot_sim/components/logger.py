@@ -9,6 +9,7 @@ class Logger:
     # Por seguranca, o logger comeca desativado; chame `Logger.activate()`
     # para ligá-lo explicitamente.
     """Registra eventos da plataforma e controla a saída detalhada."""
+
     active: bool = False
     verbose: bool = True
     global_events: list[dict[str, Any]] = []
@@ -19,7 +20,7 @@ class Logger:
         "ciphertext",
         "nonce",
         "private_key",
-        "shared_secret"
+        "shared_secret",
     }
     _lock = threading.Lock()
 
@@ -84,7 +85,7 @@ class Logger:
         message: str,
         data: dict[str, Any] | None = None,
         level: str = "INFO",
-        component: str | None = None
+        component: str | None = None,
     ):
         """Registra uma mensagem e seus dados associados.
 
@@ -104,7 +105,7 @@ class Logger:
             "level": level,
             "component": component or self.name,
             "message": message,
-            "data": safe_data
+            "data": safe_data,
         }
 
         with Logger._lock:
@@ -112,10 +113,10 @@ class Logger:
             Logger.global_events.append(event)
 
             if len(self.events) > self.max_instance_events:
-                self.events = self.events[-self.max_instance_events:]
+                self.events = self.events[-self.max_instance_events :]
 
             if len(Logger.global_events) > Logger.max_global_events:
-                Logger.global_events = Logger.global_events[-Logger.max_global_events:]
+                Logger.global_events = Logger.global_events[-Logger.max_global_events :]
 
         if self.verbose and Logger.verbose:
             time_only = event["timestamp"].split(" ", 1)[-1]

@@ -8,15 +8,21 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
-from ..components.crypto import CryptoManager
-from ..components.device import PhysicalIoTDevice, load_device_profiles
-from ..components.energy import BatteryDepletedError, load_calibration_csv
-from ..components.logger import Logger
-from ..components.metrics import PhysicalMetricsCollector
-from ..components.mininet_coupling import apply_mininet_transport_observation
-from ..components.network import Network
-from ..components.workload import EnvironmentalWorkloadGenerator
-from ..engines import MininetWiFiEngine
+from pqc_iot_simulator.pqc_iot_sim.components.crypto import CryptoManager
+from pqc_iot_simulator.pqc_iot_sim.components.device import PhysicalIoTDevice
+from pqc_iot_simulator.pqc_iot_sim.components.device import load_device_profiles
+from pqc_iot_simulator.pqc_iot_sim.components.energy import BatteryDepletedError
+from pqc_iot_simulator.pqc_iot_sim.components.energy import load_calibration_csv
+from pqc_iot_simulator.pqc_iot_sim.components.logger import Logger
+from pqc_iot_simulator.pqc_iot_sim.components.metrics import PhysicalMetricsCollector
+from pqc_iot_simulator.pqc_iot_sim.components.mininet_coupling import (
+    apply_mininet_transport_observation,
+)
+from pqc_iot_simulator.pqc_iot_sim.components.network import Network
+from pqc_iot_simulator.pqc_iot_sim.components.workload import (
+    EnvironmentalWorkloadGenerator,
+)
+from pqc_iot_simulator.pqc_iot_sim.engines import MininetWiFiEngine
 
 
 class Simulation:
@@ -28,9 +34,7 @@ class Simulation:
         Parâmetros:
             config_path: Caminho da configuração ou rede configurada.
         """
-        default_path = (
-            Path(__file__).resolve().parents[1] / "configs" / "default.yaml"
-        )
+        default_path = Path(__file__).resolve().parents[1] / "configs" / "default.yaml"
         self._network_template: Network | None = None
 
         if isinstance(config_path, Network):
@@ -52,6 +56,30 @@ class Simulation:
         self.wallclock_execution_time_seconds = 0.0
         self.engine_limitation: str | None = None
 
+    def session_recovery(self, directory, blocks=10):
+        """Configure native TLS recovery scenarios using the simulator engines."""
+        from .recovery_simulation import RecoverySimulation
+
+        return RecoverySimulation(directory, blocks=blocks)
+
+    def recovery_reference(self):
+        """Read the reference observations used for recovery comparisons."""
+        from .reference_results import ReferenceResults
+
+        return ReferenceResults()
+
+    def reanalyze_recovery(self, directory):
+        """Recalculate historical recovery metrics in a new directory."""
+        from .reference_reanalysis import ArticleNumericalReanalysis
+
+        return ArticleNumericalReanalysis(directory)
+
+    def validate_recovery(self):
+        """Run the simulator's functional recovery checks."""
+        from ..validation.suite import ValidationSuite
+
+        return ValidationSuite().run()
+
     def _load_config(self) -> dict[str, Any]:
         """Carrega o YAML e o combina com a configuração padrão."""
         if not self.config_path.exists():
@@ -59,7 +87,9 @@ class Simulation:
         try:
             import yaml
         except ImportError as exc:
-            raise RuntimeError("PyYAML is required to load simulation configuration") from exc
+            raise RuntimeError(
+                "PyYAML is required to load simulation configuration"
+            ) from exc
         with self.config_path.open("r", encoding="utf-8") as handle:
             loaded = yaml.safe_load(handle) or {}
         return self._merge_dicts(self._default_config(), loaded)
@@ -98,11 +128,17 @@ class Simulation:
             "engine": {"enabled": True, "type": "mininet_wifi", "params": {}},
         }
 
-    def _merge_dicts(self, base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    def _merge_dicts(
+        self, base: dict[str, Any], override: dict[str, Any]
+    ) -> dict[str, Any]:
         """Combina recursivamente dois dicionários sem alterar os originais."""
         result = deepcopy(base)
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._merge_dicts(result[key], value)
             else:
                 result[key] = deepcopy(value)
@@ -165,7 +201,11 @@ class Simulation:
 
         if self._network_template is not None:
             available_nodes = set(self._network_template.topology_data.nodes)
-            missing = [device_id for device_id in device_ids if device_id not in available_nodes]
+            missing = [
+                device_id
+                for device_id in device_ids
+                if device_id not in available_nodes
+            ]
             if missing:
                 raise ValueError(
                     f"devices are not present in the selected topology: {missing}"
@@ -414,7 +454,9 @@ class Simulation:
         profiles = load_device_profiles(self.config)
         devices_cfg = self.config.get("devices", {}) or {}
         if not devices_cfg:
-            raise ValueError("configuration must declare at least one physical IoT device")
+            raise ValueError(
+                "configuration must declare at least one physical IoT device"
+            )
         timing_cfg = self.config.get("crypto_timing", {}) or {}
         target_operations = self._target_operations()
         start_datetime = datetime.fromisoformat(str(sim_cfg["start_datetime"]))
@@ -423,7 +465,9 @@ class Simulation:
         for index, (device_id, device_data) in enumerate(devices_cfg.items()):
             profile_name = str(device_data["profile"])
             if profile_name not in profiles:
-                raise ValueError(f"unknown device profile for {device_id}: {profile_name}")
+                raise ValueError(
+                    f"unknown device profile for {device_id}: {profile_name}"
+                )
             profile = profiles[profile_name]
             csv_input = profile.workload.csv_input
             if csv_input:
@@ -434,8 +478,12 @@ class Simulation:
                 mode=crypto_mode,
                 kem=str(crypto_params.get("kem", "ML-KEM-512")),
                 pqc_signature=str(crypto_params.get("pqc_signature", "ML-DSA-44")),
-                classical_signature=str(crypto_params.get("classical_signature", "ed25519")),
-                use_classical_signature=bool(crypto_params.get("use_classical_signature", True)),
+                classical_signature=str(
+                    crypto_params.get("classical_signature", "ed25519")
+                ),
+                use_classical_signature=bool(
+                    crypto_params.get("use_classical_signature", True)
+                ),
                 use_pqc_signature=bool(crypto_params.get("use_pqc_signature", True)),
                 timing_mode=str(timing_cfg.get("mode", "target_profile")),
                 target_operations=target_operations,
@@ -457,7 +505,11 @@ class Simulation:
                 profile,
                 manager,
                 generator,
-                destination=str(device_data.get("destination", sim_cfg.get("test_destination", "server_1"))),
+                destination=str(
+                    device_data.get(
+                        "destination", sim_cfg.get("test_destination", "server_1")
+                    )
+                ),
                 random_seed=seed + index,
                 calibrations=target_operations,
             )
@@ -484,13 +536,23 @@ class Simulation:
 
     def _conditions_for(self, device: PhysicalIoTDevice) -> dict[str, Any]:
         """Obtém as condições de enlace aplicáveis ao dispositivo."""
-        conditions = dict(self.config.get("network", {}).get("default_conditions", {}) or {})
+        conditions = dict(
+            self.config.get("network", {}).get("default_conditions", {}) or {}
+        )
         sim_cfg = self.config.get("simulation", {}) or {}
-        if not self.engine or not self.engine.is_running() or not sim_cfg.get("collect_link_metrics", False):
+        if (
+            not self.engine
+            or not self.engine.is_running()
+            or not sim_cfg.get("collect_link_metrics", False)
+        ):
             return conditions
         try:
-            measured = self.engine.collect_link_metrics(device.device_id, device.destination)
-            conditions.update({key: value for key, value in measured.items() if value is not None})
+            measured = self.engine.collect_link_metrics(
+                device.device_id, device.destination
+            )
+            conditions.update(
+                {key: value for key, value in measured.items() if value is not None}
+            )
         except Exception as exc:
             self.engine_limitation = f"Mininet-WiFi link metrics unavailable: {exc}"
             raise RuntimeError(self.engine_limitation) from exc
@@ -530,8 +592,7 @@ class Simulation:
             transfer_id=f"simulation-{device.device_id}-{cycle.sequence:06d}",
             capture_packets=capture_packets,
             pcap_output_path=(
-                self._pcap_path(device, cycle.sequence)
-                if capture_packets else None
+                self._pcap_path(device, cycle.sequence) if capture_packets else None
             ),
         )
         capture = dict(observation.get("packet_capture") or {})
@@ -594,8 +655,7 @@ class Simulation:
         wall_started = perf_counter()
         engine_started = False
         observed_counts = {
-            device_id: {"attempted": 0, "delivered": 0}
-            for device_id in self.devices
+            device_id: {"attempted": 0, "delivered": 0} for device_id in self.devices
         }
         try:
             self.engine.build()
@@ -662,7 +722,9 @@ class Simulation:
             Dicionário com os dados produzidos.
         """
         return {
-            "simulation_time_seconds": float(self.config.get("simulation", {}).get("duration_seconds", 0.0)),
+            "simulation_time_seconds": float(
+                self.config.get("simulation", {}).get("duration_seconds", 0.0)
+            ),
             "wallclock_execution_time_seconds": self.wallclock_execution_time_seconds,
             "engine": "mininet_wifi",
             "engine_limitation": self.engine_limitation,
@@ -682,7 +744,9 @@ class Simulation:
         self.metrics_collector.export_json(
             output_path,
             metadata={
-                "simulation_time_seconds": self.config.get("simulation", {}).get("duration_seconds"),
+                "simulation_time_seconds": self.config.get("simulation", {}).get(
+                    "duration_seconds"
+                ),
                 "wallclock_execution_time_seconds": self.wallclock_execution_time_seconds,
                 "engine_limitation": self.engine_limitation,
             },

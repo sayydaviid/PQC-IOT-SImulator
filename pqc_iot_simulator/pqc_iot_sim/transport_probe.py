@@ -102,9 +102,7 @@ def _run_trace(
     records: list[dict[str, Any]] = []
     for message in plan:
         payload = _payload(transfer_id, message)
-        sender = (
-            role == "client" and message["direction"] == "iot_to_server"
-        ) or (
+        sender = (role == "client" and message["direction"] == "iot_to_server") or (
             role == "server" and message["direction"] == "server_to_iot"
         )
         started_ns = time.perf_counter_ns()
@@ -144,12 +142,8 @@ def _run_udp_trace(
     for message in plan:
         payload = _payload(transfer_id, message)
         if len(payload) > 65_507:
-            raise ValueError(
-                f"UDP payload exceeds 65507 bytes: {len(payload)}"
-            )
-        sender = (
-            role == "client" and message["direction"] == "iot_to_server"
-        ) or (
+            raise ValueError(f"UDP payload exceeds 65507 bytes: {len(payload)}")
+        sender = (role == "client" and message["direction"] == "iot_to_server") or (
             role == "server" and message["direction"] == "server_to_iot"
         )
         started_ns = time.perf_counter_ns()
@@ -188,16 +182,16 @@ def _run_udp_trace(
                 "action": action,
                 "started_ns": started_ns,
                 "finished_ns": finished_ns,
-                "duration_seconds": (
-                    finished_ns - started_ns
-                ) / 1_000_000_000.0,
+                "duration_seconds": (finished_ns - started_ns) / 1_000_000_000.0,
                 "payload_sha256": hashlib.sha256(payload).hexdigest(),
             }
         )
     return records, peer
 
 
-def _open_server(host: str, port: int, timeout: float) -> tuple[socket.socket, socket.socket]:
+def _open_server(
+    host: str, port: int, timeout: float
+) -> tuple[socket.socket, socket.socket]:
     """Abre o socket TCP do servidor."""
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -279,9 +273,7 @@ def main() -> int:
         plan = _decode_plan(args.plan_base64)
         peer: tuple[str, int] | None = None
         if args.transport == "tcp" and args.role == "server":
-            listener, connection = _open_server(
-                args.host, args.port, args.timeout
-            )
+            listener, connection = _open_server(args.host, args.port, args.timeout)
         elif args.transport == "tcp":
             connection = _open_client(
                 args.host, args.port, args.timeout, args.bind_host

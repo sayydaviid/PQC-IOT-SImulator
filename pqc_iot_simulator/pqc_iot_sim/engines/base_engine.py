@@ -5,12 +5,13 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import Any
 
-from ..components.logger import Logger
+from pqc_iot_simulator.pqc_iot_sim.components.logger import Logger
 
 
 @dataclass
 class EngineStatus:
     """Enumera os estados possíveis de um motor de execução."""
+
     name: str
     engine_type: str
     is_built: bool = False
@@ -27,6 +28,7 @@ class EngineStatus:
 @dataclass
 class EngineNode:
     """Mapeia um nó lógico para um nó do motor de rede."""
+
     node_id: str
     node_type: str
     mininet_name: str
@@ -38,6 +40,7 @@ class EngineNode:
 @dataclass
 class EngineLink:
     """Mapeia um enlace lógico para um enlace do motor de rede."""
+
     source: str
     target: str
     source_mininet: str
@@ -67,7 +70,7 @@ class BaseEngine(ABC):
         name: str = "base_engine",
         engine_type: str = "base",
         logger: Logger | None = None,
-        verbose: bool = True
+        verbose: bool = True,
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -83,10 +86,7 @@ class BaseEngine(ABC):
         self.engine_type = engine_type
         self.logger = logger or Logger(name=name, verbose=verbose)
 
-        self.status = EngineStatus(
-            name=self.name,
-            engine_type=self.engine_type
-        )
+        self.status = EngineStatus(name=self.name, engine_type=self.engine_type)
 
         self.engine_nodes: dict[str, EngineNode] = {}
         self.engine_links: list[EngineLink] = []
@@ -94,8 +94,7 @@ class BaseEngine(ABC):
         self.runtime_objects: dict[str, Any] = {}
 
         self.logger.log(
-            f"Engine {self.name} criada, tipo: {self.engine_type}",
-            component=self.name
+            f"Engine {self.name} criada, tipo: {self.engine_type}", component=self.name
         )
 
     def configure(self, **params):
@@ -108,18 +107,17 @@ class BaseEngine(ABC):
 
         if params:
             configured_params = ", ".join(
-                f"{key}: {value}"
-                for key, value in params.items()
+                f"{key}: {value}" for key, value in params.items()
             )
 
             self.logger.log(
                 f"Engine {self.name} configurada, parametros: {configured_params}",
-                component=self.name
+                component=self.name,
             )
         else:
             self.logger.log(
                 f"Engine {self.name} configurada sem parametros adicionais",
-                component=self.name
+                component=self.name,
             )
 
         return self
@@ -143,7 +141,7 @@ class BaseEngine(ABC):
 
         self.logger.log(
             f"Network validada para a engine, nos: {total_nodes}, links: {total_links}",
-            component=self.name
+            component=self.name,
         )
 
         return True
@@ -160,7 +158,7 @@ class BaseEngine(ABC):
                 f"nos mapeados: {len(self.engine_nodes)}, "
                 f"links mapeados: {len(self.engine_links)}"
             ),
-            component=self.name
+            component=self.name,
         )
 
         return self
@@ -176,16 +174,13 @@ class BaseEngine(ABC):
                 node_id=node_id,
                 node_type=node_type,
                 mininet_name=self._to_mininet_name(node_id),
-                metadata={
-                    "original_node_id": node_id
-                }
+                metadata={"original_node_id": node_id},
             )
 
             self.engine_nodes[node_id] = engine_node
 
         self.logger.log(
-            f"{len(self.engine_nodes)} nos mapeados para a engine",
-            component=self.name
+            f"{len(self.engine_nodes)} nos mapeados para a engine", component=self.name
         )
 
         return self.engine_nodes
@@ -209,17 +204,14 @@ class BaseEngine(ABC):
                 target=target,
                 source_mininet=source_engine.mininet_name,
                 target_mininet=target_engine.mininet_name,
-                metadata={
-                    "original_source": source,
-                    "original_target": target
-                }
+                metadata={"original_source": source, "original_target": target},
             )
 
             self.engine_links.append(engine_link)
 
         self.logger.log(
             f"{len(self.engine_links)} links mapeados para a engine",
-            component=self.name
+            component=self.name,
         )
 
         return self.engine_links
@@ -239,12 +231,7 @@ class BaseEngine(ABC):
 
     def _to_mininet_name(self, node_id: str):
         """Converte um identificador lógico em nome válido no Mininet."""
-        clean_name = (
-            node_id
-            .replace("-", "_")
-            .replace(".", "_")
-            .replace(" ", "_")
-        )
+        clean_name = node_id.replace("-", "_").replace(".", "_").replace(" ", "_")
 
         if clean_name.startswith("iot"):
             suffix = clean_name.replace("iot_", "").replace("iot", "")
@@ -277,8 +264,7 @@ class BaseEngine(ABC):
         self.status.is_built = True
 
         self.logger.log(
-            f"Engine {self.name} marcada como construida",
-            component=self.name
+            f"Engine {self.name} marcada como construida", component=self.name
         )
 
         return self
@@ -290,7 +276,7 @@ class BaseEngine(ABC):
 
         self.logger.log(
             f"Engine {self.name} iniciada em {self.status.started_at}",
-            component=self.name
+            component=self.name,
         )
 
         return self
@@ -302,7 +288,7 @@ class BaseEngine(ABC):
 
         self.logger.log(
             f"Engine {self.name} parada em {self.status.stopped_at}",
-            component=self.name
+            component=self.name,
         )
 
         return self
@@ -321,17 +307,11 @@ class BaseEngine(ABC):
 
     def get_engine_nodes(self):
         """Retorna os nós mapeados no motor."""
-        return {
-            node_id: asdict(node)
-            for node_id, node in self.engine_nodes.items()
-        }
+        return {node_id: asdict(node) for node_id, node in self.engine_nodes.items()}
 
     def get_engine_links(self):
         """Retorna os enlaces mapeados no motor."""
-        return [
-            asdict(link)
-            for link in self.engine_links
-        ]
+        return [asdict(link) for link in self.engine_links]
 
     def set_runtime_object(self, key: str, value: Any):
         """Associa um objeto a uma chave de execução.
@@ -344,7 +324,7 @@ class BaseEngine(ABC):
 
         self.logger.log(
             f"Objeto de runtime registrado, chave: {key}, tipo: {type(value).__name__}",
-            component=self.name
+            component=self.name,
         )
 
         return self
@@ -355,7 +335,7 @@ class BaseEngine(ABC):
             "status": self.get_status(),
             "nodes": self.get_engine_nodes(),
             "links": self.get_engine_links(),
-            "runtime_objects": list(self.runtime_objects.keys())
+            "runtime_objects": list(self.runtime_objects.keys()),
         }
 
         return data

@@ -10,17 +10,15 @@ from __future__ import annotations
 import json
 from collections import Counter
 
-from ..components.recovery import (
-    FRAME,
-    MODES,
-    ClientHandshake,
-    Gateway,
-    Observer,
-    Rejected,
-    Root,
-    Sender,
-    encode,
-)
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import FRAME
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import MODES
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import ClientHandshake
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Gateway
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Observer
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Rejected
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Root
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import Sender
+from pqc_iot_simulator.pqc_iot_sim.components.recovery import encode
 
 SCENARIOS = (
     "no_fault",

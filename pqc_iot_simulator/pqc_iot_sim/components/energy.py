@@ -54,6 +54,7 @@ def battery_energy_j(load_energy: float, regulator_efficiency: float) -> float:
 @dataclass(frozen=True)
 class PowerState:
     """Representa tensão, corrente e origem de um estado de energia."""
+
     name: str
     voltage_v: float
     current_ma: float
@@ -93,6 +94,7 @@ class PowerState:
 @dataclass
 class EnergyEvent:
     """Registra o consumo energético de um componente em um intervalo."""
+
     host_id: str
     component: str
     state: str
@@ -117,6 +119,7 @@ class EnergyEvent:
 @dataclass
 class Battery:
     """Modela capacidade, carga restante e estado de uma bateria."""
+
     chemistry: str
     nominal_voltage_v: float
     capacity_mah: float
@@ -319,10 +322,16 @@ class EnergyModel:
         Retorna:
             Evento energético registrado.
         """
-        analytical_load_j = load_energy_j(state.voltage_v, state.current_a, duration_seconds)
+        analytical_load_j = load_energy_j(
+            state.voltage_v, state.current_a, duration_seconds
+        )
         if load_energy_override_j is not None and load_energy_override_j < 0:
             raise ValueError("load_energy_override_j cannot be negative")
-        load_j = analytical_load_j if load_energy_override_j is None else load_energy_override_j
+        load_j = (
+            analytical_load_j
+            if load_energy_override_j is None
+            else load_energy_override_j
+        )
         from_battery_j = battery_energy_j(load_j, self.regulator_efficiency)
         brownout = False
         supplied_battery_j = from_battery_j
@@ -366,7 +375,11 @@ class EnergyModel:
                     if load_energy_override_j is not None
                     else {"energy_accounting": "voltage_current_duration"}
                 ),
-                **({"brownout": True, "requested_battery_energy_j": from_battery_j} if brownout else {}),
+                **(
+                    {"brownout": True, "requested_battery_energy_j": from_battery_j}
+                    if brownout
+                    else {}
+                ),
             },
         )
         self.events.append(event)
@@ -388,7 +401,9 @@ class EnergyModel:
         """
         return self.events[index:]
 
-    def energy_by_component(self, events: Iterable[EnergyEvent] | None = None) -> dict[str, float]:
+    def energy_by_component(
+        self, events: Iterable[EnergyEvent] | None = None
+    ) -> dict[str, float]:
         """Soma a energia consumida por componente.
 
         Parâmetros:
@@ -399,13 +414,16 @@ class EnergyModel:
         """
         totals: dict[str, float] = {}
         for event in events if events is not None else self.events:
-            totals[event.component] = totals.get(event.component, 0.0) + event.battery_energy_j
+            totals[event.component] = (
+                totals.get(event.component, 0.0) + event.battery_energy_j
+            )
         return totals
 
 
 @dataclass(frozen=True)
 class CalibrationRecord:
     """Representa um registro de calibração de tempo e consumo."""
+
     device: str
     operation: str
     voltage_v: float
@@ -429,7 +447,10 @@ class CalibrationRecord:
             raise ValueError("calibration duration_seconds cannot be negative")
         if self.energy_j < 0:
             raise ValueError("calibration energy_j cannot be negative")
-        if self.throughput_bytes_per_second is not None and self.throughput_bytes_per_second <= 0:
+        if (
+            self.throughput_bytes_per_second is not None
+            and self.throughput_bytes_per_second <= 0
+        ):
             raise ValueError("throughput_bytes_per_second must be positive")
         if self.fixed_cost_seconds < 0:
             raise ValueError("fixed_cost_seconds cannot be negative")
@@ -479,14 +500,19 @@ def load_calibration_csv(path: str | Path) -> dict[str, CalibrationRecord]:
                     else None
                 ),
                 fixed_cost_seconds=float(row.get("fixed_cost_seconds") or 0.0),
-                estimation_status=(row.get("estimation_status") or "configured").strip(),
+                estimation_status=(
+                    row.get("estimation_status") or "configured"
+                ).strip(),
                 metadata={
                     key: value.strip() if isinstance(value, str) else value
                     for key, value in row.items()
                     if key not in required
-                    and key not in {
-                        "energy_model", "throughput_bytes_per_second",
-                        "fixed_cost_seconds", "estimation_status",
+                    and key
+                    not in {
+                        "energy_model",
+                        "throughput_bytes_per_second",
+                        "fixed_cost_seconds",
+                        "estimation_status",
                     }
                     and value not in (None, "")
                 },

@@ -69,9 +69,7 @@ def apply_mininet_transport_observation(
     bitrate = float(row.get("effective_bitrate_bps") or 0.0)
     efficiency = float(row.get("regulator_efficiency") or 0.0)
     if bitrate <= 0 or not 0 < efficiency <= 1:
-        row["capture_coupled_energy_status"] = (
-            "invalid_bitrate_or_regulator_efficiency"
-        )
+        row["capture_coupled_energy_status"] = "invalid_bitrate_or_regulator_efficiency"
         row["energy_total_capture_coupled_j"] = None
         return
 
@@ -96,9 +94,7 @@ def apply_mininet_transport_observation(
     tx_events = wire_events("tx")
     rx_events = wire_events("rx")
     if not tx_events or not rx_events:
-        row["capture_coupled_energy_status"] = (
-            "missing_directional_power_state_events"
-        )
+        row["capture_coupled_energy_status"] = "missing_directional_power_state_events"
         row["energy_total_capture_coupled_j"] = None
         return
 
@@ -185,9 +181,7 @@ def apply_mininet_transport_observation(
             "pcap_iot_tx_ip_bytes": tx_bytes,
             "pcap_iot_rx_ip_bytes": rx_bytes,
             "pcap_packet_count": int(capture.get("packet_count") or 0),
-            "pcap_capture_duration_seconds": capture.get(
-                "capture_duration_seconds"
-            ),
+            "pcap_capture_duration_seconds": capture.get("capture_duration_seconds"),
             "observed_network_active_window_seconds": observed_duration,
             "observed_network_active_window_source": duration_source,
             "capture_coupled_tx_airtime_seconds": tx_seconds,

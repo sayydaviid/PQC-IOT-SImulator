@@ -13,8 +13,9 @@ import signal
 import select
 import networkx as nx
 
-from .base_engine import BaseEngine, EngineLink
-from ..components.logger import Logger
+from pqc_iot_simulator.pqc_iot_sim.engines.base_engine import BaseEngine
+from pqc_iot_simulator.pqc_iot_sim.engines.base_engine import EngineLink
+from pqc_iot_simulator.pqc_iot_sim.components.logger import Logger
 
 
 class MininetWiFiEngine(BaseEngine):
@@ -67,7 +68,7 @@ class MininetWiFiEngine(BaseEngine):
         station_range: int = 200,
         ap_range: int = 200,
         position_spacing_m: float = 5.0,
-        association_wait_seconds: float = 1.0
+        association_wait_seconds: float = 1.0,
     ):
         """Inicializa a instância e prepara seu estado interno.
 
@@ -98,15 +99,14 @@ class MininetWiFiEngine(BaseEngine):
             name=name,
             engine_type="mininet_wifi",
             logger=logger,
-            verbose=verbose
+            verbose=verbose,
         )
 
         valid_log_levels = ["silent", "info", "debug"]
 
         if log_level not in valid_log_levels:
             raise ValueError(
-                f"Nivel de log invalido: {log_level}. "
-                f"Use um destes: {valid_log_levels}"
+                f"Nivel de log invalido: {log_level}. Use um destes: {valid_log_levels}"
             )
 
         self.log_level = log_level
@@ -166,7 +166,7 @@ class MininetWiFiEngine(BaseEngine):
             station_range=self.station_range,
             ap_range=self.ap_range,
             position_spacing_m=self.position_spacing_m,
-            association_wait_seconds=self.association_wait_seconds
+            association_wait_seconds=self.association_wait_seconds,
         )
 
         self._log_info(
@@ -181,35 +181,27 @@ class MininetWiFiEngine(BaseEngine):
         self,
         message: str,
         data: dict[str, Any] | None = None,
-        component: str | None = None
+        component: str | None = None,
     ):
         """Registra uma mensagem informativa quando o nível permite."""
         if self.log_level in ["info", "debug"]:
-            self.logger.log(
-                message,
-                data=data or {},
-                component=component or self.name
-            )
+            self.logger.log(message, data=data or {}, component=component or self.name)
 
     def _log_debug(
         self,
         message: str,
         data: dict[str, Any] | None = None,
-        component: str | None = None
+        component: str | None = None,
     ):
         """Registra uma mensagem de depuração quando o nível permite."""
         if self.log_level == "debug":
-            self.logger.log(
-                message,
-                data=data or {},
-                component=component or self.name
-            )
+            self.logger.log(message, data=data or {}, component=component or self.name)
 
     def _log_error(
         self,
         message: str,
         data: dict[str, Any] | None = None,
-        component: str | None = None
+        component: str | None = None,
     ):
         """Registra uma mensagem de erro quando o nível permite."""
         if self.log_level != "silent":
@@ -217,15 +209,13 @@ class MininetWiFiEngine(BaseEngine):
                 message,
                 data=data or {},
                 level="ERROR",
-                component=component or self.name
+                component=component or self.name,
             )
 
     def build(self):
         """Prepara o componente para execução."""
         if self.is_built():
-            self._log_debug(
-                "Build ignorado porque a engine ja estava construida"
-            )
+            self._log_debug("Build ignorado porque a engine ja estava construida")
 
             return self
 
@@ -252,9 +242,7 @@ class MininetWiFiEngine(BaseEngine):
         )
 
         self.net = Mininet_wifi(
-            controller=Controller,
-            accessPoint=OVSKernelAP,
-            link=TCLink
+            controller=Controller, accessPoint=OVSKernelAP, link=TCLink
         )
 
         self.controller = self.net.addController("c0")
@@ -286,9 +274,7 @@ class MininetWiFiEngine(BaseEngine):
     def start(self):
         """Inicia o motor concreto."""
         if self.is_running():
-            self._log_debug(
-                "Start ignorado porque a engine ja estava em execucao"
-            )
+            self._log_debug("Start ignorado porque a engine ja estava em execucao")
 
             return self
 
@@ -298,9 +284,7 @@ class MininetWiFiEngine(BaseEngine):
         if self.net is None:
             raise RuntimeError("Objeto Mininet WiFi nao foi criado.")
 
-        self._log_info(
-            "Iniciando rede Mininet WiFi"
-        )
+        self._log_info("Iniciando rede Mininet WiFi")
 
         self.net.build()
 
@@ -320,10 +304,7 @@ class MininetWiFiEngine(BaseEngine):
 
         self.mark_started()
 
-        ap_names = [
-            ap.name
-            for ap in access_points
-        ]
+        ap_names = [ap.name for ap in access_points]
 
         self._log_info(
             (
@@ -346,17 +327,13 @@ class MininetWiFiEngine(BaseEngine):
     def stop(self):
         """Encerra o motor concreto."""
         if self.net is None:
-            self._log_debug(
-                "Stop ignorado porque nao existe rede Mininet criada"
-            )
+            self._log_debug("Stop ignorado porque nao existe rede Mininet criada")
 
             self.mark_stopped()
 
             return self
 
-        self._log_info(
-            "Parando rede Mininet WiFi"
-        )
+        self._log_info("Parando rede Mininet WiFi")
 
         try:
             self.net.stop()
@@ -364,9 +341,7 @@ class MininetWiFiEngine(BaseEngine):
         finally:
             self.mark_stopped()
 
-            self._log_info(
-                "Mininet WiFi parado com sucesso"
-            )
+            self._log_info("Mininet WiFi parado com sucesso")
 
         return self
 
@@ -378,7 +353,9 @@ class MininetWiFiEngine(BaseEngine):
             command: Comando que será executado.
         """
         if not self.is_running():
-            raise RuntimeError("A engine precisa estar em execucao para executar comandos.")
+            raise RuntimeError(
+                "A engine precisa estar em execucao para executar comandos."
+            )
 
         node = self.get_mininet_node(node_id)
 
@@ -410,9 +387,7 @@ class MininetWiFiEngine(BaseEngine):
                 "CLI do Mininet WiFi nao encontrada nesta versao instalada."
             )
 
-        self._log_info(
-            "Abrindo CLI do Mininet WiFi"
-        )
+        self._log_info("Abrindo CLI do Mininet WiFi")
 
         CLI_wifi(self.net)
 
@@ -536,9 +511,7 @@ class MininetWiFiEngine(BaseEngine):
             "hostapd_binary": ap.cmd("command -v hostapd").strip(),
             "hostapd_version": ap.cmd("hostapd -v 2>&1").strip(),
             "hostapd_processes": ap.cmd("pgrep -af hostapd").strip(),
-            "hostapd_status": ap.cmd(
-                f"hostapd_cli -i {interface} status 2>&1"
-            ).strip(),
+            "hostapd_status": ap.cmd(f"hostapd_cli -i {interface} status 2>&1").strip(),
             "rfkill": ap.cmd("rfkill list 2>&1").strip(),
         }
 
@@ -668,12 +641,7 @@ class MininetWiFiEngine(BaseEngine):
             }
         return diagnostics
 
-    def collect_link_metrics(
-        self,
-        source: str,
-        destination: str,
-        count: int = 3
-    ):
+    def collect_link_metrics(self, source: str, destination: str, count: int = 3):
         """Coleta métricas do enlace entre dois nós.
 
         Parâmetros:
@@ -681,11 +649,7 @@ class MininetWiFiEngine(BaseEngine):
             destination: Identificador do destino.
             count: Quantidade de elementos ou repetições.
         """
-        output = self.ping(
-            source=source,
-            destination=destination,
-            count=count
-        )
+        output = self.ping(source=source, destination=destination, count=count)
 
         destination_ip = self.get_ip(destination)
 
@@ -704,12 +668,12 @@ class MininetWiFiEngine(BaseEngine):
             "latency_measurement_source": None,
             "configured_bandwidth_mbps": self.default_bw,
             "bandwidth_measurement_source": "mininet_link_configuration",
-            "raw_output": output
+            "raw_output": output,
         }
 
         packet_patterns = [
             r"(\d+)\s+packets transmitted,\s+(\d+)\s+received.*?(\d+(?:\.\d+)?)%\s+packet loss",
-            r"(\d+)\s+packets transmitted,\s+(\d+)\s+packets received,\s+(\d+(?:\.\d+)?)%\s+packet loss"
+            r"(\d+)\s+packets transmitted,\s+(\d+)\s+packets received,\s+(\d+(?:\.\d+)?)%\s+packet loss",
         ]
 
         packets_match = None
@@ -727,7 +691,7 @@ class MininetWiFiEngine(BaseEngine):
 
         rtt_patterns = [
             r"rtt min/avg/max/mdev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)",
-            r"round-trip min/avg/max/(?:mdev|stddev) = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)"
+            r"round-trip min/avg/max/(?:mdev|stddev) = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)",
         ]
 
         rtt_match = None
@@ -757,7 +721,9 @@ class MininetWiFiEngine(BaseEngine):
                 metrics["rtt_avg_ms"] = sum(values) / len(values)
                 metrics["rtt_max_ms"] = max(values)
                 metrics["latency_ms"] = metrics["rtt_avg_ms"] / 2.0
-                metrics["latency_measurement_source"] = "derived_one_way_from_ping_samples"
+                metrics["latency_measurement_source"] = (
+                    "derived_one_way_from_ping_samples"
+                )
 
         self._log_info(
             (
@@ -776,12 +742,7 @@ class MininetWiFiEngine(BaseEngine):
 
         return metrics
 
-    def iperf(
-        self,
-        source: str,
-        destination: str,
-        seconds: int = 5
-    ):
+    def iperf(self, source: str, destination: str, seconds: int = 5):
         """Mede a vazão entre dois nós.
 
         Parâmetros:
@@ -790,7 +751,9 @@ class MininetWiFiEngine(BaseEngine):
             seconds: Valor de tempo, em segundos.
         """
         if not self.is_running():
-            raise RuntimeError("A engine precisa estar em execucao para executar iperf.")
+            raise RuntimeError(
+                "A engine precisa estar em execucao para executar iperf."
+            )
 
         if self.net is None:
             raise RuntimeError("A rede Mininet WiFi ainda nao foi criada.")
@@ -808,10 +771,7 @@ class MininetWiFiEngine(BaseEngine):
             f"Executando teste de throughput com iperf entre {source} e {destination}, duracao: {seconds}s"
         )
 
-        result = self.net.iperf(
-            [source_node, destination_node],
-            seconds=seconds
-        )
+        result = self.net.iperf([source_node, destination_node], seconds=seconds)
 
         self._log_info(
             f"Teste iperf concluido entre {source} e {destination}, resultado: {result}"
@@ -929,15 +889,17 @@ class MininetWiFiEngine(BaseEngine):
                 endpoint: Parâmetro usado pela operação.
             """
             source = endpoint.group("src")
-            packets.append({
-                "timestamp_seconds": float(header["timestamp"]),
-                "ip_packet_bytes": int(header["length"]),
-                "direction": (
-                    "iot_to_server" if source == source_ip else "server_to_iot"
-                ),
-                "capture_interface": header.get("interface"),
-                "capture_packet_direction": header.get("packet_direction"),
-            })
+            packets.append(
+                {
+                    "timestamp_seconds": float(header["timestamp"]),
+                    "ip_packet_bytes": int(header["length"]),
+                    "direction": (
+                        "iot_to_server" if source == source_ip else "server_to_iot"
+                    ),
+                    "capture_interface": header.get("interface"),
+                    "capture_packet_direction": header.get("packet_direction"),
+                }
+            )
 
         for line in str(output or "").splitlines():
             stripped = line.strip()
@@ -957,7 +919,8 @@ class MininetWiFiEngine(BaseEngine):
                     append_packet(pending, endpoint_match)
                     pending = None
         tx_bytes = sum(
-            packet["ip_packet_bytes"] for packet in packets
+            packet["ip_packet_bytes"]
+            for packet in packets
             if packet["direction"] == "iot_to_server"
         )
         rx_bytes = sum(packet["ip_packet_bytes"] for packet in packets) - tx_bytes
@@ -1009,7 +972,9 @@ class MininetWiFiEngine(BaseEngine):
             Relatório de entrega, duração e captura da transferência.
         """
         if not self.is_running():
-            raise RuntimeError("A engine precisa estar em execucao para transmitir dados.")
+            raise RuntimeError(
+                "A engine precisa estar em execucao para transmitir dados."
+            )
         if timeout_seconds <= 0:
             raise ValueError("timeout_seconds deve ser maior que zero")
         if capture_endpoint not in {"source", "destination"}:
@@ -1047,25 +1012,41 @@ class MininetWiFiEngine(BaseEngine):
         ).decode("ascii")
         module = "pqc_iot_simulator.pqc_iot_sim.transport_probe"
         common = [
-            "--port", str(port),
-            "--plan-base64", encoded_plan,
-            "--transfer-id", identifier,
-            "--timeout", str(timeout_seconds),
-            "--transport", transport,
+            "--port",
+            str(port),
+            "--plan-base64",
+            encoded_plan,
+            "--transfer-id",
+            identifier,
+            "--timeout",
+            str(timeout_seconds),
+            "--transport",
+            transport,
         ]
         server_command = [
-            "python3", "-m", module, "server", "--host", destination_ip, *common
+            "python3",
+            "-m",
+            module,
+            "server",
+            "--host",
+            destination_ip,
+            *common,
         ]
         udp_ready_path: Path | None = None
         if transport == "udp":
-            udp_ready_path = Path("/tmp") / (
-                f"pqc-iot-udp-ready-{uuid.uuid4().hex}"
-            )
+            udp_ready_path = Path("/tmp") / (f"pqc-iot-udp-ready-{uuid.uuid4().hex}")
             udp_ready_path.unlink(missing_ok=True)
             server_command.extend(["--ready-file", str(udp_ready_path)])
         client_command = [
-            "python3", "-m", module, "client", "--host", destination_ip,
-            *common, "--bind-host", source_ip,
+            "python3",
+            "-m",
+            module,
+            "client",
+            "--host",
+            destination_ip,
+            *common,
+            "--bind-host",
+            source_ip,
         ]
         capture_process = None
         capture_path: Path | None = None
@@ -1077,9 +1058,7 @@ class MininetWiFiEngine(BaseEngine):
         # Capture its concrete interface: Linux cooked captures on `any` store
         # a namespace-local ifindex that tcpdump can mislabel when decoded in
         # the container's root namespace.
-        capture_node = (
-            source_node if capture_endpoint == "source" else destination_node
-        )
+        capture_node = source_node if capture_endpoint == "source" else destination_node
         capture_namespace = f"{capture_endpoint}_mininet_host"
         capture_intf = capture_node.defaultIntf()
         if capture_intf is None:
@@ -1090,8 +1069,7 @@ class MininetWiFiEngine(BaseEngine):
         capture_interface_selection = "endpoint_default_interface"
         endpoint_filter = f"host {source_ip} and host {destination_ip}"
         capture_filter = (
-            f"{endpoint_filter} and (udp port {port} or "
-            "(ip[6:2] & 0x1fff != 0))"
+            f"{endpoint_filter} and (udp port {port} or (ip[6:2] & 0x1fff != 0))"
             if transport == "udp"
             else f"{endpoint_filter} and tcp port {port}"
         )
@@ -1107,9 +1085,17 @@ class MininetWiFiEngine(BaseEngine):
                 capture_path.parent.mkdir(parents=True, exist_ok=True)
             capture_process = capture_node.popen(
                 [
-                    "tcpdump", "--immediate-mode", "-U", "-n", "-s", "0",
-                    "-i", capture_interface,
-                    capture_filter, "-w", str(capture_path),
+                    "tcpdump",
+                    "--immediate-mode",
+                    "-U",
+                    "-n",
+                    "-s",
+                    "0",
+                    "-i",
+                    capture_interface,
+                    capture_filter,
+                    "-w",
+                    str(capture_path),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -1123,9 +1109,9 @@ class MininetWiFiEngine(BaseEngine):
                     capture_process.kill()
                 _, capture_runtime_stderr = capture_process.communicate()
                 detail = "\n".join(
-                    part for part in (
-                        capture_startup_stderr, capture_runtime_stderr
-                    ) if part
+                    part
+                    for part in (capture_startup_stderr, capture_runtime_stderr)
+                    if part
                 ).strip()
                 raise RuntimeError(
                     "tcpdump_not_ready_before_transport: "
@@ -1208,7 +1194,9 @@ class MininetWiFiEngine(BaseEngine):
 
         client_report = self._last_json_object(client_stdout)
         server_report = self._last_json_object(server_stdout)
-        client_returncode = client_process.returncode if client_process is not None else None
+        client_returncode = (
+            client_process.returncode if client_process is not None else None
+        )
         server_returncode = server_process.returncode
         delivered = bool(
             not timed_out
@@ -1220,7 +1208,8 @@ class MininetWiFiEngine(BaseEngine):
         logical_bytes = sum(int(row["logical_payload_bytes"]) for row in trace)
         tx_bytes = sum(
             int(row["logical_payload_bytes"])
-            for row in trace if row["direction"] == "iot_to_server"
+            for row in trace
+            if row["direction"] == "iot_to_server"
         )
         rx_bytes = logical_bytes - tx_bytes
         duration = client_report.get("duration_seconds")
@@ -1241,16 +1230,21 @@ class MininetWiFiEngine(BaseEngine):
             "capture_interface_selection": capture_interface_selection,
             "capture_filter": capture_filter,
             "capture_namespace": capture_namespace,
-            "capture_node": (
-                source if capture_endpoint == "source" else destination
-            ),
+            "capture_node": (source if capture_endpoint == "source" else destination),
             "tcpdump_startup_stderr": capture_startup_stderr,
             "tcpdump_runtime_stderr": capture_runtime_stderr,
             "pcap_retained": bool(capture_path and not capture_temporary),
-            "pcap_path": str(capture_path) if capture_path and not capture_temporary else None,
+            "pcap_path": str(capture_path)
+            if capture_path and not capture_temporary
+            else None,
             "error": capture_error,
         }
-        if capture_packets and capture_path and capture_path.is_file() and capture_path.stat().st_size:
+        if (
+            capture_packets
+            and capture_path
+            and capture_path.is_file()
+            and capture_path.stat().st_size
+        ):
             decoded = subprocess.run(
                 ["tcpdump", "-n", "-tt", "-v", "-r", str(capture_path)],
                 capture_output=True,
@@ -1265,7 +1259,9 @@ class MininetWiFiEngine(BaseEngine):
             packet_capture.update(parsed)
             if decoded.returncode != 0 and not packet_capture.get("error"):
                 packet_capture["error"] = decoded.stderr.strip()
-            elif not parsed.get("capture_available") and not packet_capture.get("error"):
+            elif not parsed.get("capture_available") and not packet_capture.get(
+                "error"
+            ):
                 packet_capture["error"] = (
                     f"capture_contains_no_decodable_ipv4_{transport}_packets"
                 )
@@ -1275,9 +1271,7 @@ class MininetWiFiEngine(BaseEngine):
             "transfer_id": identifier,
             "delivered": delivered,
             "status": "delivered" if delivered else "not_delivered",
-            "transport_kind": (
-                f"real_{transport}_socket_between_mininet_namespaces"
-            ),
+            "transport_kind": (f"real_{transport}_socket_between_mininet_namespaces"),
             "payload_semantics": (
                 "deterministic_size_equivalent_application_trace_not_"
                 "interoperable_application_server"
@@ -1305,7 +1299,8 @@ class MininetWiFiEngine(BaseEngine):
             "duration_seconds": duration,
             "application_goodput_bps": (
                 logical_bytes * 8.0 / float(duration)
-                if duration is not None and float(duration) > 0 else None
+                if duration is not None and float(duration) > 0
+                else None
             ),
             "timed_out": timed_out,
             "trace": trace,
@@ -1363,21 +1358,13 @@ class MininetWiFiEngine(BaseEngine):
         data = {
             "engine": self.summary(),
             "node_mapping": self.get_engine_nodes(),
-            "link_mapping": self.get_engine_links()
+            "link_mapping": self.get_engine_links(),
         }
 
         with open(path, "w", encoding="utf-8") as file:
-            json.dump(
-                data,
-                file,
-                indent=4,
-                ensure_ascii=False,
-                default=str
-            )
+            json.dump(data, file, indent=4, ensure_ascii=False, default=str)
 
-        self._log_info(
-            f"Mapeamento da engine exportado em {output_path}"
-        )
+        self._log_info(f"Mapeamento da engine exportado em {output_path}")
 
         return self
 
@@ -1432,8 +1419,8 @@ class MininetWiFiEngine(BaseEngine):
                         "link_mode": "infrastructure",
                         "original_source": gateway_id,
                         "original_target": server_id,
-                        "note": "stations se associam ao AP via wireless"
-                    }
+                        "note": "stations se associam ao AP via wireless",
+                    },
                 )
 
                 self.engine_links.append(engine_link)
@@ -1471,8 +1458,8 @@ class MininetWiFiEngine(BaseEngine):
                 metadata={
                     "link_mode": self.link_mode,
                     "original_source": source,
-                    "original_target": target
-                }
+                    "original_target": target,
+                },
             )
 
             self.engine_links.append(engine_link)
@@ -1506,29 +1493,19 @@ class MininetWiFiEngine(BaseEngine):
                 )
             elif node_type == "iot":
                 mininet_node = self._add_station(
-                    name=mininet_name,
-                    ip=ip,
-                    position=position
+                    name=mininet_name, ip=ip, position=position
                 )
 
             elif node_type == "gateway":
                 mininet_node = self._add_access_point(
-                    name=mininet_name,
-                    ip=ip,
-                    position=position
+                    name=mininet_name, ip=ip, position=position
                 )
 
             elif node_type == "server":
-                mininet_node = self._add_host(
-                    name=mininet_name,
-                    ip=ip
-                )
+                mininet_node = self._add_host(name=mininet_name, ip=ip)
 
             else:
-                mininet_node = self._add_host(
-                    name=mininet_name,
-                    ip=ip
-                )
+                mininet_node = self._add_host(name=mininet_name, ip=ip)
 
             self.mininet_nodes[node_id] = mininet_node
             self.set_runtime_object(node_id, mininet_node)
@@ -1543,16 +1520,9 @@ class MininetWiFiEngine(BaseEngine):
             )
         )
 
-    def _add_station(
-        self,
-        name: str,
-        ip: str | None,
-        position: str | None
-    ):
+    def _add_station(self, name: str, ip: str | None, position: str | None):
         """Adiciona uma estação IoT ao Mininet-WiFi."""
-        params = {
-            "range": self.station_range
-        }
+        params = {"range": self.station_range}
 
         if ip:
             params["ip"] = ip
@@ -1560,17 +1530,9 @@ class MininetWiFiEngine(BaseEngine):
         if position:
             params["position"] = position
 
-        return self.net.addStation(
-            name,
-            **params
-        )
+        return self.net.addStation(name, **params)
 
-    def _add_access_point(
-        self,
-        name: str,
-        ip: str | None,
-        position: str | None
-    ):
+    def _add_access_point(self, name: str, ip: str | None, position: str | None):
         """Adiciona um ponto de acesso ao Mininet-WiFi."""
         params = {
             "ssid": f"{self.ssid}_{name}",
@@ -1586,35 +1548,23 @@ class MininetWiFiEngine(BaseEngine):
         if position:
             params["position"] = position
 
-        return self.net.addAccessPoint(
-            name,
-            **params
-        )
+        return self.net.addAccessPoint(name, **params)
 
-    def _add_host(
-        self,
-        name: str,
-        ip: str | None
-    ):
+    def _add_host(self, name: str, ip: str | None):
         """Adiciona um host cabeado ao Mininet."""
         params = {}
 
         if ip:
             params["ip"] = ip
 
-        return self.net.addHost(
-            name,
-            **params
-        )
+        return self.net.addHost(name, **params)
 
     def _configure_wifi_nodes(self):
         """Aplica a configuração sem fio aos nós do Mininet."""
         if self.net is None:
             raise RuntimeError("Objeto Mininet WiFi nao foi criado.")
 
-        self._log_debug(
-            "Configurando nos WiFi no Mininet"
-        )
+        self._log_debug("Configurando nos WiFi no Mininet")
 
         self.net.configureWifiNodes()
 
@@ -1649,14 +1599,16 @@ class MininetWiFiEngine(BaseEngine):
             created = self._safe_add_link(
                 source_node=source_node,
                 target_node=target_node,
-                link_params=link_params
+                link_params=link_params,
             )
 
-            self.created_link_objects.append({
-                "source": link.source,
-                "target": link.target,
-                "link": created,
-            })
+            self.created_link_objects.append(
+                {
+                    "source": link.source,
+                    "target": link.target,
+                    "link": created,
+                }
+            )
 
             created_links.append(
                 {
@@ -1664,19 +1616,14 @@ class MininetWiFiEngine(BaseEngine):
                     "destino": link.target,
                     "origem_mininet": link.source_mininet,
                     "destino_mininet": link.target_mininet,
-                    "criado": created is not None
+                    "criado": created is not None,
                 }
             )
 
-        self._log_info(
-            f"{len(created_links)} links criados no Mininet WiFi"
-        )
+        self._log_info(f"{len(created_links)} links criados no Mininet WiFi")
 
     def _safe_add_link(
-        self,
-        source_node: Any,
-        target_node: Any,
-        link_params: dict[str, Any]
+        self, source_node: Any, target_node: Any, link_params: dict[str, Any]
     ):
         """Cria um enlace e acrescenta contexto quando ocorre uma falha."""
         existing_link_ids = {
@@ -1717,11 +1664,7 @@ class MininetWiFiEngine(BaseEngine):
 
         try:
             return resolve_created_link(
-                self.net.addLink(
-                    source_node,
-                    target_node,
-                    **link_params
-                )
+                self.net.addLink(source_node, target_node, **link_params)
             )
 
         except TypeError:
@@ -1735,12 +1678,7 @@ class MininetWiFiEngine(BaseEngine):
                 )
             )
 
-            return resolve_created_link(
-                self.net.addLink(
-                    source_node,
-                    target_node
-                )
-            )
+            return resolve_created_link(self.net.addLink(source_node, target_node))
 
     def _build_link_params(self, link):
         """Monta os parâmetros de banda, atraso e perda de um enlace."""
@@ -1770,9 +1708,7 @@ class MininetWiFiEngine(BaseEngine):
                         "routed_logical_topology supports at most 254 nodes"
                     )
                 self.engine_nodes[node_id].ip = f"10.255.0.{index}/32"
-            self._log_debug(
-                "Enderecos loopback /32 atribuidos para topologia roteada"
-            )
+            self._log_debug("Enderecos loopback /32 atribuidos para topologia roteada")
             return
 
         iot_counter = 1
@@ -1811,9 +1747,7 @@ class MininetWiFiEngine(BaseEngine):
     def _assign_positions(self):
         """Atribui posições espaciais aos nós sem fio."""
         if not self.auto_set_positions:
-            self._log_debug(
-                "Atribuicao automatica de posicoes ignorada"
-            )
+            self._log_debug("Atribuicao automatica de posicoes ignorada")
 
             return
 
@@ -1896,7 +1830,9 @@ class MininetWiFiEngine(BaseEngine):
             target = str(record["target"])
             link = record["link"]
             if link is None or not hasattr(link, "intf1") or not hasattr(link, "intf2"):
-                raise RuntimeError(f"Mininet link object unavailable for {source}-{target}")
+                raise RuntimeError(
+                    f"Mininet link object unavailable for {source}-{target}"
+                )
             source_node = self.mininet_nodes[source]
             target_node = self.mininet_nodes[target]
             intf1, intf2 = link.intf1, link.intf2
@@ -1914,12 +1850,8 @@ class MininetWiFiEngine(BaseEngine):
             target_ip = f"172.16.{third}.{fourth + 2}"
             source_node.cmd(f"ip addr flush dev {source_intf.name}")
             target_node.cmd(f"ip addr flush dev {target_intf.name}")
-            source_node.cmd(
-                f"ip addr add {source_ip}/30 dev {source_intf.name}"
-            )
-            target_node.cmd(
-                f"ip addr add {target_ip}/30 dev {target_intf.name}"
-            )
+            source_node.cmd(f"ip addr add {source_ip}/30 dev {source_intf.name}")
+            target_node.cmd(f"ip addr add {target_ip}/30 dev {target_intf.name}")
             source_node.cmd(f"ip link set dev {source_intf.name} up")
             target_node.cmd(f"ip link set dev {target_intf.name} up")
             edge_endpoints[frozenset((source, target))] = {
@@ -1952,9 +1884,11 @@ class MininetWiFiEngine(BaseEngine):
             for destination in self.network.topology_data.nodes:
                 if source == destination:
                     continue
-                path = list(nx.shortest_path(
-                    self.network.graph, source=source, target=destination
-                ))
+                path = list(
+                    nx.shortest_path(
+                        self.network.graph, source=source, target=destination
+                    )
+                )
                 if len(path) < 2:
                     raise RuntimeError(f"invalid routed path {source}->{destination}")
                 next_hop = path[1]
@@ -1992,9 +1926,9 @@ class MininetWiFiEngine(BaseEngine):
         """
         if self.link_mode != "routed_logical_topology":
             raise RuntimeError("routed path is only available in routed mode")
-        return list(nx.shortest_path(
-            self.network.graph, source=source, target=destination
-        ))
+        return list(
+            nx.shortest_path(self.network.graph, source=source, target=destination)
+        )
 
     def _force_wireless_interfaces_up(self):
         """Ativa as interfaces sem fio que estiverem inativas."""
@@ -2017,13 +1951,11 @@ class MininetWiFiEngine(BaseEngine):
                     "no": node_id,
                     "station": station.name,
                     "interface": wlan,
-                    "saida": output.strip()
+                    "saida": output.strip(),
                 }
             )
 
-        self._log_debug(
-            f"Interfaces WiFi das stations ativadas, total: {len(actions)}"
-        )
+        self._log_debug(f"Interfaces WiFi das stations ativadas, total: {len(actions)}")
 
     def _associate_stations_to_gateway(
         self,
@@ -2064,7 +1996,7 @@ class MininetWiFiEngine(BaseEngine):
                         "no": node_id,
                         "ap": ap.name,
                         "ssid": ssid,
-                        "motivo": "station_not_found"
+                        "motivo": "station_not_found",
                     }
                 )
 
@@ -2104,9 +2036,7 @@ class MininetWiFiEngine(BaseEngine):
                 if "Connected to" in link_status:
                     result["connected"] = True
                     result["route_status"] = station.cmd("ip route").strip()
-                    result["addr_status"] = station.cmd(
-                        f"ip addr show {wlan}"
-                    ).strip()
+                    result["addr_status"] = station.cmd(f"ip addr show {wlan}").strip()
                     associated.append(result)
                 else:
                     still_pending.append(result)
@@ -2124,10 +2054,7 @@ class MininetWiFiEngine(BaseEngine):
             )
 
         else:
-            ap_names = [
-                ap.name
-                for ap in access_points
-            ]
+            ap_names = [ap.name for ap in access_points]
 
             self._log_info(
                 (
@@ -2216,7 +2143,7 @@ class MininetWiFiEngine(BaseEngine):
             "link_status": link_status,
             "route_status": route_status,
             "addr_status": addr_status,
-            "outputs": outputs
+            "outputs": outputs,
         }
 
         self._log_debug(
@@ -2239,9 +2166,7 @@ class MininetWiFiEngine(BaseEngine):
             output = node.cmd("ip neigh flush all")
             results[node_id] = output.strip()
 
-        self._log_debug(
-            f"Cache ARP apagado nos nos da engine, total: {len(results)}"
-        )
+        self._log_debug(f"Cache ARP apagado nos nos da engine, total: {len(results)}")
 
     def _enable_l2_forwarding_on_access_points(self):
         """Ativa encaminhamento de camada 2 nos pontos de acesso."""
@@ -2254,15 +2179,11 @@ class MininetWiFiEngine(BaseEngine):
             commands = [
                 ["ovs-vsctl", "set-fail-mode", ap_name, "standalone"],
                 ["ovs-ofctl", "del-flows", ap_name],
-                ["ovs-ofctl", "add-flow", ap_name, "priority=0,actions=NORMAL"]
+                ["ovs-ofctl", "add-flow", ap_name, "priority=0,actions=NORMAL"],
             ]
 
             for command in commands:
-                result = subprocess.run(
-                    command,
-                    capture_output=True,
-                    text=True
-                )
+                result = subprocess.run(command, capture_output=True, text=True)
 
                 command_results.append(
                     {
@@ -2270,7 +2191,7 @@ class MininetWiFiEngine(BaseEngine):
                         "comando": " ".join(command),
                         "codigo_retorno": result.returncode,
                         "stdout": result.stdout.strip(),
-                        "stderr": result.stderr.strip()
+                        "stderr": result.stderr.strip(),
                     }
                 )
 
@@ -2295,8 +2216,7 @@ class MininetWiFiEngine(BaseEngine):
     def _count_nodes_by_type(self, node_type: str):
         """Conta os nós mapeados por tipo."""
         return sum(
-            1 for node in self.engine_nodes.values()
-            if node.node_type == node_type
+            1 for node in self.engine_nodes.values() if node.node_type == node_type
         )
 
     def _get_access_points(self):
@@ -2344,11 +2264,13 @@ class MininetWiFiEngine(BaseEngine):
 
         try:
             from mn_wifi.cli import CLI
+
             CLI_wifi = CLI
 
         except ImportError:
             try:
                 from mn_wifi.cli import CLI_wifi
+
                 CLI_wifi = CLI_wifi
 
             except ImportError:
@@ -2360,5 +2282,5 @@ class MininetWiFiEngine(BaseEngine):
             "CLI_wifi": CLI_wifi,
             "Controller": Controller,
             "TCLink": TCLink,
-            "setLogLevel": setLogLevel
+            "setLogLevel": setLogLevel,
         }

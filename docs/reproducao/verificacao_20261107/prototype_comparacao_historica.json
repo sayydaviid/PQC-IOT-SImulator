@@ -1,9 +1,0 @@
-{
-  "scope": "New prototype measurements compared with historical raw results",
-  "cases": 240,
-  "excluded_fields": [
-    "host_write_ms",
-    "restart_host_handshake_ms"
-  ],
-  "all_other_fields_exactly_equal": true
-}

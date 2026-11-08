@@ -18,7 +18,20 @@ O Mininet-WiFi é o motor de rede obrigatório. Cada ciclo transmite mensagens e
 - execução obrigatória no Mininet-WiFi;
 - captura PCAP e exportação em JSON e CSV.
 
-A pesquisa de **recuperação de sessões após reinícios e rollback** está em [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). O notebook consulta os resultados de referência e permite repetir os experimentos com TLS 1.3 nativo, preservação/perda do contexto de retomada, diferentes cadeias de certificados, várias leituras por conexão e deduplicação persistente. A implementação é chamada por classes do simulador. Consulte o [guia de reprodução](docs/reproducao/README.md).
+A pesquisa de **recuperação de sessões após reinícios e rollback** está em [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). O notebook consulta os resultados de referência e permite repetir os experimentos com TLS 1.3 nativo, preservação/perda do contexto de retomada, diferentes cadeias de certificados, várias leituras por conexão e deduplicação persistente. A implementação é chamada por classes do simulador. O notebook mostra a sequência dos experimentos, a análise e o código dos gráficos.
+
+A execução de recuperação parte da mesma API do simulador:
+
+```python
+from pqc_iot_simulator import Simulation
+
+simulacao = Simulation()
+estudo = simulacao.session_recovery("results/minha_execucao", blocks=10)
+estudo.preflight()
+estudo.run_all()
+```
+
+A geração de gráficos fica nas células do notebook, onde os filtros e comandos de desenho podem ser inspecionados e alterados pelos pesquisadores. O simulador executa os cenários e calcula as métricas. Para somente recalcular as tabelas históricas, use `REPRODUZIR = False` no notebook; as 11 tabelas são comparadas exatamente com as referências.
 
 ## Estrutura
 
@@ -30,9 +43,9 @@ A pesquisa de **recuperação de sessões após reinícios e rollback** está em
 │   ├── components/                 # rede, dispositivos, criptografia e estado
 │   ├── core/                       # Simulation e protótipo
 │   ├── engines/                    # Mininet-WiFi
-│   └── research/                   # classes de experimentos, análise e validação
+│   ├── data/                       # observações de referência para reanálise
+│   └── validation/                 # verificações dos componentes e cenários
 ├── calibracao/                     # parâmetros e fontes bibliográficas
-├── docs/                           # métodos, resultados de referência e artigo
 ├── docker/                         # ambiente TLS da pesquisa
 ├── Dockerfile
 ├── docker-compose.yml
@@ -41,7 +54,7 @@ A pesquisa de **recuperação de sessões após reinícios e rollback** está em
 └── LICENSE
 ```
 
-Dados produzidos nas execuções são salvos no diretório escolhido no notebook e não são versionados automaticamente. Os resultados de referência da pesquisa estão em `docs/`.
+Dados produzidos nas execuções são salvos no diretório escolhido no notebook e não são versionados automaticamente. As observações necessárias para recalcular os números do artigo estão em `pqc_iot_simulator/pqc_iot_sim/data/`. O método e a geração das figuras estão no notebook de pesquisa.
 
 ## Requisitos
 
@@ -66,7 +79,7 @@ sudo docker compose build notebook
 O tutorial monta a rede e executa a simulação. As verificações adicionais estão disponíveis como classe Python:
 
 ```python
-from pqc_iot_simulator.pqc_iot_sim.research.validation.installation import InstallationValidation
+from pqc_iot_simulator.pqc_iot_sim.validation.installation import InstallationValidation
 
 InstallationValidation(mode="classical").run()
 ```
