@@ -12,7 +12,7 @@ ENV LD_LIBRARY_PATH=/opt/pqc-tls/lib:/usr/local/lib:/usr/local/lib64
 ENV PATH=/opt/pqc-tls/bin:$PATH
 ENV OPENSSL_CONF=/etc/ssl/openssl.cnf
 ENV PYTHONPATH=/workspace:/opt/pqc-tls/native
-COPY pqc_iot_simulator/pqc_iot_sim/engines/native/tls/native.c /opt/pqc-tls/native/native.c
+COPY pqc_iot_simulator/pqc_iot_sim/runtime/native/tls/native.c /opt/pqc-tls/native/native.c
 RUN cd /opt/pqc-tls/native \
     && gcc -shared -fPIC -Wall -Wextra -Werror -Wno-unused-parameter \
        $(python3-config --includes) -I/opt/pqc-tls/include native.c \

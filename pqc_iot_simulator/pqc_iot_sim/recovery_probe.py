@@ -9,19 +9,19 @@ import socket
 import time
 from pathlib import Path
 
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import ClientHandshake
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import FRAME
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import Gateway
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import Identity
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import Root
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import SealedStore
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import Sender
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import encode
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import mac
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import receive_frame
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import require_mac
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import send_frame
-from pqc_iot_simulator.pqc_iot_sim.components.recovery import unb64
+from .crypto.session import ClientHandshake
+from .crypto.session import FRAME
+from .crypto.session import Gateway
+from .crypto.session import Identity
+from .crypto.session import Root
+from .crypto.session import SealedStore
+from .crypto.session import Sender
+from .crypto.session import encode
+from .crypto.session import mac
+from .crypto.session import receive_frame
+from .crypto.session import require_mac
+from .crypto.session import send_frame
+from .crypto.session import unb64
 
 
 def server(args, credentials):

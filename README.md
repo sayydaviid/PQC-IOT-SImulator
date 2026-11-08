@@ -31,7 +31,7 @@ estudo.preflight()
 estudo.run_all()
 ```
 
-A geração de gráficos fica nas células do notebook, onde os filtros e comandos de desenho podem ser inspecionados e alterados pelos pesquisadores. O simulador executa os cenários e calcula as métricas. Para somente recalcular as tabelas históricas, use `REPRODUZIR = False` no notebook; as 11 tabelas são comparadas exatamente com as referências.
+A geração de gráficos fica nas células do notebook, onde os filtros e comandos de desenho podem ser inspecionados e alterados pelos pesquisadores. O simulador executa os cenários e calcula as métricas. As classes não dependem do nome nem da localização do notebook. Para somente recalcular as tabelas históricas, use `REPRODUZIR = False` no notebook; as 11 tabelas são comparadas exatamente com as referências.
 
 ## Estrutura
 
@@ -40,11 +40,15 @@ A geração de gráficos fica nas células do notebook, onde os filtros e comand
 ├── Tutorial_Execucao.ipynb          # uso geral, preservado
 ├── Pesquisa_Retomada_Sessoes.ipynb  # reprodução da pesquisa atual
 ├── pqc_iot_simulator/pqc_iot_sim/
-│   ├── components/                 # rede, dispositivos, criptografia e estado
-│   ├── core/                       # Simulation e protótipo
-│   ├── engines/                    # Mininet-WiFi
+│   ├── config/                     # configurações de execução
+│   ├── control/                    # controle de sessões e cenários de falha
+│   ├── crypto/                     # criptografia e parâmetros TLS
+│   ├── devices/                    # dispositivos, energia e carga
+│   ├── runtime/                    # execução, Mininet-WiFi e comunicação nativa
+│   ├── topology/                   # rede e participantes
+│   ├── utils/                      # métricas, registros e exportação
 │   ├── data/                       # observações de referência para reanálise
-│   └── validation/                 # verificações dos componentes e cenários
+│   └── metadata.py                 # versão e registro automático da execução
 ├── calibracao/                     # parâmetros e fontes bibliográficas
 ├── docker/                         # ambiente TLS da pesquisa
 ├── Dockerfile
@@ -76,12 +80,12 @@ sudo docker compose version
 sudo docker compose build notebook
 ```
 
-O tutorial monta a rede e executa a simulação. As verificações adicionais estão disponíveis como classe Python:
+O tutorial monta a rede e executa a simulação. A instalação pode ser conferida com um ciclo real do simulador:
 
 ```python
-from pqc_iot_simulator.pqc_iot_sim.validation.installation import InstallationValidation
+from pqc_iot_simulator.pqc_iot_sim.runtime.environment import Environment
 
-InstallationValidation(mode="classical").run()
+Environment(mode="classical").run()
 ```
 
 Esse código deve ser executado no ambiente Docker, em uma célula do notebook. Os modos `pqc` e `hybrid` também são aceitos.
@@ -100,7 +104,7 @@ O Jupyter escuta somente em `127.0.0.1:8888`. Não exponha essa porta à Interne
 
 ## Configuração
 
-A configuração principal está em [default.yaml](pqc_iot_simulator/pqc_iot_sim/configs/default.yaml). Os principais blocos configuráveis são:
+A configuração principal está em [default.yaml](pqc_iot_simulator/pqc_iot_sim/config/default.yaml). Os principais blocos configuráveis são:
 
 - `simulation`: duração, semente, captura e diretório de PCAP;
 - `devices`: dispositivos e destinos;
@@ -152,3 +156,5 @@ Execuções criam arquivos em `results/raw/`, incluindo configurações resolvid
 ## Licença
 
 O código é distribuído conforme [LICENSE](LICENSE).
+
+Os cenários de identidade, persistência e interrupção integram as classes de controle. O notebook mostra quais são executados e verifica seus resultados. As dependências Python estão centralizadas em `requirements.txt`.

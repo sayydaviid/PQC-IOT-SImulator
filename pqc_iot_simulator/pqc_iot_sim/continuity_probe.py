@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 
 def load_component(name, filename):
     spec = importlib.util.spec_from_file_location(
-        name, Path(__file__).parent / "components" / filename
+        name, ROOT / "pqc_iot_simulator/pqc_iot_sim" / filename
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
@@ -31,11 +31,11 @@ def load_component(name, filename):
     return module
 
 
-_ledger = load_component("_continuity_ledger", "reading_ledger.py")
-_checkpoint = load_component("_continuity_checkpoint", "recovery.py")
+_ledger = load_component("_continuity_ledger", "control/reading_ledger.py")
+_checkpoint = load_component("_continuity_checkpoint", "crypto/session.py")
 ReadingConflict, ReadingLedger = _ledger.ReadingConflict, _ledger.ReadingLedger
 SealedStore, b64, unb64 = _checkpoint.SealedStore, _checkpoint.b64, _checkpoint.unb64
-PROFILES = load_component("_continuity_design", "tls/design.py").PROFILES
+PROFILES = load_component("_continuity_design", "crypto/tls/design.py").PROFILES
 
 LENGTH = struct.Struct("!I")
 

@@ -1,5 +1,5 @@
 FROM pqc-iot-continuity:organizacao
-COPY pqc_iot_simulator/pqc_iot_sim/engines/native/context_costs/native.c /opt/pqc-tls/context_costs/native.c
+COPY pqc_iot_simulator/pqc_iot_sim/runtime/native/context_costs/native.c /opt/pqc-tls/context_costs/native.c
 RUN cd /opt/pqc-tls/context_costs \
  && gcc -shared -fPIC -Wall -Wextra -Werror -Wno-unused-parameter \
  $(python3-config --includes) -I/opt/pqc-tls/include native.c \
