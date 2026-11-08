@@ -2,7 +2,9 @@
 
 Abra [Pesquisa_Retomada_Sessoes.ipynb](../../Pesquisa_Retomada_Sessoes.ipynb). Esse é o ponto de entrada da pesquisa. O [Tutorial_Execucao.ipynb](../../Tutorial_Execucao.ipynb) foi preservado e continua demonstrando o simulador geral.
 
-O notebook permite consultar as tabelas de referência ou repetir os experimentos. A opção `REPRODUZIR = True` executa o desenho completo com dez blocos, grava novos dados e gera as análises e figuras. Uma execução completa pode levar várias horas. Alterar a quantidade de blocos muda a quantidade de repetições; não representa a mesma amostra do artigo. A análise de continuidade exige pelo menos dois blocos para os intervalos; as etapas individuais podem ser conferidas com um bloco.
+O notebook recalcula os números originais e, por padrão, executa novos experimentos (`REPRODUZIR = True`). O desenho completo usa dez blocos, grava novos dados, gera figuras e compara os resultados com o artigo. Uma execução completa pode levar várias horas. Para somente recalcular os dados originais e consultar as referências, use `False`. Alterar a quantidade de blocos representa outra amostra; a comparação completa exige dez blocos. A análise de continuidade exige pelo menos dois blocos para os intervalos.
+
+A execução completa de 07/11/2026 e suas diferenças numéricas estão registradas em [verificacao_20261107/README.md](verificacao_20261107/README.md). As conclusões e as contagens foram reproduzidas; nem todos os custos de rede repetiram o mesmo arredondamento do artigo.
 
 ## Organização
 
@@ -54,6 +56,7 @@ estudo.run_security()
 estudo.analyze_continuity()
 estudo.analyze_context()
 estudo.export_figures()
+estudo.compare_article()
 ```
 
 Também é possível chamar `estudo.run_all()` em um diretório novo. As etapas rejeitam diretórios já existentes para evitar substituir resultados. Para retomar uma reprodução por células, mantenha a mesma instância/diretório e execute somente as etapas ainda não concluídas. Uma etapa incompleta deve ser preservada como registro e repetida em outro diretório; não se deve completar a análise com parte dos comparadores de um bloco.
@@ -86,6 +89,10 @@ Os três perfis usam TLS 1.3, autenticação mútua e AES-256-GCM/SHA-384. O cl�
 O diagnóstico verifica cadeias enviadas nos dois sentidos e preserva a raiz confiável. A investigação dos tickets mede comprimentos e usa controles de identidade; não exporta segredos ou conteúdo privado de sessões. Os testes de persistência interrompem processos com o sistema operacional e o armazenamento em funcionamento. Não representam queda física de energia.
 
 ## Referências e dados novos
+
+`ArticleNumericalReanalysis(novo_diretorio).run()` recalcula 11 tabelas a partir das observações por execução em `dados_numericos_artigo.json.gz` e exige igualdade exata com as tabelas históricas. O arquivo acompanha o repositório, com procedência no manifesto, sem depender de `results/` ou dos arquivos do computador do autor. Ele contém somente os campos necessários aos cálculos, exportados dos resultados históricos: não contém credenciais ou capturas. Essa reanálise verifica os cálculos; para repetir e auditar a coleta em rede, execute `RecoveryStudy`.
+
+`RecoveryStudy.compare_article()` gera `article_comparison/comparacao_completa.csv`, `comparacao.json` e `COMPARACAO.md`. O relatório informa separadamente a reprodução das propriedades observadas e a igualdade dos números na precisão do artigo. Nenhuma tolerância é escolhida depois da execução para transformar diferenças em concordância. Essa comparação também é executada por `run_all()` e pelo notebook.
 
 `ReferenceResults().verify()` verifica os resumos SHA-256 dos arquivos de referência versionados. Essa verificação detecta alteração dessas tabelas, mas não substitui a auditoria dos PCAP das novas execuções.
 

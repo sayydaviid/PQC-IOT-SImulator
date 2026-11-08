@@ -181,6 +181,15 @@ class RecoveryStudy:
         ).run()
         return self._record("figures", result)
 
+    def compare_article(self):
+        """Report agreement and every numerical difference with the article."""
+        from .article_comparison import ArticleReproductionAudit
+
+        result = ArticleReproductionAudit(
+            directory=self.directory, output=self.directory / "article_comparison"
+        ).run()
+        return self._record("article_comparison", result)
+
     def run_all(self):
         """Execute the full registered design. This can take several hours."""
         self.preflight()
@@ -193,4 +202,5 @@ class RecoveryStudy:
         self.analyze_continuity()
         self.analyze_context()
         self.export_figures()
+        self.compare_article()
         return self.directory

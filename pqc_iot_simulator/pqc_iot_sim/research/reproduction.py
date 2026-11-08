@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,9 +35,14 @@ class NotebookReproduction:
         notebook = nbformat.read(source, as_version=4)
         found = 0
         for cell in notebook.cells:
-            if cell.cell_type == "code" and "REPRODUZIR = False" in cell.source:
-                cell.source = cell.source.replace(
-                    "REPRODUZIR = False", "REPRODUZIR = True"
+            if cell.cell_type == "code" and re.search(
+                r"^REPRODUZIR = (True|False)$", cell.source, re.M
+            ):
+                cell.source = re.sub(
+                    r"^REPRODUZIR = (True|False)$",
+                    "REPRODUZIR = True",
+                    cell.source,
+                    flags=re.M,
                 )
                 cell.source = cell.source.replace(
                     "BLOCOS = 10", f"BLOCOS = {self.blocks}"

@@ -1,0 +1,22 @@
+{
+  "cases": 330,
+  "fields_compared": [
+    "policy",
+    "scenario",
+    "client_interrupted",
+    "unknown_root_rejected",
+    "full_fallback",
+    "nonce_reuses",
+    "stale_record_accepted",
+    "application_acceptances",
+    "application_duplicates",
+    "initial_attempt_handshake_bytes",
+    "retry_handshake_bytes",
+    "total_handshake_bytes",
+    "initial_flights_sent",
+    "retry_flights_sent",
+    "checkpoint_writes_after_bootstrap",
+    "repetition"
+  ],
+  "all_fields_exactly_equal": true
+}

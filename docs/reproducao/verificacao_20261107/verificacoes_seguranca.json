@@ -1,0 +1,49 @@
+{
+  "identity_tickets": {
+    "status": "PASS",
+    "diagnostics": 12,
+    "same_server_and_ca_client_comparison": [
+      {
+        "client_key": "EC",
+        "certificate_bytes": 2775,
+        "session_bytes": 2928,
+        "ticket_bytes": [
+          3008
+        ]
+      },
+      {
+        "client_key": "ML-DSA-44",
+        "certificate_bytes": 4018,
+        "session_bytes": 4171,
+        "ticket_bytes": [
+          4240
+        ]
+      }
+    ]
+  },
+  "persistence": {
+    "status": "PASS",
+    "ledger_checks": 100,
+    "checkpoint": {
+      "processes": 20,
+      "encryptions": 1000,
+      "file_rollback_before_processes": 10,
+      "observed_nonce_collisions": 0,
+      "nonce_bytes": 12,
+      "source": "os.urandom(12), host OS CSPRNG independent of checkpoint file",
+      "birthday_collision_bound": "q*(q-1)/2**97 for q encryptions under the same key, assuming independent uniform nonces",
+      "old_authenticated_snapshot_accepted": true,
+      "tampered_snapshot_rejected": true,
+      "forced_repeated_rng_nonce_reuse_observed": true,
+      "rng_or_machine_snapshot_rollback_not_protected": true
+    }
+  },
+  "tls_persistence": {
+    "status": "PASS",
+    "checks": 30
+  },
+  "continuity_security": {
+    "status": "PASS",
+    "checks": 12
+  }
+}

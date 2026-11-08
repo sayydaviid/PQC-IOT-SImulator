@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "archive": "dados_numericos_artigo.json.gz",
+  "archive_sha256": "59d9149a599573c1f6910d1c1790e2223759350c0a72d8732555011ebdbbb349",
+  "scope": "Numeric per-execution observations exported from historical results; not new measurements or a substitute for PCAP audit",
+  "sources": {
+    "chains": {
+      "files_sha256": {
+        "results/raw/context_chain_completed_20261107_v1/results.json": "7f4b5431589194a799fa876c36663f23cbb2400875fe98ddc4cc9f06d6672770",
+        "results/raw/context_chain_completed_20261107_v1/manifest.json": "846567552f6277e5920b42cc3e55d8e1c5bf53d2ba711aff74cad09a06f55a0f"
+      },
+      "cases": 540
+    },
+    "amortization": {
+      "files_sha256": {
+        "results/raw/context_amortization_registered_20261106_v1/results.json": "c6c954de6b78b747c9161d93be85dd1d528b7ada414347714ee42a99b560e3d0",
+        "results/raw/context_amortization_registered_20261106_v1/manifest.json": "0bf3a2df02013d2ff991b5b82684d158bec5a9de7922222f1072f566fb516086"
+      },
+      "cases": 540
+    },
+    "core": {
+      "files_sha256": {
+        "results/raw/continuity_core_registered_20261021_v5/results.json": "cf3e6d5033971b0358bc605baea33649824aa385303295abfd189af5867e6bcd",
+        "results/raw/continuity_core_registered_20261021_v5/manifest.json": "92186f7ac010a34c4c0cd5d4f64746d3ca0017d72095b72fd4af19f2a7fcbeda"
+      },
+      "cases": 1620
+    },
+    "loss": {
+      "files_sha256": {
+        "results/raw/continuity_loss_registered_20261021_v5/results.json": "ef5d2f0349bf52df236709ef6731560cef28ef22d51968cd94cd1092922f56a8",
+        "results/raw/continuity_loss_registered_20261021_v5/manifest.json": "56924e0fe5181367b72d850dd359070f759596590beb5a1d08d77de76ebacdad"
+      },
+      "cases": 180
+    }
+  }
+}
