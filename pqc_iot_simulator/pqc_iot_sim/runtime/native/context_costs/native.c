@@ -230,7 +230,7 @@ static PyObject *handshake(PyObject *self, PyObject *args) {
     SSL_set_fd(p->ssl, fd);
     SSL_set_msg_callback(p->ssl, message);
     SSL_set_msg_callback_arg(p->ssl, p);
-    if (server && !SSL_set1_host(p->ssl, "iot_1")) {
+    if (server && !SSL_set1_host(p->ssl, hostname[0] ? hostname : "iot_1")) {
         SSL_free(p->ssl); PyMem_Free(p); return ssl_error("client identity");
     }
     if (!server) {
@@ -324,8 +324,8 @@ static PyObject *metadata(PyObject *self, PyObject *args) {
         "peer_key_type", keytype, "client_share_sha256", p->client_share, "server_share_sha256", p->server_share);
     /* OpenSSL may not retain get0_peername on resumption. Match the recovered
        authenticated peer certificate as well, never the application payload. */
-    const char *expected_name = SSL_is_server(p->ssl) ? "iot_1" : "gateway.local";
-    const char *peername = cert && X509_check_host(cert,expected_name,0,0,NULL)==1 ? expected_name : "";
+    const char *expected_name = X509_VERIFY_PARAM_get0_host(SSL_get0_param(p->ssl), 0);
+    const char *peername = cert && expected_name && X509_check_host(cert,expected_name,0,0,NULL)==1 ? expected_name : "";
     PyObject *name = PyUnicode_FromString(peername ? peername : "");
     PyDict_SetItemString(value, "verified_peer_name", name); Py_DECREF(name);
     const char *keys[] = {"wire_cert_tx_der_bytes", "wire_cert_rx_der_bytes", "tickets_tx_bytes", "tickets_rx_bytes"};

@@ -3,6 +3,9 @@
 from __future__ import annotations
 from ..metadata import RunMetadata
 import hashlib, itertools, json, os, random, subprocess, tempfile
+from copy import deepcopy
+import math
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -44,7 +47,7 @@ def certificate_sizes(directory):
     return out
 
 
-def assert_chains(case, include_root):
+def assert_chains(case, include_root, device_id="iot_1"):
     expected = 2 if include_root else 1
     fulls = [r for r in case["clients"] if "version" in r and (not r["reused"])]
     for r in fulls:
@@ -54,22 +57,46 @@ def assert_chains(case, include_root):
         ):
             raise RuntimeError("client/server wire chain mismatch")
     for s in case["servers"]:
-        if "version" in s and s["verified_peer_name"] != "iot_1":
+        if "version" in s and s["verified_peer_name"] != device_id:
             raise RuntimeError("client identity mismatch")
 
 
-def topology(loss=0):
+def topology(loss=0, network=None, source="iot_1", destination="server_1", delay_ms=2):
     from ..topology.network import Network
     from .mininet_wifi_engine import MininetWiFiEngine
 
+    for value, maximum in ((loss, 100), (delay_ms, None)):
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0
+            or (maximum is not None and value > maximum)
+        ):
+            raise ValueError("perda ou atraso de rede inválido")
+    template = network
     network = Network(verbose=False, log_level="silent")
-    network.set_ready_topology("star", nodes=1)
+    if template is None:
+        network.set_ready_topology("star", nodes=1)
+    else:
+        network.config = deepcopy(template.config)
+        network.topology_data = deepcopy(template.topology_data)
+        network._sync_graph()
+    if (
+        source not in network.topology_data.nodes
+        or destination not in network.topology_data.nodes
+    ):
+        raise ValueError("origem ou destino não existe na topologia")
+    if not source.startswith("iot_") or not destination.startswith("server_"):
+        raise ValueError("selecione um sensor e um servidor TLS")
     network.create_hosts()
+    delay = f"{delay_ms:g}ms"
+    expected_stations = sum(n.startswith("iot_") for n in network.topology_data.nodes)
     engine = MininetWiFiEngine(
         network,
         verbose=False,
         log_level="silent",
-        default_delay="2ms",
+        default_delay=delay,
         default_loss=0,
         association_wait_seconds=5,
     )
@@ -78,32 +105,40 @@ def topology(loss=0):
         engine.start()
         if (
             engine.last_association_report["failed"]
-            or len(engine.last_association_report["associated"]) != 1
+            or len(engine.last_association_report["associated"]) != expected_stations
         ):
             raise RuntimeError("association failed")
         (sta, dst) = (
-            engine.get_mininet_node("iot_1"),
-            engine.get_mininet_node("server_1"),
+            engine.get_mininet_node(source),
+            engine.get_mininet_node(destination),
         )
         intf = dst.defaultIntf()
         other = intf.link.intf1 if intf.link.intf2 is intf else intf.link.intf2
         details = []
         for endpoint in (intf, other):
             err = endpoint.node.cmd(
-                f"tc qdisc replace dev {endpoint.name} root netem limit 1000 delay 2ms loss {loss}%"
+                f"tc qdisc replace dev {endpoint.name} root netem limit 1000 delay {delay} loss {loss}%"
             )
             if err.strip():
                 raise RuntimeError(err)
             q = endpoint.node.cmd(f"tc -s qdisc show dev {endpoint.name}")
-            if "netem" not in q or "delay 2ms" not in q:
+            match = re.search(r"delay ([0-9.]+)(us|ms|s)", q)
+            observed_delay = (
+                float(match[1]) * {"us": 0.001, "ms": 1, "s": 1000}[match[2]]
+                if match
+                else 0
+            )
+            if "netem" not in q or not math.isclose(
+                observed_delay, delay_ms, abs_tol=0.001
+            ):
                 raise RuntimeError("qdisc not configured")
             details.append(q)
         return (
             engine,
             sta,
             dst,
-            engine.get_ip("iot_1"),
-            engine.get_ip("server_1"),
+            engine.get_ip(source),
+            engine.get_ip(destination),
             intf.name,
             details,
         )
@@ -118,13 +153,30 @@ class CertificateChainEngine:
     Configure once, then call ``run()`` from a notebook.
     """
 
-    def __init__(self, *, output, blocks=10, local_smoke=False, block_start=0):
+    def __init__(
+        self,
+        *,
+        output,
+        blocks=10,
+        local_smoke=False,
+        block_start=0,
+        network=None,
+        source="iot_1",
+        destination="server_1",
+    ):
         self.output = Path(output) if output is not None else None
         self.blocks = blocks
-        if self.blocks < 1:
+        if (
+            isinstance(self.blocks, bool)
+            or not isinstance(self.blocks, int)
+            or self.blocks < 1
+        ):
             raise ValueError("blocks must be positive")
         self.local_smoke = local_smoke
         self.block_start = block_start
+        self.network = network
+        self.source = source
+        self.destination = destination
 
     def run(self):
         args = self
@@ -149,6 +201,8 @@ class CertificateChainEngine:
                     Path(__import__("_context_tls").__file__).read_bytes()
                 ).hexdigest(),
             },
+            "source": args.source,
+            "destination": args.destination,
             "blocks": args.blocks,
             "block_start": args.block_start,
             "planned_cases": args.blocks * len(matrix),
@@ -168,7 +222,7 @@ class CertificateChainEngine:
                 credentials = {}
                 for profile in PROFILES:
                     cred = private / f"b{block}_{profile}"
-                    provision(cred, profile)
+                    provision(cred, profile, device_id=args.source)
                     credentials[profile] = cred
                 (args.output / f"certificates_block{block}.json").write_text(
                     json.dumps(
@@ -184,7 +238,11 @@ class CertificateChainEngine:
                         interface = "lo"
                         qdiscs = []
                     else:
-                        (engine, sta, dst, cip, sip, interface, qdiscs) = topology()
+                        (engine, sta, dst, cip, sip, interface, qdiscs) = topology(
+                            network=args.network,
+                            source=args.source,
+                            destination=args.destination,
+                        )
                     (args.output / f"network_block{block}.json").write_text(
                         json.dumps(qdiscs)
                     )
@@ -209,10 +267,13 @@ class CertificateChainEngine:
                             block,
                             capture_enabled=not args.local_smoke,
                             probe=PROBE,
+                            device_id=args.source,
                         )
-                        assert_chains(case, include_root)
+                        assert_chains(case, include_root, args.source)
                         case.update(
                             case_id=cid,
+                            source=args.source,
+                            destination=args.destination,
                             include_root=include_root,
                             restart_fraction=fraction,
                             ack_fraction=fraction,

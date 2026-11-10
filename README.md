@@ -18,20 +18,35 @@ O Mininet-WiFi é o motor de rede obrigatório. Cada ciclo transmite mensagens e
 - execução obrigatória no Mininet-WiFi;
 - captura PCAP e exportação em JSON e CSV.
 
-A pesquisa de **recuperação de sessões após reinícios e rollback** está em [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). O notebook consulta os resultados de referência e permite repetir os experimentos com TLS 1.3 nativo, preservação/perda do contexto de retomada, diferentes cadeias de certificados, várias leituras por conexão e deduplicação persistente. A implementação é chamada por classes do simulador. O notebook mostra a sequência dos experimentos, a análise e o código dos gráficos.
+A pesquisa de **recuperação de sessões após reinícios e rollback** está em [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). O notebook conduz os experimentos com TLS 1.3 nativo, preservação/perda do contexto de retomada, diferentes cadeias de certificados, várias leituras por conexão e deduplicação persistente. A implementação é chamada por classes do simulador. O notebook mostra a sequência dos experimentos, a análise e o código dos gráficos.
 
-A execução de recuperação parte da mesma API do simulador:
+O [Proposta_Retomada_Sessoes.ipynb](Proposta_Retomada_Sessoes.ipynb) configura a rede e chama os experimentos passando os parâmetros:
 
 ```python
-from pqc_iot_simulator import Simulation
+from pqc_iot_simulator import Network, Logger
 
-simulacao = Simulation()
-estudo = simulacao.session_recovery("results/minha_execucao", blocks=10)
-estudo.preflight()
-estudo.run_all()
+rede = Network()
+rede.set_ready_topology("Star", 1)
+rede.draw()
+Logger.activate()
+
+resultado = rede.recovery.run_sessions(
+    source="iot_1",
+    destination="server_1",
+    profile="pqc",
+    treatment="resume_preserved",
+    readings=9,
+    restart_fraction=0.25,
+    ack_fraction=0.25,
+    repetitions=10,
+    payload_bytes=31,
+    loss_pct=0,
+)
 ```
 
-A geração de gráficos fica nas células do notebook, onde os filtros e comandos de desenho podem ser inspecionados e alterados pelos pesquisadores. O simulador executa os cenários e calcula as métricas. As classes não dependem do nome nem da localização do notebook. Para somente recalcular as tabelas históricas, use `REPRODUZIR = False` no notebook; as 11 tabelas são comparadas exatamente com as referências.
+A origem e o destino são nós da topologia configurada. `profile` seleciona `classical`, `hybrid` ou `pqc`; `treatment` seleciona `full`, `resume_volatile` ou `resume_preserved`. As frequências variam de 0 a 1, e `loss_pct` é a perda de pacotes em porcentagem. Os arquivos de cada execução são organizados pelo simulador. O retorno contém as medições por repetição.
+
+A geração de gráficos fica nas células do notebook, onde os filtros e comandos de desenho podem ser inspecionados e alterados pelos pesquisadores. O simulador executa os cenários e calcula as métricas. As classes não dependem do nome nem da localização do notebook.
 
 ## Estrutura
 
@@ -39,6 +54,7 @@ A geração de gráficos fica nas células do notebook, onde os filtros e comand
 .
 ├── Tutorial_Execucao.ipynb          # uso geral, preservado
 ├── Pesquisa_Retomada_Sessoes.ipynb  # reprodução da pesquisa atual
+├── Proposta_Retomada_Sessoes.ipynb  # experimentos a partir da rede
 ├── pqc_iot_simulator/pqc_iot_sim/
 │   ├── config/                     # configurações de execução
 │   ├── control/                    # controle de sessões e cenários de falha
@@ -50,7 +66,7 @@ A geração de gráficos fica nas células do notebook, onde os filtros e comand
 │   ├── data/                       # observações de referência para reanálise
 │   └── metadata.py                 # versão e registro automático da execução
 ├── calibracao/                     # parâmetros e fontes bibliográficas
-├── docker/                         # ambiente TLS da pesquisa
+├── .devcontainer/                  # ambiente do VS Code
 ├── Dockerfile
 ├── docker-compose.yml
 ├── docker-entrypoint.sh
@@ -71,36 +87,19 @@ Use um host Linux com:
 
 A primeira construção da imagem compila dependências nativas e pode demorar.
 
-## Instalação
+## Instalação e uso no VS Code
 
 Na raiz do repositório:
 
 ```bash
-sudo docker compose version
-sudo docker compose build notebook
+docker compose build
 ```
 
-O tutorial monta a rede e executa a simulação. A instalação pode ser conferida com um ciclo real do simulador:
+No VS Code, com a extensão **Dev Containers** instalada, execute **Dev Containers: Reopen in Container**. O VS Code inicia o serviço `notebook` e instala as extensões Python e Jupyter no contêiner.
 
-```python
-from pqc_iot_simulator.pqc_iot_sim.runtime.environment import Environment
+Abra [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb) e selecione o kernel **Python 3 - PQC IoT Simulator**. O ambiente já contém o simulador, o Mininet-WiFi e os três módulos TLS nativos.
 
-Environment(mode="classical").run()
-```
-
-Esse código deve ser executado no ambiente Docker, em uma célula do notebook. Os modos `pqc` e `hybrid` também são aceitos.
-
-## Tutorial
-
-Inicie o JupyterLab:
-
-```bash
-sudo docker compose run --rm --service-ports notebook
-```
-
-Abra a URL exibida no terminal, selecione o kernel **Python 3 - PQC IoT Simulator** e execute [Tutorial_Execucao.ipynb](Tutorial_Execucao.ipynb) da primeira à última célula.
-
-O Jupyter escuta somente em `127.0.0.1:8888`. Não exponha essa porta à Internet.
+O [Tutorial_Execucao.ipynb](Tutorial_Execucao.ipynb) continua disponível para o uso geral do simulador.
 
 ## Configuração
 

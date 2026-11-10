@@ -77,12 +77,22 @@ class Network:
 
         self.engine = None
         self.runtime_engine = None
+        self._recovery = None
 
         self.logger = logger or Logger(name="Network", verbose=verbose)
         self.metrics_collector = MetricsCollector(logger=self.logger)
         self.crypto_manager = CryptoManager(mode="classical", logger=self.logger)
 
         self._log_info("Rede criada e pronta para configuracao")
+
+    @property
+    def recovery(self):
+        """Controla os experimentos de retomada usando a topologia desta rede."""
+        if self._recovery is None:
+            from ..control.recovery import RecoverySimulation
+
+            self._recovery = RecoverySimulation(network=self)
+        return self._recovery
 
     def _crypto_label(self, crypto_mode: str | None):
         """Converte o modo criptográfico em um rótulo legível."""
@@ -261,6 +271,13 @@ class Network:
             *args: Argumentos posicionais adicionais.
             **kwargs: Argumentos nomeados adicionais.
         """
+        aliases = {
+            "estrela": "star",
+            "árvore": "tree",
+            "arvore": "tree",
+            "malha": "mesh",
+        }
+        topology_name = aliases.get(topology_name.lower(), topology_name.lower())
         self._log_debug(f"Preparando topologia {topology_name}")
 
         self.config.topology_name = topology_name

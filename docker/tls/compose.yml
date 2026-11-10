@@ -1,9 +1,0 @@
-services:
-  notebook:
-    image: pqc-iot-tls:organizacao
-    build:
-      context: .
-      dockerfile: docker/tls/Dockerfile
-    environment:
-      LD_LIBRARY_PATH: /opt/pqc-tls/lib:/usr/local/lib:/usr/local/lib64
-      PYTHONPATH: /workspace:/opt/pqc-tls/native

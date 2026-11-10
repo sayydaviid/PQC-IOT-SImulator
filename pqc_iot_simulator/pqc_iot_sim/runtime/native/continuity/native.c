@@ -168,7 +168,7 @@ static PyObject *handshake(PyObject *self, PyObject *args) {
     SSL_set_fd(p->ssl, fd);
     SSL_set_msg_callback(p->ssl, message);
     SSL_set_msg_callback_arg(p->ssl, p);
-    if (server && !SSL_set1_host(p->ssl, "iot_1")) {
+    if (server && !SSL_set1_host(p->ssl, hostname[0] ? hostname : "iot_1")) {
         SSL_free(p->ssl); PyMem_Free(p); return ssl_error("client identity");
     }
     if (!server) {

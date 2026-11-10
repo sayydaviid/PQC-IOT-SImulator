@@ -130,8 +130,8 @@ class SessionResultsAudit:
                     continue
                 assert (
                     server["verify_result"] == 0
-                    and server["dedup_device"] == "iot_1"
-                    and (server["verified_peer_name"] == "iot_1")
+                    and server["dedup_device"] == c.get("source", "iot_1")
+                    and (server["verified_peer_name"] == c.get("source", "iot_1"))
                 )
                 for ticket in server["tickets_tx_bytes"]:
                     tickets_count += 1

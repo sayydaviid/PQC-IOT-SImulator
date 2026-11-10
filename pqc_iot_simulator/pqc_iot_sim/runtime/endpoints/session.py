@@ -226,7 +226,13 @@ def server(args):
             peer = None
             with connection:
                 try:
-                    peer = native.handshake(ctx, connection.fileno(), 1, "", b"")
+                    peer = native.handshake(
+                        ctx,
+                        connection.fileno(),
+                        1,
+                        getattr(args, "device_id", "iot_1"),
+                        b"",
+                    )
                     record = json.loads(receive(peer))
                     if (
                         set(record) != {"reading_id", "payload"}
@@ -236,7 +242,7 @@ def server(args):
                     payload = unb64(record["payload"])
                     row["reading_id"] = record["reading_id"]
                     identity = native.metadata(peer)["verified_peer_name"]
-                    if identity != "iot_1":
+                    if identity != getattr(args, "device_id", "iot_1"):
                         raise ValueError(
                             "authenticated client identity is not the allowed device"
                         )
@@ -382,9 +388,15 @@ def multi_server(args):
             }
             with connection:
                 try:
-                    peer = native.handshake(ctx, connection.fileno(), 1, "", b"")
+                    peer = native.handshake(
+                        ctx,
+                        connection.fileno(),
+                        1,
+                        getattr(args, "device_id", "iot_1"),
+                        b"",
+                    )
                     identity = native.metadata(peer)["verified_peer_name"]
-                    if identity != "iot_1":
+                    if identity != getattr(args, "device_id", "iot_1"):
                         raise ValueError("unexpected authenticated client")
                     row["dedup_device"] = identity
                     while True:
@@ -435,6 +447,7 @@ def main():
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--credentials", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--device-id", default="iot_1")
     parser.add_argument("--profile", choices=tuple(PROFILES), default="pqc")
     parser.add_argument("--mode", choices=("full", "resume"), default="resume")
     parser.add_argument("--state")

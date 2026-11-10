@@ -5,7 +5,9 @@ import os
 import subprocess
 
 
-def provision(directory: Path, profile="pqc"):
+def provision(directory: Path, profile="pqc", device_id="iot_1"):
+    if not device_id.startswith("iot_") or not device_id[4:].isdigit():
+        raise ValueError("identificador do sensor inválido")
     algorithm = (
         ["ML-DSA-44"]
         if profile == "pqc"
@@ -42,7 +44,7 @@ def provision(directory: Path, profile="pqc"):
     )
     for name, common, purpose in (
         ("server", "gateway.local", "serverAuth"),
-        ("client", "iot_1", "clientAuth"),
+        ("client", device_id, "clientAuth"),
     ):
         openssl(
             "genpkey", "-algorithm", *algorithm, "-out", directory / (name + ".key")

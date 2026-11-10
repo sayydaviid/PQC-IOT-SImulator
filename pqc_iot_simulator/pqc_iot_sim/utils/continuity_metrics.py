@@ -7,8 +7,10 @@ import json
 import random
 import statistics as st
 import sys
+from tempfile import TemporaryDirectory
 from collections import defaultdict
 from pathlib import Path
+from ..crypto.tls import ticket_sizes
 from ..crypto.tls.context_capture import capture_client_hellos as capture_hellos
 
 
@@ -450,8 +452,22 @@ class ContinuityMetrics:
         self.output = Path(output) if output is not None else None
 
     def run(self):
+        """Publish reports only after analysis succeeds; allow a failed run to retry."""
+        self.output.parent.mkdir(parents=True, exist_ok=True)
+        with TemporaryDirectory(
+            prefix=f".{self.output.name}-", dir=self.output.parent
+        ) as temporary:
+            output = Path(temporary)
+            self._analyze(output)
+            self.output.mkdir(exist_ok=True)
+            # The audit is the completion marker, so publish it last. Replace
+            # only generated reports, leaving measurements and other files alone.
+            for report in sorted(output.iterdir(), key=lambda p: p.name == "audit.json"):
+                report.replace(self.output / report.name)
+        return self.output
+
+    def _analyze(self, output):
         args = self
-        args.output.mkdir(parents=True, exist_ok=False)
         (rows, raw_cases, provenance, hellos) = ([], [], {}, [])
         for phase, path in (("core", args.core), ("loss", args.loss)):
             (manifest, cases) = ContinuityMetrics.validate(path)
@@ -517,7 +533,7 @@ class ContinuityMetrics:
                 )
         if len(capture_hashes) != len(rows):
             raise ValueError("missing raw capture")
-        (args.output / "capture_sha256.json").write_text(
+        (output / "capture_sha256.json").write_text(
             json.dumps(capture_hashes, indent=2)
         )
         (aggregates, contrasts, state, migration) = ContinuityMetrics.analyze(rows)
@@ -528,12 +544,12 @@ class ContinuityMetrics:
             ("preservacao_contexto.csv", state),
             ("custos_migracao.csv", migration),
         ):
-            ContinuityMetrics.write_csv(args.output / filename, data)
+            ContinuityMetrics.write_csv(output / filename, data)
         ContinuityMetrics.write_csv(
-            args.output / "interacoes_falhas.csv",
+            output / "interacoes_falhas.csv",
             ContinuityMetrics.fault_interactions(rows),
         )
-        ContinuityMetrics.write_csv(args.output / "clienthello_tamanhos.csv", hellos)
+        ContinuityMetrics.write_csv(output / "clienthello_tamanhos.csv", hellos)
         audit = dict(
             status="PASS",
             provenance=provenance,
@@ -542,9 +558,7 @@ class ContinuityMetrics:
                 Path(__file__).read_bytes()
             ).hexdigest(),
             ticket_sizes_source_sha256=hashlib.sha256(
-                (
-                    Path(__file__).resolve().parents[1] / "tls/ticket_sizes.py"
-                ).read_bytes()
+                Path(ticket_sizes.__file__).read_bytes()
             ).hexdigest(),
             analyzed_public_clienthellos=len(hellos),
             cases=len(rows),
@@ -579,6 +593,5 @@ class ContinuityMetrics:
             ),
             inference="median of within-block paired contrasts; percentile bootstrap 10000, seed 20261018; exploratory per-cell intervals, not simultaneous; readings are not independent repetitions",
         )
-        (args.output / "audit.json").write_text(json.dumps(audit, indent=2))
+        (output / "audit.json").write_text(json.dumps(audit, indent=2))
         print(json.dumps(audit, indent=2))
-        return args.output

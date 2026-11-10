@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/opt/pqc-tls/lib:/usr/local/lib:/usr/local/lib64:${LD_LIBRARY_PATH}
 export OQS_INSTALL_PATH=/usr/local
 export PYTHONPATH=/workspace:${PYTHONPATH}
 export MPLBACKEND=Agg

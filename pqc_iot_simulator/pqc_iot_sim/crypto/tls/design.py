@@ -33,17 +33,26 @@ PROBE = str(
 )
 
 
-def schedule(readings, restart_fraction, ack_fraction, block, seed=20261018):
+def schedule(
+    readings, restart_fraction, ack_fraction, block, seed=20261018, flexible=False
+):
     """One initial reading, faults on exactly sampled eligible subsequent readings.
 
     Matched across TLS profiles/treatments/dedup. Independent restart/ACK draws.
     Overlap is allowed and recorded. This is not a paired kernel-loss realization.
     """
-    if readings < 5 or (readings - 1) % 4:
+    if isinstance(readings, bool) or not isinstance(readings, int) or readings < 1:
+        raise ValueError("readings must be a positive integer")
+    if not flexible and (readings < 5 or (readings - 1) % 4):
         raise ValueError("readings must be 1 plus a positive multiple of four")
     masks = []
     for label, fraction in (("restart", restart_fraction), ("ack", ack_fraction)):
-        if fraction not in FREQUENCIES:
+        if (
+            not isinstance(fraction, (int, float))
+            or isinstance(fraction, bool)
+            or not 0 <= fraction <= 1
+            or (not flexible and fraction not in FREQUENCIES)
+        ):
             raise ValueError("unsupported fault frequency")
         material = f"{seed}/{block}/{label}"
         rng = random.Random(int(hashlib.sha256(material.encode()).hexdigest(), 16))

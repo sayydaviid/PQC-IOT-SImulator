@@ -1,0 +1,21 @@
+{
+    "name": "PQC-IoT Simulator",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "notebook",
+    "runServices": ["notebook"],
+    "workspaceFolder": "/workspace",
+    "remoteUser": "root",
+    "overrideCommand": false,
+    "shutdownAction": "stopCompose",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python3"
+            }
+        }
+    }
+}

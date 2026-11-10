@@ -33,6 +33,7 @@ def execute(
     batch,
     recovery,
     block,
+    device_id="iot_1",
 ):
     directory.mkdir()
     private.mkdir(mode=0o700)
@@ -125,6 +126,8 @@ def execute(
             str(cred),
             "--profile",
             profile,
+            "--device-id",
+            device_id,
             "--ledger",
             str(db),
             "--ready",
@@ -295,13 +298,30 @@ class ConnectionBatchEngine:
     Configure once, then call ``run()`` from a notebook.
     """
 
-    def __init__(self, *, output, blocks=10, smoke=False, local_smoke=False):
+    def __init__(
+        self,
+        *,
+        output,
+        blocks=10,
+        smoke=False,
+        local_smoke=False,
+        network=None,
+        source="iot_1",
+        destination="server_1",
+    ):
         self.output = Path(output) if output is not None else None
         self.blocks = blocks
-        if self.blocks < 1:
+        if (
+            isinstance(self.blocks, bool)
+            or not isinstance(self.blocks, int)
+            or self.blocks < 1
+        ):
             raise ValueError("blocks must be positive")
         self.smoke = smoke
         self.local_smoke = local_smoke
+        self.network = network
+        self.source = source
+        self.destination = destination
 
     def run(self):
         args = self
@@ -337,6 +357,8 @@ class ConnectionBatchEngine:
                     Path(__import__("_context_tls").__file__).read_bytes()
                 ).hexdigest(),
             },
+            "source": args.source,
+            "destination": args.destination,
             "blocks": args.blocks,
             "planned_cases": len(matrix) * args.blocks,
             "logical_readings_per_case": 100,
@@ -357,7 +379,7 @@ class ConnectionBatchEngine:
                 creds = {}
                 for profile in PROFILES:
                     creds[profile] = private / f"b{block}_{profile}"
-                    provision(creds[profile], profile)
+                    provision(creds[profile], profile, device_id=args.source)
                 (args.output / f"certificates_block{block}.json").write_text(
                     json.dumps(
                         {p: certificate_sizes(d) for (p, d) in creds.items()}, indent=2
@@ -372,7 +394,11 @@ class ConnectionBatchEngine:
                     interface = "lo"
                     qdiscs = []
                 else:
-                    (engine, sta, dst, cip, sip, interface, qdiscs) = topology()
+                    (engine, sta, dst, cip, sip, interface, qdiscs) = topology(
+                        network=args.network,
+                        source=args.source,
+                        destination=args.destination,
+                    )
                 try:
                     (args.output / f"network_block{block}.json").write_text(
                         json.dumps(qdiscs)
@@ -395,8 +421,10 @@ class ConnectionBatchEngine:
                             batch,
                             recovery,
                             block,
+                            device_id=args.source,
                         )
                         row["case_id"] = cid
+                        row.update(source=args.source, destination=args.destination)
                         (args.output / cid / "case.json").write_text(
                             json.dumps(row, indent=2)
                         )

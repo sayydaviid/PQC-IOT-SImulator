@@ -149,6 +149,39 @@ RUN python3 -m ipykernel install \
     --name pqc-iot-simulator \
     --display-name "Python 3 - PQC IoT Simulator"
 
+# TLS 1.3 e os módulos nativos usados nos experimentos de recuperação.
+ARG OPENSSL_TAG=openssl-3.5.9
+RUN git clone --depth 1 --branch "$OPENSSL_TAG" \
+        https://github.com/openssl/openssl.git /tmp/tls-openssl \
+    && cd /tmp/tls-openssl \
+    && mkdir -p /opt/pqc-tls \
+    && git rev-parse HEAD > /opt/pqc-tls/source-commit \
+    && ./Configure --prefix=/opt/pqc-tls --libdir=lib shared no-tests \
+    && make -j4 \
+    && make install_sw \
+    && rm -rf /tmp/tls-openssl
+
+ENV LD_LIBRARY_PATH=/opt/pqc-tls/lib:/usr/local/lib:/usr/local/lib64
+ENV PATH=/opt/pqc-tls/bin:$PATH
+ENV OPENSSL_CONF=/etc/ssl/openssl.cnf
+ENV PYTHONPATH=/workspace:/opt/pqc-tls/native:/opt/pqc-tls/continuity:/opt/pqc-tls/context_costs
+
+COPY pqc_iot_simulator/pqc_iot_sim/runtime/native/tls/native.c /opt/pqc-tls/native/native.c
+COPY pqc_iot_simulator/pqc_iot_sim/runtime/native/continuity/native.c /opt/pqc-tls/continuity/native.c
+COPY pqc_iot_simulator/pqc_iot_sim/runtime/native/context_costs/native.c /opt/pqc-tls/context_costs/native.c
+
+RUN for tls_module in native:_pqc_tls continuity:_continuity_tls context_costs:_context_tls; do \
+        tls_directory="${tls_module%:*}"; \
+        tls_name="${tls_module#*:}"; \
+        gcc -shared -fPIC -Wall -Wextra -Werror -Wno-unused-parameter \
+            $(python3-config --includes) -I/opt/pqc-tls/include \
+            "/opt/pqc-tls/${tls_directory}/native.c" \
+            -L/opt/pqc-tls/lib -Wl,-rpath,/opt/pqc-tls/lib -lssl -lcrypto \
+            -o "/opt/pqc-tls/${tls_directory}/${tls_name}$(python3-config --extension-suffix)" \
+            || exit 1; \
+    done \
+    && python3 -c 'import _pqc_tls, _continuity_tls, _context_tls; import ssl; assert ssl.OPENSSL_VERSION.startswith("OpenSSL 3.5.9")'
+
 COPY . /workspace
 
 RUN python3 -c \

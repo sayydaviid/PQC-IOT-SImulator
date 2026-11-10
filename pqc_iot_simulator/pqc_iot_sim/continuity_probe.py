@@ -220,7 +220,13 @@ def server(args):
             peer = None
             with connection:
                 try:
-                    peer = native.handshake(ctx, connection.fileno(), 1, "", b"")
+                    peer = native.handshake(
+                        ctx,
+                        connection.fileno(),
+                        1,
+                        getattr(args, "device_id", "iot_1"),
+                        b"",
+                    )
                     record = json.loads(receive(peer))
                     if (
                         set(record) != {"reading_id", "payload"}
@@ -229,7 +235,11 @@ def server(args):
                         raise ValueError("invalid reading")
                     payload = unb64(record["payload"])
                     row["reading_id"] = record["reading_id"]
-                    answer = ledger.ingest("iot_1", record["reading_id"], payload)
+                    answer = ledger.ingest(
+                        getattr(args, "device_id", "iot_1"),
+                        record["reading_id"],
+                        payload,
+                    )
                     row["reading_received"] = True
                     row.update(answer)
                     if number in args.drop_ack or record["reading_id"] in pending_drops:
@@ -268,6 +278,7 @@ def main():
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--credentials", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--device-id", default="iot_1")
     parser.add_argument("--profile", choices=tuple(PROFILES), default="pqc")
     parser.add_argument("--mode", choices=("full", "resume"), default="resume")
     parser.add_argument("--state")

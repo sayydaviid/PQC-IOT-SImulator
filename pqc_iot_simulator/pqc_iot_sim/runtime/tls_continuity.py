@@ -6,6 +6,7 @@ use identical stateless tickets; the STEK is regenerated or preserved at restart
 
 from __future__ import annotations
 from ..metadata import RunMetadata
+import math
 import hashlib
 import json
 import os
@@ -91,6 +92,8 @@ def execute_case(
     capture_enabled=True,
     max_attempts=3,
     probe=None,
+    device_id="iot_1",
+    payload_bytes=None,
 ):
     probe = probe or PROBE
     directory.mkdir()
@@ -186,6 +189,8 @@ def execute_case(
                     str(gateway_output),
                     "--profile",
                     profile,
+                    "--device-id",
+                    device_id,
                     "--connections",
                     "100000",
                     "--stop-file",
@@ -215,9 +220,10 @@ def execute_case(
                 startup_ms = (time.perf_counter_ns() - start) / 1000000.0
             rid = reading_id(reading)
             payload = private / "reading.bin"
-            payload.write_bytes(
-                f"synthetic block={block:03} reading={reading:03}".encode()
-            )
+            data = f"synthetic block={block:03} reading={reading:03}".encode()
+            if payload_bytes is not None:
+                data = (data + b"x" * payload_bytes)[:payload_bytes]
+            payload.write_bytes(data)
             for retry in range(max_attempts):
                 output = directory / f"client_{reading}_{retry}.json"
                 command = [
@@ -453,12 +459,69 @@ class TLSContinuityEngine:
     """
 
     def __init__(
-        self, *, output, blocks=10, readings=9, phase="core", resume_from=None
+        self,
+        *,
+        output,
+        blocks=10,
+        readings=9,
+        phase="core",
+        resume_from=None,
+        network=None,
+        source="iot_1",
+        destination="server_1",
+        design=None,
+        payload_bytes=None,
+        delay_ms=2,
     ):
         self.output = Path(output) if output is not None else None
         self.blocks = blocks
-        if self.blocks < 1:
+        if (
+            isinstance(self.blocks, bool)
+            or not isinstance(self.blocks, int)
+            or self.blocks < 1
+        ):
             raise ValueError("blocks must be positive")
+        self.network = network
+        self.source = source
+        self.destination = destination
+        self.design = design
+        self.payload_bytes = payload_bytes
+        self.delay_ms = delay_ms
+        if isinstance(blocks, bool) or not isinstance(blocks, int):
+            raise ValueError("blocks must be a positive integer")
+        if payload_bytes is not None and (
+            isinstance(payload_bytes, bool)
+            or not isinstance(payload_bytes, int)
+            or not 1 <= payload_bytes <= 4096
+        ):
+            raise ValueError("payload_bytes deve estar entre 1 e 4096")
+        if (
+            isinstance(delay_ms, bool)
+            or not isinstance(delay_ms, (float, int))
+            or not math.isfinite(delay_ms)
+            or delay_ms < 0
+        ):
+            raise ValueError("delay_ms deve ser não negativo")
+        if design is not None:
+            if not design or resume_from is not None:
+                raise ValueError(
+                    "a condição deve ser informada e não admite resume_from"
+                )
+            for loss, restart, ack, profile, treatment, deduplicate in design:
+                if (
+                    profile not in PROFILES
+                    or treatment not in ("full", "resume_volatile", "resume_preserved")
+                    or not isinstance(deduplicate, bool)
+                ):
+                    raise ValueError("perfil, política ou deduplicação inválidos")
+                if (
+                    isinstance(loss, bool)
+                    or not isinstance(loss, (float, int))
+                    or not math.isfinite(loss)
+                    or not 0 <= loss <= 100
+                ):
+                    raise ValueError("loss_pct deve estar entre 0 e 100")
+                schedule(readings, restart, ack, 0, flexible=True)
         self.readings = readings
         self.phase = phase
         if self.phase not in ("core", "loss", "smoke", "network_smoke"):
@@ -469,7 +532,7 @@ class TLSContinuityEngine:
         args = self
         if args.blocks < 1:
             raise ValueError("blocks must be positive")
-        schedule(args.readings, 0.25, 0.25, 0)
+        schedule(args.readings, 0.25, 0.25, 0, flexible=args.design is not None)
         args.output.mkdir(parents=True, exist_ok=False)
         initial_hashes = RunMetadata.source_hashes()
         (imported, complete_blocks) = ([], set())
@@ -480,6 +543,26 @@ class TLSContinuityEngine:
             (original, imported, complete_blocks) = completed_blocks(
                 args.resume_from, args.phase, args.blocks, args.readings, initial_hashes
             )
+            requested_topology = (
+                dict(
+                    name=args.network.config.topology_name,
+                    parameters=args.network.config.topology_params,
+                    nodes=args.network.topology_data.nodes,
+                    links=args.network.topology_data.links,
+                )
+                if args.network
+                else None
+            )
+            # Os enlaces passam a listas quando são gravados em JSON.
+            requested_topology = json.loads(json.dumps(requested_topology))
+            if (
+                original.get("source", "iot_1") != args.source
+                or original.get("destination", "server_1") != args.destination
+                or original.get("payload_bytes") != args.payload_bytes
+                or original.get("delay_ms", 2) != args.delay_ms
+                or original.get("topology") != requested_topology
+            ):
+                raise ValueError("continuation network or payload differs")
             continuation = dict(
                 source=str(args.resume_from),
                 original_manifest=original,
@@ -515,14 +598,18 @@ class TLSContinuityEngine:
         ):
             raise RuntimeError("runtime built from another native source")
         design = (
-            cells(args.phase)
-            if args.phase in ("core", "loss")
-            else [
-                (0, 1, 1, p, t, d)
-                for p in PROFILES
-                for t in ("full", "resume_volatile", "resume_preserved")
-                for d in (False, True)
-            ]
+            args.design
+            if args.design is not None
+            else (
+                cells(args.phase)
+                if args.phase in ("core", "loss")
+                else [
+                    (0, 1, 1, p, t, d)
+                    for p in PROFILES
+                    for t in ("full", "resume_volatile", "resume_preserved")
+                    for d in (False, True)
+                ]
+            )
         )
         manifest = dict(
             started_utc=datetime.now(timezone.utc).isoformat(),
@@ -530,6 +617,20 @@ class TLSContinuityEngine:
             continuation=continuation,
             environment=environment(),
             phase=args.phase,
+            source=args.source,
+            destination=args.destination,
+            topology=(
+                dict(
+                    name=args.network.config.topology_name,
+                    parameters=args.network.config.topology_params,
+                    nodes=args.network.topology_data.nodes,
+                    links=args.network.topology_data.links,
+                )
+                if args.network
+                else None
+            ),
+            payload_bytes=args.payload_bytes,
+            delay_ms=args.delay_ms,
             blocks=args.blocks,
             readings=args.readings,
             max_attempts_per_reading=3,
@@ -561,11 +662,8 @@ class TLSContinuityEngine:
             )
         with tempfile.TemporaryDirectory(prefix="continuity-private-") as tmp:
             private = Path(tmp)
-            for profile in PROFILES:
-                provision(private / profile, profile)
-            from ..topology.network import Network
-            from .mininet_wifi_engine import MininetWiFiEngine
-
+            for profile in dict.fromkeys(cell[3] for cell in design):
+                provision(private / profile, profile, device_id=args.source)
             for loss in sorted({c[0] for c in design}):
                 for block in range(args.blocks):
                     if (loss, block) in complete_blocks:
@@ -580,53 +678,23 @@ class TLSContinuityEngine:
                             interface = "lo"
                             qdiscs = []
                         else:
-                            network = Network(verbose=False, log_level="silent")
-                            network.set_ready_topology("star", nodes=1)
-                            network.create_hosts()
-                            engine = MininetWiFiEngine(
-                                network,
-                                verbose=False,
-                                log_level="silent",
-                                default_delay="2ms",
-                                default_loss=0,
-                                association_wait_seconds=5,
+                            from .tls_chains import topology
+
+                            (
+                                engine,
+                                station,
+                                destination,
+                                client_ip,
+                                server_ip,
+                                interface,
+                                qdiscs,
+                            ) = topology(
+                                loss=loss,
+                                network=args.network,
+                                source=args.source,
+                                destination=args.destination,
+                                delay_ms=args.delay_ms,
                             )
-                            engine.build()
-                            engine.start()
-                            if (
-                                engine.last_association_report["failed"]
-                                or len(engine.last_association_report["associated"])
-                                != 1
-                            ):
-                                raise RuntimeError("Wi-Fi association failed")
-                            (station, destination) = (
-                                engine.get_mininet_node("iot_1"),
-                                engine.get_mininet_node("server_1"),
-                            )
-                            (client_ip, server_ip) = (
-                                engine.get_ip("iot_1"),
-                                engine.get_ip("server_1"),
-                            )
-                            intf = destination.defaultIntf()
-                            interface = intf.name
-                            other = (
-                                intf.link.intf1
-                                if intf.link.intf2 is intf
-                                else intf.link.intf2
-                            )
-                            qdiscs = []
-                            for endpoint in (intf, other):
-                                error = endpoint.node.cmd(
-                                    f"tc qdisc replace dev {endpoint.name} root netem limit 1000 delay 2ms loss {loss}%"
-                                )
-                                if error.strip():
-                                    raise RuntimeError("netem failed: " + error)
-                                qdisc = endpoint.node.cmd(
-                                    f"tc -s qdisc show dev {endpoint.name}"
-                                )
-                                if "netem" not in qdisc or "delay 2ms" not in qdisc:
-                                    raise RuntimeError("netem not applied")
-                                qdiscs.append(qdisc)
                             (
                                 args.output / f"network_loss{loss}_block{block}.json"
                             ).write_text(
@@ -645,7 +713,13 @@ class TLSContinuityEngine:
                             )
                         for _, restart, ack, profile, treatment, dedup in order:
                             case_id = f"l{loss}_b{block}_r{restart:g}_a{ack:g}_{profile}_{treatment}_d{int(dedup)}"
-                            faults = schedule(args.readings, restart, ack, block)
+                            faults = schedule(
+                                args.readings,
+                                restart,
+                                ack,
+                                block,
+                                flexible=args.design is not None,
+                            )
                             case = execute_case(
                                 station,
                                 destination,
@@ -662,9 +736,14 @@ class TLSContinuityEngine:
                                 args.readings,
                                 block,
                                 capture_enabled=args.phase != "smoke",
+                                device_id=args.source,
+                                payload_bytes=args.payload_bytes,
                             )
                             case.update(
                                 case_id=case_id,
+                                source=args.source,
+                                destination=args.destination,
+                                payload_bytes=args.payload_bytes,
                                 loss_pct=loss,
                                 restart_fraction=restart,
                                 ack_fraction=ack,
