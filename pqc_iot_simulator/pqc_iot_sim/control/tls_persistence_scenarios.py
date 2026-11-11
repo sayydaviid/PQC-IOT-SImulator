@@ -81,7 +81,7 @@ def worker(config):
         ledger=str(directory / "db"),
         deduplicate=True,
         host="127.0.0.1",
-        port=39922,
+        port=0,
         stop_file=None,
         connections=1,
         drop_reading_id=[],
@@ -103,7 +103,7 @@ def ready(process, path):
         time.sleep(0.005)
 
 
-def client_command(directory, credentials, profile, output):
+def client_command(directory, credentials, profile, output, port):
     return [
         sys.executable,
         str(PROBE),
@@ -111,7 +111,7 @@ def client_command(directory, credentials, profile, output):
         "--host",
         "127.0.0.1",
         "--port",
-        "39922",
+        str(port),
         "--credentials",
         str(credentials),
         "--profile",
@@ -185,12 +185,14 @@ class TLSPersistenceScenarios:
                             customer = None
                             try:
                                 ready(gateway, directory / "ready")
+                                port = int((directory / "ready").read_text())
                                 customer = subprocess.Popen(
                                     client_command(
                                         directory,
                                         credentials,
                                         profile,
                                         directory / "client_before.json",
+                                        port,
                                     ),
                                     env=env,
                                     stdout=subprocess.PIPE,
@@ -243,7 +245,7 @@ class TLSPersistenceScenarios:
                                     "--host",
                                     "127.0.0.1",
                                     "--port",
-                                    "39922",
+                                    "0",
                                     "--credentials",
                                     str(credentials),
                                     "--profile",
@@ -264,12 +266,14 @@ class TLSPersistenceScenarios:
                             )
                             try:
                                 ready(server, directory / "retry_ready")
+                                port = int((directory / "retry_ready").read_text())
                                 result = subprocess.run(
                                     client_command(
                                         directory,
                                         credentials,
                                         profile,
                                         directory / "client_after.json",
+                                        port,
                                     ),
                                     env=env,
                                     capture_output=True,

@@ -205,7 +205,9 @@ def server(args):
     listener.listen(4)
     listener.settimeout(0.05 if args.stop_file else 90)
     pending_drops = set(args.drop_reading_id)
-    Path(args.ready).write_text("ready")
+    Path(args.ready).write_text(
+        str(listener.getsockname()[1]) if args.port == 0 else "ready"
+    )
     try:
         number = 0
         while number < args.connections:
@@ -372,7 +374,9 @@ def multi_server(args):
     listener.settimeout(0.05)
     pending = set(args.drop_reading_id)
     rows = []
-    Path(args.ready).write_text("ready")
+    Path(args.ready).write_text(
+        str(listener.getsockname()[1]) if args.port == 0 else "ready"
+    )
     try:
         while not (args.stop_file and Path(args.stop_file).exists()):
             try:
