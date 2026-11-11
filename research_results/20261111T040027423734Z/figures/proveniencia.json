@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "inputs_sha256": {
+    "cadeias_custos_absolutos.csv": "5643ad1e75c3ada340c67bd503ebf374beba510be9ae3272bda6715d6bc59a43",
+    "cadeias_comparacoes_mesma_repeticao.csv": "834560f2a6c9e79bf7d16e4ee977b0f1f91f0dbeb9fedb2198cece0f72258236",
+    "amortizacao_custos_absolutos.csv": "14a8ef3a7b1782d545f05eaf744eca70a47d7c7eee71bb3a3b5185b12f02fb14",
+    "amortizacao_comparacoes_mesma_repeticao.csv": "46c49c74c867cec742c3ba21bfd7552069167eead23cdffe0297e2f76b14f318",
+    "results.json": "849c41e1f20c8b9caf5d797aa0e9082845e29fe65923a18081a6f092be234b51"
+  },
+  "notebook_sha256": "bdf4adf3136313b620651c4eeceb9a6456a57096281570916dc14428f861aae2",
+  "chain_executions": 540,
+  "chain_confirmed_readings": 4860,
+  "amortization_executions": 540,
+  "amortization_confirmed_readings": 54000,
+  "blocks_per_condition": 10,
+  "scope": {
+    "a": "Cadeias: 100%/100%, raiz omitida, mediana de bytes por leitura.",
+    "b": "Cadeias: 100%/100%, medianas de comparações dentro da repetição; IC bootstrap exploratório 95%.",
+    "c": "Controle local com exatamente mesmo servidor e CA; não é amostra de custo de rede.",
+    "d": "100 leituras de 512 bytes, sem falhas, primeiro completo incluído, raiz omitida.",
+    "e": "Mesma carga; reinício antes da 51ª leitura e supressão de sua primeira confirmação.",
+    "f": "Contexto preservado menos completo, diferenças dentro do bloco e IC bootstrap exploratório 95%."
+  },
+  "all_network_panels": {
+    "packet_loss_pct": 0,
+    "deduplication": true,
+    "root_trust": "mantida"
+  },
+  "panels": [
+    "contexto_custos_sem_raiz",
+    "contexto_economia_cadeias",
+    "contexto_ticket_identidade",
+    "contexto_leituras_custos",
+    "contexto_leituras_recuperacao",
+    "contexto_leituras_tempo"
+  ]
+}

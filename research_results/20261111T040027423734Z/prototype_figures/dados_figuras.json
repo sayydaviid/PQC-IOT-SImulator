@@ -1,0 +1,312 @@
+{
+  "source_sha256": {
+    "security": "1290bc9601f12e2dfcb855a5676eb50bfd75badfbccf8818950de1996c3346e5",
+    "transitions": "31099d56b22d52ba3c9e416fbfb0414eb590a6aad7aa63d6dc49c5d453f695ca",
+    "tls": null
+  },
+  "security": {
+    "power_loss": [
+      {
+        "policy": "checkpoint",
+        "reuses": 80,
+        "plaintexts": 80,
+        "writes": 0.0
+      },
+      {
+        "policy": "persist_each",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 8.0
+      },
+      {
+        "policy": "reserve_blocks",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 1.0
+      },
+      {
+        "policy": "full_pqc",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 0.0
+      },
+      {
+        "policy": "psk_resume",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 0.0
+      },
+      {
+        "policy": "pqc_resume",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 0.0
+      }
+    ],
+    "client_storage_rollback": [
+      {
+        "policy": "checkpoint",
+        "reuses": 80,
+        "plaintexts": 80,
+        "writes": 0.0
+      },
+      {
+        "policy": "persist_each",
+        "reuses": 80,
+        "plaintexts": 80,
+        "writes": 8.0
+      },
+      {
+        "policy": "reserve_blocks",
+        "reuses": 80,
+        "plaintexts": 80,
+        "writes": 1.0
+      },
+      {
+        "policy": "full_pqc",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 0.0
+      },
+      {
+        "policy": "psk_resume",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 0.0
+      },
+      {
+        "policy": "pqc_resume",
+        "reuses": 0,
+        "plaintexts": 0,
+        "writes": 0.0
+      }
+    ]
+  },
+  "transitions": [
+    {
+      "scenario": "no_fault",
+      "full_pqc": {
+        "bytes": 9263.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 1048.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 3136.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_client_hello",
+      "full_pqc": {
+        "bytes": 9428.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 1353.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 3441.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_server_hello",
+      "full_pqc": {
+        "bytes": 14018.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 1853.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 5007.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_client_finished",
+      "full_pqc": {
+        "bytes": 18443.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 2013.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 6189.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_gateway_commit",
+      "full_pqc": {
+        "bytes": 18526.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 2096.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 6272.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_key_confirmation",
+      "full_pqc": {
+        "bytes": 18526.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 2096.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 6272.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_checkpoint",
+      "full_pqc": {
+        "bytes": 18526.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 2096.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 6272.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "after_record_encryption",
+      "full_pqc": {
+        "bytes": 18526.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 2096.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 6272.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "lost_reading_ack",
+      "full_pqc": {
+        "bytes": 18526.0,
+        "fallbacks": 0,
+        "duplicates": 10
+      },
+      "psk_resume": {
+        "bytes": 2096.0,
+        "fallbacks": 0,
+        "duplicates": 10
+      },
+      "pqc_resume": {
+        "bytes": 6272.0,
+        "fallbacks": 0,
+        "duplicates": 10
+      }
+    },
+    {
+      "scenario": "torn_checkpoint",
+      "full_pqc": {
+        "bytes": 18526.0,
+        "fallbacks": 10,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 10311.0,
+        "fallbacks": 10,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 12399.0,
+        "fallbacks": 10,
+        "duplicates": 0
+      }
+    },
+    {
+      "scenario": "gateway_lost_before_start",
+      "full_pqc": {
+        "bytes": 9263.0,
+        "fallbacks": 0,
+        "duplicates": 0
+      },
+      "psk_resume": {
+        "bytes": 9568.0,
+        "fallbacks": 10,
+        "duplicates": 0
+      },
+      "pqc_resume": {
+        "bytes": 9568.0,
+        "fallbacks": 10,
+        "duplicates": 0
+      }
+    }
+  ],
+  "scenario_labels": [
+    "Sem falha",
+    "ClientHello",
+    "ServerHello",
+    "ClientFinished",
+    "Commit",
+    "Confirmação",
+    "Checkpoint",
+    "Cifragem",
+    "ACK perdido",
+    "Truncado",
+    "Raiz perdida"
+  ],
+  "tls": [],
+  "tls_warm_bytes": {},
+  "tls_duplicates": [],
+  "panels": [
+    "estado_energia",
+    "estado_rollback",
+    "estado_textos",
+    "estado_escritas",
+    "transicoes_bytes",
+    "transicoes_fallbacks",
+    "transicoes_economia",
+    "transicoes_duplicados"
+  ],
+  "statistics": "10 repetições de estado; 10 repetições de interrupções; medianas descritivas."
+}
