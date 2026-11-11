@@ -81,7 +81,7 @@ def worker(config):
         ledger=str(directory / "db"),
         deduplicate=True,
         host="127.0.0.1",
-        port=39922,
+        port=0,
         stop_file=None,
         connections=1,
         drop_reading_id=[],
@@ -95,15 +95,20 @@ def worker(config):
         pass
 
 
-def ready(process, path):
+def ready(process, path, log_path):
     deadline = time.monotonic() + 20
     while not path.exists():
-        if process.poll() is not None or time.monotonic() > deadline:
-            raise RuntimeError("gateway did not reach expected boundary")
+        code = process.poll()
+        if code is not None or time.monotonic() > deadline:
+            detail = log_path.read_text(errors="replace") if log_path.exists() else ""
+            reason = f"exited with code {code}" if code is not None else "timed out"
+            raise RuntimeError(
+                f"gateway {reason} waiting for {path.name}; log: {log_path}\n{detail}"
+            )
         time.sleep(0.005)
 
 
-def client_command(directory, credentials, profile, output):
+def client_command(directory, credentials, profile, output, port):
     return [
         sys.executable,
         str(PROBE),
@@ -111,7 +116,7 @@ def client_command(directory, credentials, profile, output):
         "--host",
         "127.0.0.1",
         "--port",
-        "39922",
+        str(port),
         "--credentials",
         str(credentials),
         "--profile",
@@ -175,7 +180,10 @@ class TLSPersistenceScenarios:
                                 }
                             )
                         )
-                        with (directory / "worker.log").open("w") as log:
+                        case_output = args.output / directory.name
+                        case_output.mkdir()
+                        worker_log = case_output / "worker.log"
+                        with worker_log.open("w") as log:
                             gateway = subprocess.Popen(
                                 [sys.executable, __file__, "--worker", str(config)],
                                 env=env,
@@ -184,20 +192,22 @@ class TLSPersistenceScenarios:
                             )
                             customer = None
                             try:
-                                ready(gateway, directory / "ready")
+                                ready(gateway, directory / "ready", worker_log)
+                                port = int((directory / "ready").read_text())
                                 customer = subprocess.Popen(
                                     client_command(
                                         directory,
                                         credentials,
                                         profile,
                                         directory / "client_before.json",
+                                        port,
                                     ),
                                     env=env,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,
                                     text=True,
                                 )
-                                ready(gateway, directory / "barrier")
+                                ready(gateway, directory / "barrier", worker_log)
                                 (
                                     gateway.terminate
                                     if termination == "sigterm_cleanup"
@@ -234,7 +244,8 @@ class TLSPersistenceScenarios:
                             ).fetchall()
                         committed = boundary in ["after_commit", "before_ack"]
                         assert records == effects and len(records) == int(committed)
-                        with (directory / "retry.log").open("w") as log:
+                        retry_log = case_output / "retry.log"
+                        with retry_log.open("w") as log:
                             server = subprocess.Popen(
                                 [
                                     sys.executable,
@@ -243,7 +254,7 @@ class TLSPersistenceScenarios:
                                     "--host",
                                     "127.0.0.1",
                                     "--port",
-                                    "39922",
+                                    "0",
                                     "--credentials",
                                     str(credentials),
                                     "--profile",
@@ -263,13 +274,15 @@ class TLSPersistenceScenarios:
                                 stderr=subprocess.STDOUT,
                             )
                             try:
-                                ready(server, directory / "retry_ready")
+                                ready(server, directory / "retry_ready", retry_log)
+                                port = int((directory / "retry_ready").read_text())
                                 result = subprocess.run(
                                     client_command(
                                         directory,
                                         credentials,
                                         profile,
                                         directory / "client_after.json",
+                                        port,
                                     ),
                                     env=env,
                                     capture_output=True,

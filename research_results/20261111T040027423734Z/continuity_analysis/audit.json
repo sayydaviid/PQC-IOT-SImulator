@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "provenance": {
+    "core": {
+      "path": "/workspace/results/retomada/20261111T040027423734Z/core",
+      "blocks": 10,
+      "cases": 1620,
+      "sha256": {
+        "manifest.json": "a3bf424876aadbd314f7abd1dfc905b8c65166c50de552df5b7d86dcebcd86ab",
+        "results.json": "e894f1edbc8864ee92fdd430ac9606a14e86089e0309b78e4c6df93f462d7078"
+      }
+    },
+    "loss": {
+      "path": "/workspace/results/retomada/20261111T040027423734Z/loss",
+      "blocks": 10,
+      "cases": 180,
+      "sha256": {
+        "manifest.json": "1dda389eb60d06dacd72b91aefa2656ba3a12cd85c9abd97cd2b3cd42894863f",
+        "results.json": "d6ea7346bc23bcc202893e3dde4435c43dfe6b557bb7ee390caceb2b9d1ee54e"
+      }
+    }
+  },
+  "analysis_python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+  "analysis_source_sha256": "1bfe6f49598b5db71fcdbea5eca515e33f017dfc271065afa83f675425810b9b",
+  "ticket_sizes_source_sha256": "baf5df088ab9b3edaebb4b116c1146db0618d12ac3259b89faeba35d44eb60df",
+  "analyzed_public_clienthellos": 21960,
+  "cases": 1800,
+  "logical_readings": 16200,
+  "confirmed_logical_readings": 16200,
+  "unconfirmed_logical_readings": 0,
+  "unplanned_unacknowledged": 0,
+  "client_attempts": 21960,
+  "duplicate_effects_enabled": 0,
+  "duplicate_effects_disabled": 2700,
+  "eligible_restart_ack_intersections": 2268,
+  "restart_ack_retry_without_replacement_ticket": 756,
+  "inference": "median of within-block paired contrasts; percentile bootstrap 10000, seed 20261018; exploratory per-cell intervals, not simultaneous; readings are not independent repetitions"
+}
