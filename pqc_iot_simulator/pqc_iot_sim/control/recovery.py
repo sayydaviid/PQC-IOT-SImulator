@@ -30,6 +30,7 @@ class RecoverySimulation:
             )
         self.directory = Path(directory).resolve()
         self.network = network
+        self.article_directory = None
         if isinstance(blocks, bool) or not isinstance(blocks, int) or blocks < 1:
             raise ValueError("blocks must be a positive integer")
         self.blocks = blocks
@@ -234,17 +235,35 @@ class RecoverySimulation:
             )
         return network
 
-    def table(self, name):
+    def reproduce_article(self):
+        """Recalcula os resultados publicados a partir das observações originais."""
+        from ..utils.reanalysis import ArticleNumericalReanalysis
+
+        destination = self.directory / "artigo"
+        number = 1
+        while destination.exists():
+            number += 1
+            destination = self.directory / f"artigo_{number}"
+        ArticleNumericalReanalysis(destination).run()
+        self.article_directory = destination
+        return self._record("article_reanalysis", destination)
+
+    def table(self, name, *, article=False):
         """Obtém uma tabela dos experimentos desta rede."""
         import pandas as pd
 
         tables = {
             "tls": "continuity_analysis/medianas.csv",
+            "tls_comparisons": "continuity_analysis/contrastes_pareados.csv",
             "chains": "context_analysis/cadeias_custos_absolutos.csv",
             "chain_comparisons": "context_analysis/cadeias_comparacoes_mesma_repeticao.csv",
             "amortization": "context_analysis/amortizacao_custos_absolutos.csv",
+            "amortization_comparisons": "context_analysis/amortizacao_comparacoes_mesma_repeticao.csv",
         }
-        return pd.read_csv(self.directory / tables[name])
+        if article and self.article_directory is None:
+            raise ValueError("Execute primeiro rede.recovery.reproduce_article().")
+        directory = self.article_directory if article else self.directory
+        return pd.read_csv(directory / tables[name])
 
     def run_security(self):
         from .identity_scenarios import IdentityScenarios
