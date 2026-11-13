@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import importlib.util
 import json
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -22,6 +23,9 @@ class RecoverySimulation:
     """
 
     def __init__(self, directory=None, blocks=10, network=None):
+        self._managed_root = (
+            (Path.cwd() / "results/retomada").resolve() if directory is None else None
+        )
         if directory is None:
             directory = (
                 Path.cwd()
@@ -34,6 +38,57 @@ class RecoverySimulation:
         if isinstance(blocks, bool) or not isinstance(blocks, int) or blocks < 1:
             raise ValueError("blocks must be a positive integer")
         self.blocks = blocks
+
+    def start(self):
+        """Start a campaign, removing previous generated measurements first."""
+        self.preflight()
+        if self._managed_root is not None:
+            for previous in self._managed_root.glob("*"):
+                if re.fullmatch(r"\d{8}T\d{12}Z", previous.name):
+                    if previous.is_symlink():
+                        previous.unlink()
+                    elif previous.is_dir():
+                        shutil.rmtree(previous)
+            self.directory = self._managed_root / datetime.now(timezone.utc).strftime(
+                "%Y%m%dT%H%M%S%fZ"
+            )
+        else:
+            self._reset_directory()
+        self.directory.mkdir(parents=True, exist_ok=True)
+        self.article_directory = None
+        return self.directory
+
+    def _reset_directory(self):
+        if self.directory.is_symlink():
+            self.directory.unlink()
+        elif self.directory.exists():
+            if self.directory == ROOT or self.directory in ROOT.parents:
+                raise ValueError("experiment directory cannot contain the project")
+            shutil.rmtree(self.directory)
+
+    def _clear(self, *folders):
+        """Discard a replaced stage and any records pointing to its old outputs."""
+        paths = [self.directory / name for name in folders]
+        for path in paths:
+            if path.is_symlink():
+                path.unlink()
+            elif path.is_dir():
+                shutil.rmtree(path)
+        record = self.directory / "stages.json"
+        if record.exists():
+            def affected(value):
+                if isinstance(value, dict):
+                    return any(affected(item) for item in value.values())
+                return isinstance(value, str) and any(
+                    Path(value).is_relative_to(path) for path in paths
+                )
+
+            stages = json.loads(record.read_text())
+            stages = {
+                key: value for key, value in stages.items()
+                if key not in folders and not affected(value)
+            }
+            record.write_text(json.dumps(stages, indent=2) + "\n")
 
     def preflight(self):
         """Check the isolated TLS runtime before starting measured executions."""
@@ -93,6 +148,7 @@ class RecoverySimulation:
         from .state_scenarios import RecoveryStateScenario
         from .interruption_scenarios import RecoveryTransitionScenario
 
+        self._clear("prototype", "transitions", "prototype_figures")
         security = RecoveryStateScenario(
             output=self.directory / "prototype",
             repetitions=repetitions,
@@ -112,6 +168,7 @@ class RecoverySimulation:
         self._validate_endpoints(source, destination)
         from ..runtime.tls_continuity import TLSContinuityEngine
 
+        self._clear("core", "loss", "continuity_analysis", "article_comparison")
         core = TLSContinuityEngine(
             output=self.directory / "core",
             blocks=self.blocks if blocks is None else blocks,
@@ -136,6 +193,7 @@ class RecoverySimulation:
         self._validate_endpoints(source, destination)
         from ..runtime.tls_chains import CertificateChainEngine
 
+        self._clear("chains", "context_analysis", "figures", "article_comparison")
         result = CertificateChainEngine(
             output=self.directory / "chains",
             blocks=self.blocks if blocks is None else blocks,
@@ -149,6 +207,7 @@ class RecoverySimulation:
         self._validate_endpoints(source, destination)
         from ..runtime.tls_amortization import ConnectionBatchEngine
 
+        self._clear("amortization", "context_analysis", "figures", "article_comparison")
         result = ConnectionBatchEngine(
             output=self.directory / "amortization",
             blocks=self.blocks if blocks is None else blocks,
@@ -187,6 +246,7 @@ class RecoverySimulation:
         if profile not in PROFILES or treatment not in TREATMENTS:
             raise ValueError("perfil TLS ou política de retomada inválidos")
         self._validate_endpoints(source, destination)
+        self._clear("sessions", "article_comparison")
         trials = self.directory / "sessions"
         number = 1
         while (trials / str(number)).exists():
@@ -271,6 +331,10 @@ class RecoverySimulation:
         from .tls_persistence_scenarios import TLSPersistenceScenarios
         from .tls_failure_scenarios import TLSFailureScenarios
 
+        self._clear(
+            "identity_tickets", "persistence", "tls_persistence",
+            "continuity_security", "figures", "article_comparison",
+        )
         outcomes = {}
         for name, validation in (
             ("identity_tickets", IdentityScenarios),
@@ -284,6 +348,7 @@ class RecoverySimulation:
     def analyze_continuity(self):
         from ..utils.continuity_metrics import ContinuityMetrics
 
+        self._clear("continuity_analysis", "article_comparison")
         result = ContinuityMetrics(
             core=self.directory / "core",
             loss=self.directory / "loss",
@@ -296,6 +361,7 @@ class RecoverySimulation:
         from ..utils.report import ContextReport
         from ..utils.session_results import SessionResultsAudit
 
+        self._clear("context_analysis", "figures", "article_comparison")
         analysis = SessionCostMetrics(
             chains=self.directory / "chains",
             amortization=self.directory / "amortization",
@@ -310,6 +376,32 @@ class RecoverySimulation:
         ContextReport(analysis=analysis, output=analysis / "resultados.md").run()
         return self._record("context_analysis", analysis)
 
+    def plot(self, kind="context"):
+        """Export and display figures from this campaign's measurements."""
+        from IPython.display import Image, display
+        from ..utils.recovery_figures import ContextFigures, PrototypeFigures
+
+        if kind == "prototype":
+            output = self.directory / "prototype_figures"
+            renderer = PrototypeFigures(
+                security=self.directory / "prototype",
+                transitions=self.directory / "transitions",
+                output=output,
+            )
+        elif kind == "context":
+            output = self.directory / "figures"
+            renderer = ContextFigures(
+                data_dir=self.directory / "context_analysis",
+                diagnostic=self.directory / "identity_tickets/results.json",
+                output=output,
+            )
+        else:
+            raise ValueError("figure kind must be 'prototype' or 'context'")
+        self._clear(output.name)
+        renderer.run()
+        for path in sorted(output.glob("figura_*.png")):
+            display(Image(filename=str(path), width=720))
+
     def compare_article(self):
         """Report agreement and every numerical difference with the article."""
         from ..utils.comparison import ArticleReproductionAudit
@@ -321,8 +413,7 @@ class RecoverySimulation:
 
     def run_all(self):
         """Execute the full registered design. This can take several hours."""
-        self.preflight()
-        self.directory.mkdir(parents=True, exist_ok=False)
+        self.start()
         self.run_prototype()
         self.run_continuity()
         self.run_chains()
@@ -330,5 +421,4 @@ class RecoverySimulation:
         self.run_security()
         self.analyze_continuity()
         self.analyze_context()
-        self.compare_article()
         return self.directory
