@@ -26,8 +26,8 @@ from .mininet_wifi_engine import MininetWiFiEngine
 PROBE = "pqc_iot_simulator.pqc_iot_sim.recovery_probe"
 
 
-def pcap_counts(path, client_ip):
-    """Classic libpcap Ethernet/IPv4 parsing; counts IP bytes including retransmits."""
+def pcap_counts(path, client_ip, *, client_ports=None):
+    """Count IP bytes including retransmits, optionally scoped to TCP client ports."""
     raw = Path(path).read_bytes()
     if len(raw) < 24 or raw[:4] not in (b"\xd4\xc3\xb2\xa1", b"\xa1\xb2\xc3\xd4"):
         raise RuntimeError("unsupported/incomplete capture")
@@ -60,6 +60,8 @@ def pcap_counts(path, client_ip):
             tcp = ip[ihl:]
             tcp_header = (tcp[12] >> 4) * 4
             port = int.from_bytes(tcp[:2] if outgoing else tcp[2:4], "big")
+            if client_ports is not None and port not in client_ports:
+                continue
             flow = flows.setdefault(str(port), {"tx_payload": 0, "rx_payload": 0})
             flow["tx_payload" if outgoing else "rx_payload"] += (
                 length - ihl - tcp_header

@@ -405,7 +405,16 @@ def execute_case(
     if capture_enabled:
         if "0 packets dropped by kernel" not in capture_log:
             raise RuntimeError("capture kernel drops or missing capture statistics")
-        result["capture"] = tls_capture(directory / "traffic.pcap", client_ip)
+        # A previous case can still retransmit after its capture has stopped.
+        # Keep current attempts strict, including failed server handshakes.
+        expected_ports = {
+            row["client_tcp_port"]
+            for row in rows + server_rows
+            if "client_tcp_port" in row
+        }
+        result["capture"] = tls_capture(
+            directory / "traffic.pcap", client_ip, expected_client_ports=expected_ports
+        )
         result["capture_transport_gap_flows"] = sum(
             (
                 any(
