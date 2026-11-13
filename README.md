@@ -1,26 +1,35 @@
 # PQC-IoT Simulator
 
-Plataforma de simulação e emulação de rede para comparar criptografia clássica, pós-quântica e híbrida em cenários de Internet das Coisas. O perfil físico principal representa um ESP32-WROOM-32 com sensor BME280, Wi-Fi de 2,4 GHz e bateria Li-ion.
+Simulador para comparar o custo da recuperação de sessões em redes IoT com criptografia clássica, híbrida e pós-quântica. Usamos o Mininet-WiFi para montar a rede e executar a comunicação entre o sensor e o servidor.
 
-O Mininet-WiFi é o motor de rede obrigatório. Cada ciclo transmite mensagens entre namespaces reais da topologia antes de ser aceito como resultado. A plataforma registra tráfego, PCAP, latência, bytes, operações criptográficas e estimativas de energia do nó IoT.
+Os experimentos estão no [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). Nele configuramos a topologia, executamos as falhas, analisamos as medições e geramos os gráficos com Matplotlib.
 
-> **Limite científico:** a energia do ESP32 é estimada com parâmetros de datasheets e literatura. O Mininet-WiFi não mede corrente elétrica e os protocolos de aplicação são traços equivalentes, não implementações interoperáveis completas.
+O [Tutorial_Execucao.ipynb](Tutorial_Execucao.ipynb) mostra o uso geral do simulador.
 
-## Recursos
+## Preparando o ambiente
 
-- modos clássico, pós-quântico e híbrido;
-- X25519, Ed25519, ML-KEM-512 e ML-DSA-44;
-- proteção dos dados com AES-256-GCM e derivação HKDF/HMAC-SHA-256;
-- MQTT 3.1.1, CoAP confirmável e HTTP/1.1;
-- topologias em grade, estrela, árvore e malha;
-- sessões com tempo de vida, limite de mensagens e contador de nonce;
-- perfis parametrizados de dispositivo, bateria, rádio e criptografia;
-- execução obrigatória no Mininet-WiFi;
-- captura PCAP e exportação em JSON e CSV.
+Usamos Linux com Docker, Docker Compose e suporte ao módulo `mac80211_hwsim`. O contêiner precisa de privilégios para executar o Mininet-WiFi e o Open vSwitch.
 
-A pesquisa de **recuperação de sessões após reinícios e rollback** está em [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb). O notebook conduz os experimentos com TLS 1.3 nativo, preservação/perda do contexto de retomada, diferentes cadeias de certificados, várias leituras por conexão e deduplicação persistente. A implementação é chamada por classes do simulador. O notebook mostra a sequência dos experimentos, a análise e o código dos gráficos.
+Na pasta do projeto, construímos a imagem:
 
-O [Proposta_Retomada_Sessoes.ipynb](Proposta_Retomada_Sessoes.ipynb) configura a rede e chama os experimentos passando os parâmetros:
+```bash
+docker compose build
+```
+
+Depois, iniciamos o Jupyter:
+
+```bash
+sudo docker compose run --rm --service-ports notebook \
+  jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+```
+
+Abra o endereço com o token que aparece no terminal. No Jupyter, abra `Pesquisa_Retomada_Sessoes.ipynb` e execute as células em ordem.
+
+No VS Code, também é possível usar a extensão Dev Containers e a opção **Dev Containers: Reopen in Container**. Nesse caso, selecione o Python do contêiner para executar o notebook.
+
+## Configurando a rede
+
+Criamos uma estrela com um sensor, um ponto de acesso e um servidor:
 
 ```python
 from pqc_iot_simulator import Network, Logger
@@ -29,131 +38,86 @@ rede = Network()
 rede.set_ready_topology("Star", 1)
 rede.draw()
 Logger.activate()
+rede.recovery.start()
+```
 
-resultado = rede.recovery.run_sessions(
-    source="iot_1",
-    destination="server_1",
-    profile="pqc",
-    treatment="resume_preserved",
-    readings=9,
-    restart_fraction=0.25,
-    ack_fraction=0.25,
-    repetitions=10,
-    payload_bytes=31,
-    loss_pct=0,
+O sensor `iot_1` se conecta por Wi-Fi ao ponto de acesso `gateway_1`, que encaminha os dados para `server_1`. O servidor executa o TLS e mantém o banco de leituras.
+
+`start()` inicia uma campanha e apaga os resultados das campanhas anteriores em `results/retomada`. Repetir uma etapa substitui suas medições e remove as análises e figuras que dependem delas.
+
+## Executando os experimentos
+
+Comparamos três configurações de TLS 1.3:
+
+| Perfil | Troca de chaves | Autenticação |
+|---|---|---|
+| Clássico | X25519 | ECDSA P-256 |
+| Híbrido | X25519MLKEM768 | ECDSA P-256 |
+| Pós-quântico | X25519MLKEM768 | ML-DSA-44 |
+
+Os modos são autenticação completa, contexto de retomada perdido e contexto preservado. As conexões usam autenticação mútua, AES-256-GCM/SHA-384 e 0-RTT desabilitado.
+
+No notebook, chamamos cada etapa passando seus parâmetros:
+
+```python
+rede.recovery.run_prototype(repetitions=10, messages=8, block_size=32)
+
+rede.recovery.run_continuity(
+    source="iot_1", destination="server_1", blocks=10, readings=9
 )
+rede.recovery.analyze_continuity()
+
+rede.recovery.run_chains(source="iot_1", destination="server_1", blocks=10)
+rede.recovery.run_amortization(source="iot_1", destination="server_1", blocks=10)
+rede.recovery.run_security()
+rede.recovery.analyze_context()
 ```
 
-A origem e o destino são nós da topologia configurada. `profile` seleciona `classical`, `hybrid` ou `pqc`; `treatment` seleciona `full`, `resume_volatile` ou `resume_preserved`. As frequências variam de 0 a 1, e `loss_pct` é a perda de pacotes em porcentagem. Os arquivos de cada execução são organizados pelo simulador. O retorno contém as medições por repetição.
+As etapas avaliam falhas de estado, reinícios do processo servidor, confirmações perdidas, perda de pacotes, transmissão da CA raiz e quantidade de leituras por conexão. O controle com deduplicação verifica se o reenvio de uma leitura repete seu efeito no banco.
 
-A geração de gráficos fica nas células do notebook, onde os filtros e comandos de desenho podem ser inspecionados e alterados pelos pesquisadores. O simulador executa os cenários e calcula as métricas. As classes não dependem do nome nem da localização do notebook.
+## Consultando as medições
 
-## Estrutura
+As tabelas usam os dados da campanha atual:
 
-```text
-.
-├── Tutorial_Execucao.ipynb          # uso geral, preservado
-├── Pesquisa_Retomada_Sessoes.ipynb  # reprodução da pesquisa atual
-├── Proposta_Retomada_Sessoes.ipynb  # experimentos a partir da rede
-├── pqc_iot_simulator/pqc_iot_sim/
-│   ├── config/                     # configurações de execução
-│   ├── control/                    # controle de sessões e cenários de falha
-│   ├── crypto/                     # criptografia e parâmetros TLS
-│   ├── devices/                    # dispositivos, energia e carga
-│   ├── runtime/                    # execução, Mininet-WiFi e comunicação nativa
-│   ├── topology/                   # rede e participantes
-│   ├── utils/                      # métricas, registros e exportação
-│   ├── data/                       # observações de referência para reanálise
-│   └── metadata.py                 # versão e registro automático da execução
-├── calibracao/                     # parâmetros e fontes bibliográficas
-├── .devcontainer/                  # ambiente do VS Code
-├── Dockerfile
-├── docker-compose.yml
-├── docker-entrypoint.sh
-├── requirements.txt
-└── LICENSE
+```python
+rede.recovery.table("tls")
+rede.recovery.table("tls_comparisons")
+rede.recovery.table("chains")
+rede.recovery.table("chain_comparisons")
+rede.recovery.table("amortization")
+rede.recovery.table("amortization_comparisons")
 ```
 
-Dados produzidos nas execuções são salvos no diretório escolhido no notebook e não são versionados automaticamente. As observações necessárias para recalcular os números do artigo estão em `pqc_iot_simulator/pqc_iot_sim/data/`. O método e a geração das figuras estão no notebook de pesquisa.
+O código dos gráficos fica nas células do notebook, separado por figura e painel. Ali podemos alterar os filtros, as cores, as legendas e os eixos. As figuras são exibidas no notebook e salvas em PNG, PDF e SVG.
 
-## Requisitos
+## Arquivos gerados
 
-Use um host Linux com:
+Cada campanha cria uma pasta em `results/retomada`, com os resultados em JSON, as capturas PCAP, as tabelas CSV e as figuras. Os manifestos registram a topologia, os parâmetros, as versões e os hashes do código usado.
 
-- Docker Engine;
-- Docker Compose;
-- suporte a `mac80211_hwsim`;
-- privilégios para Mininet-WiFi, Open vSwitch e namespaces de rede.
+Para consultar a pasta da campanha:
 
-A primeira construção da imagem compila dependências nativas e pode demorar.
-
-## Instalação e uso no VS Code
-
-Na raiz do repositório:
-
-```bash
-docker compose build
+```python
+rede.recovery.directory
 ```
 
-No VS Code, com a extensão **Dev Containers** instalada, execute **Dev Containers: Reopen in Container**. O VS Code inicia o serviço `notebook` e instala as extensões Python e Jupyter no contêiner.
+## Organização do código
 
-Abra [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb) e selecione o kernel **Python 3 - PQC IoT Simulator**. O ambiente já contém o simulador, o Mininet-WiFi e os três módulos TLS nativos.
+- `control/`: chamadas dos experimentos e cenários de falha;
+- `crypto/`: criptografia, sessões e configurações TLS;
+- `runtime/`: execução no Mininet-WiFi e módulos TLS nativos;
+- `topology/`: rede, nós e enlaces;
+- `devices/`: perfis dos dispositivos e cálculo de energia;
+- `utils/`: métricas, análise e exportação;
+- `config/`: configurações gerais do simulador.
 
-O [Tutorial_Execucao.ipynb](Tutorial_Execucao.ipynb) continua disponível para o uso geral do simulador.
+Essas pastas ficam em `pqc_iot_simulator/pqc_iot_sim/`. A configuração geral está em [default.yaml](pqc_iot_simulator/pqc_iot_sim/config/default.yaml), e as dependências Python estão em [requirements.txt](requirements.txt).
 
-## Configuração
+## Dispositivo e energia
 
-A configuração principal está em [default.yaml](pqc_iot_simulator/pqc_iot_sim/config/default.yaml). Os principais blocos configuráveis são:
+O perfil de dispositivo usa ESP32-WROOM-32, sensor BME280 e Wi-Fi de 2,4 GHz. As estimativas de energia são calculadas a partir da tensão, da corrente e da duração de cada atividade. Os parâmetros e suas fontes estão em [calibracao/README.md](calibracao/README.md).
 
-- `simulation`: duração, semente, captura e diretório de PCAP;
-- `devices`: dispositivos e destinos;
-- `device_profiles`: bateria, rádio, carga de trabalho e sessão;
-- `crypto_timing`: perfil de calibração;
-- `network`: topologia, protocolo, criptografia e condições do enlace;
-- `engine`: parâmetros do Mininet-WiFi.
-
-## Invariantes de execução
-
-- `simulation.run_engine` deve permanecer `true`;
-- `engine.enabled` deve permanecer `true`;
-- `engine.type` deve ser `mininet_wifi`;
-- ausência de topologia, transporte ou PCAP obrigatório interrompe a execução;
-- valores configurados não substituem silenciosamente observações Mininet ausentes.
-
-## Criptografia e sessões
-
-Os modos disponíveis são:
-
-- **clássico:** X25519 e Ed25519;
-- **PQC:** ML-KEM-512 e ML-DSA-44;
-- **híbrido:** X25519 + ML-KEM-512 e Ed25519 + ML-DSA-44.
-
-O modelo possui duas variantes de estabelecimento: `preprovisioned` e `full_certificate`. As chaves de sessão protegem os dados com AES-256-GCM.
-
-## Energia e calibração
-
-A energia é contabilizada em joules:
-
-```text
-E_load = tensão × corrente × duração
-E_battery = E_load / eficiência_do_regulador
-```
-
-Os eventos podem incluir sensor, CPU, criptografia, associação Wi-Fi, transmissão, recepção, espera, sono e estado RTC. Consulte [calibracao/README.md](calibracao/README.md) para conhecer a origem e as limitações dos parâmetros.
-
-## Limitações
-
-- energia do gateway e do servidor não está calibrada;
-- não há medição elétrica em ESP32 real;
-- telemetria ambiental é sintética;
-- ataques MITM, replay e downgrade não estão implementados.
-
-## Dados gerados
-
-Execuções criam arquivos em `results/raw/`, incluindo configurações resolvidas, CSV, JSON e PCAP. Esse diretório é ignorado pelo Git. Para compartilhar uma execução, use um repositório de dados separado e registre o commit da plataforma, a configuração, as sementes e a versão da imagem Docker.
+Os experimentos de retomada apresentados no notebook medem tráfego e tempo no ambiente emulado.
 
 ## Licença
 
-O código é distribuído conforme [LICENSE](LICENSE).
-
-Os cenários de identidade, persistência e interrupção integram as classes de controle. O notebook mostra quais são executados e verifica seus resultados. As dependências Python estão centralizadas em `requirements.txt`.
+[MIT](LICENSE).
