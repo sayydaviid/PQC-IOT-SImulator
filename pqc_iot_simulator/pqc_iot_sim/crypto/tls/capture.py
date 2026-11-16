@@ -35,12 +35,9 @@ def client_share(data):
     return None
 
 
-def tls_capture(path, client_ip):
-    result = pcap_counts(path, client_ip)
-    raw = path.read_bytes()
+def _tcp_packets(raw, client):
+    """Yield client-oriented TCP fields from a validated Ethernet/IPv4 PCAP."""
     order = "<" if raw[:4] == b"\xd4\xc3\xb2\xa1" else ">"
-    client = bytes(map(int, client_ip.split(".")))
-    flows = {}
     position = 24
     while position < len(raw):
         size = struct.unpack(order + "IIII", raw[position : position + 16])[2]
@@ -58,15 +55,46 @@ def tls_capture(path, client_ip):
         tcp = ip[(ip[0] & 15) * 4 :]
         header = (tcp[12] >> 4) * 4
         length = int.from_bytes(ip[2:4], "big") - (ip[0] & 15) * 4 - header
-        port = str(int.from_bytes(tcp[:2] if tx else tcp[2:4], "big"))
+        port = int.from_bytes(tcp[:2] if tx else tcp[2:4], "big")
         seq = int.from_bytes(tcp[4:8], "big")
         flags = tcp[13]
+        acknowledgement = int.from_bytes(tcp[8:12], "big")
+        yield tx, port, seq, flags, acknowledgement, bytes(tcp[header : header + length])
+
+
+def tls_capture(path, client_ip, *, expected_client_ports=None):
+    """Validate TLS flows, retaining strict coverage for the current attempts.
+
+    With attempt ports supplied, exclude late traffic from connections with no
+    SYN in this capture and no matching attempt. Connections started during the
+    capture remain included, even if a watchdog left no client metadata.
+    """
+    result = pcap_counts(path, client_ip)
+    raw = path.read_bytes()
+    client = bytes(map(int, client_ip.split(".")))
+    client_ports = None
+    if expected_client_ports is not None:
+        client_ports = set(expected_client_ports)
+        observed_ports = set()
+        for tx, port, _, flags, _, _ in _tcp_packets(raw, client):
+            observed_ports.add(port)
+            if tx and flags & 2:
+                client_ports.add(port)
+        excluded = observed_ports - client_ports
+        if excluded:
+            # Apply the same scope to wire-byte metrics and TLS reassembly.
+            result = pcap_counts(path, client_ip, client_ports=client_ports)
+        result["excluded_tcp_client_ports"] = sorted(excluded)
+    flows = {}
+    for tx, port, seq, flags, acknowledgement, data in _tcp_packets(raw, client):
+        if client_ports is not None and port not in client_ports:
+            continue
         if tx and flags & 2:
-            key = port + ":" + str(seq)
+            key = str(port) + ":" + str(seq)
             flows.setdefault(
                 key,
                 {
-                    "client_tcp_port": int(port),
+                    "client_tcp_port": port,
                     "client_initial_sequence": seq,
                     "tx_start": (seq + 1) % 2**32,
                     "tx_segments": [],
@@ -74,28 +102,25 @@ def tls_capture(path, client_ip):
                 },
             )
         if not tx and flags & 2:
-            acknowledgement = int.from_bytes(tcp[8:12], "big")
             for flow in flows.values():
                 if (
-                    flow["client_tcp_port"] == int(port)
+                    flow["client_tcp_port"] == port
                     and flow["tx_start"] == acknowledgement
                 ):
                     flow["rx_start"] = (seq + 1) % 2**32
-        if length:
+        if data:
             direction = "tx" if tx else "rx"
             candidates = [
                 ((seq - flow[direction + "_start"]) % 2**32, flow)
                 for flow in flows.values()
-                if flow["client_tcp_port"] == int(port)
+                if flow["client_tcp_port"] == port
                 and direction + "_start" in flow
                 and (seq - flow[direction + "_start"]) % 2**32 < 262144
             ]
             if not candidates:
                 raise RuntimeError("capture missing initial sequence for TLS data")
             start, flow = min(candidates, key=lambda value: value[0])
-            flow[direction + "_segments"].append(
-                (start, bytes(tcp[header : header + length]))
-            )
+            flow[direction + "_segments"].append((start, data))
     for flow in flows.values():
         for direction in ("tx", "rx"):
             segments = sorted(

@@ -282,6 +282,7 @@ def server(args):
 
 
 def batch_client(args, ctx, store, ca_hash, saved, local_fallback):
+    writes_before, write_ms_before = store.writes, store.host_write_ms
     items = json.loads(Path(os.environ["CONTEXT_BATCH_FILE"]).read_text())
     result = {
         "pid": os.getpid(),
@@ -364,6 +365,8 @@ def batch_client(args, ctx, store, ca_hash, saved, local_fallback):
                 result.update(native.metadata(peer))
                 result["tcp_retransmitted_segments"] = retransmissions(connection)
             result["attempt_ms"] = (time.perf_counter_ns() - start) / 1e6
+    result["checkpoint_writes"] = store.writes - writes_before
+    result["checkpoint_write_ms"] = store.host_write_ms - write_ms_before
     Path(args.output).write_text(json.dumps(result, indent=2))
     if not result["acknowledged"]:
         raise SystemExit(2)

@@ -60,7 +60,7 @@ class ResumptionOfferEngine:
             raise ValueError("configurações TLS inválidas")
         if not set(self.validation_batches) <= set(self.batches) or len(set(self.validation_batches)) != len(self.validation_batches):
             raise ValueError("lotes de validação devem pertencer aos lotes medidos")
-        if len(set(self.probabilities)) != len(self.probabilities) or any(isinstance(p, bool) or not isinstance(p, (int, float)) or not math.isfinite(p) or not 0 <= p <= 1 or not math.isclose(p * attempts, round(p * attempts)) for p in self.probabilities):
+        if not self.probabilities or len(set(self.probabilities)) != len(self.probabilities) or any(isinstance(p, bool) or not isinstance(p, (int, float)) or not math.isfinite(p) or not 0 <= p <= 1 or not math.isclose(p * attempts, round(p * attempts)) for p in self.probabilities):
             raise ValueError("cada probabilidade precisa corresponder a uma quantidade inteira de tentativas")
         if isinstance(delay_ms, bool) or not isinstance(delay_ms, (int, float)) or not math.isfinite(delay_ms) or delay_ms < 0:
             raise ValueError("atraso inválido")
@@ -170,7 +170,8 @@ class ResumptionOfferEngine:
         if capture:
             if "0 packets dropped by kernel" not in capture_log:
                 raise RuntimeError("captura com descartes")
-            trace = tls_capture(output / "traffic.pcap", cip)
+            trace = tls_capture(output / "traffic.pcap", cip,
+                                expected_client_ports={row["client_tcp_port"]})
             if not covered_attempt(trace, row, server_data["connections"]):
                 raise RuntimeError("captura incompleta")
             hellos = capture_client_hellos(output / "traffic.pcap")
@@ -202,7 +203,8 @@ class ResumptionOfferEngine:
             private = Path(tmp)
             for block in range(self.blocks):
                 creds, snapshots, keys = {}, {}, {}
-                for profile in self.profiles:
+                credential_order = sorted(self.profiles, key=lambda p: p == "pqc_ec_client")
+                for profile in credential_order:
                     base = "pqc" if profile == "pqc_ec_client" else profile
                     credentials = private / f"credentials_b{block}_{profile}"
                     if profile == "pqc_ec_client" and "pqc" in creds:
