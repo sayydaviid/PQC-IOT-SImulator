@@ -138,6 +138,8 @@ resultados_ofertas = rede.recovery.run_offers(
 rede.recovery.table("offer_thresholds")
 ```
 
+O completo direto mantém a emissão de tickets habilitada. Nas medições registradas, cada completo emitiu um ticket e a retomada aceita não emitiu outro. O completo com emissão desabilitada ainda não foi medido.
+
 O limiar de aceitação é calculado com médias por bloco. A validação independente da disponibilidade usa os lotes de `validation_batches`; na comparação registrada, uma leitura por conexão. Os lotes de 10 e 100 fornecem estimativas condicionais. O perfil `pqc_ec_client` é um controle com servidor e CA ML-DSA e cliente ECDSA, alterando a autenticação do cliente.
 
 O notebook mantém identificadas as saídas de execuções anteriores. Uma nova execução produz suas próprias medições; diferenças de bytes e tempo permanecem visíveis. A reanálise das observações originais verifica os cálculos e não substitui a execução dos experimentos.
