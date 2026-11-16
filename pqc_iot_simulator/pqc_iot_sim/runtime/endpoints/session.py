@@ -120,9 +120,9 @@ def client(args):
             saved = unb64(state["der"])
         except ValueError:
             local_fallback = True
-    payload = Path(args.payload).read_bytes()
     if os.environ.get("CONTEXT_BATCH_FILE"):
         return batch_client(args, ctx, store, ca_hash, saved, local_fallback)
+    payload = Path(args.payload).read_bytes()
     record = json.dumps(
         {"reading_id": args.reading_id, "payload": b64(payload)},
         sort_keys=True,
@@ -310,13 +310,17 @@ def batch_client(args, ctx, store, ca_hash, saved, local_fallback):
     with socket.socket() as connection:
         configure_socket(connection)
         start = time.perf_counter_ns()
+        tcp_started = start
         try:
             connection.bind((args.bind_host, 0))
             result["client_tcp_port"] = connection.getsockname()[1]
             connection.connect((args.host, args.port))
+            result["tcp_connect_ms"] = (time.perf_counter_ns() - tcp_started) / 1e6
             start = time.perf_counter_ns()
             result["stage"] = "tls_handshake"
+            cpu_started = time.process_time_ns()
             peer = native.handshake(ctx, connection.fileno(), 0, "gateway.local", saved)
+            result["handshake_cpu_ms"] = (time.process_time_ns() - cpu_started) / 1e6
             result["handshake_ms"] = (time.perf_counter_ns() - start) / 1e6
             result["stage"] = "application"
             for item in items:
@@ -345,6 +349,7 @@ def batch_client(args, ctx, store, ca_hash, saved, local_fallback):
                 result["ack_monotonic_ns"] = result["confirmed"][-1]["ack_monotonic_ns"]
                 result["rx_confirmed_tls_bytes"] = native.metadata(peer)["rx_tls_bytes"]
                 save_session()
+            result["tcp_to_ack_ms"] = (result["ack_monotonic_ns"] - tcp_started) / 1e6
             result["acknowledged"] = True
             result["stage"] = "confirmed"
             send(peer, b'{"end":true}')

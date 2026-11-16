@@ -31,6 +31,7 @@ class RecoverySimulation:
         self.directory = Path(directory).resolve()
         self.network = network
         self.article_directory = None
+        self.offer_directory = None
         if isinstance(blocks, bool) or not isinstance(blocks, int) or blocks < 1:
             raise ValueError("blocks must be a positive integer")
         self.blocks = blocks
@@ -158,6 +159,28 @@ class RecoverySimulation:
         ).run()
         return self._record("amortization", result)
 
+    def run_offers(self, *, source="iot_1", destination="server_1", blocks=10,
+                   batches=(1, 10, 100), profiles=("classical", "hybrid", "pqc", "pqc_ec_client"),
+                   probabilities=(0, .25, .5, .75, 1), attempts=4, payload_bytes=512,
+                   validation_batches=(1,)):
+        """Mede quando oferecer retomada compensa, com disponibilidade controlada."""
+        from ..runtime.tls_offers import ResumptionOfferEngine
+        from ..utils.offer_metrics import OfferMetrics
+
+        self._validate_endpoints(source, destination)
+        output = self.directory / "offers"
+        number = 1
+        while output.exists():
+            number += 1
+            output = self.directory / f"offers_{number}"
+        result = ResumptionOfferEngine(output=output, network=self.network, source=source,
+            destination=destination, blocks=blocks, batches=batches, profiles=profiles,
+            probabilities=probabilities, attempts=attempts, payload_bytes=payload_bytes,
+            validation_batches=validation_batches).run()
+        analysis = OfferMetrics(result).run()
+        self.offer_directory = result
+        return self._record("offers", {"measurements": str(result), "analysis": str(analysis)})
+
     def run_sessions(
         self,
         *,
@@ -251,6 +274,13 @@ class RecoverySimulation:
     def table(self, name, *, article=False):
         """Obtém uma tabela dos experimentos desta rede."""
         import pandas as pd
+
+        offer_tables = {"offer_costs": "custos_condicionais.csv", "offer_thresholds": "limiar_aceitacao.csv",
+                        "offer_validation": "validacao_disponibilidade.csv", "offer_observations": "observacoes.csv"}
+        if name in offer_tables:
+            if self.offer_directory is None:
+                raise ValueError("Execute primeiro rede.recovery.run_offers().")
+            return pd.read_csv(self.offer_directory / "analysis" / offer_tables[name])
 
         tables = {
             "tls": "continuity_analysis/medianas.csv",

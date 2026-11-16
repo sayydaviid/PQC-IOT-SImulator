@@ -93,13 +93,16 @@ Na raiz do repositório:
 
 ```bash
 docker compose build
+sudo docker compose run --rm notebook jupyter lab --ip=127.0.0.1 --port=8888 --no-browser --allow-root
 ```
 
-No VS Code, com a extensão **Dev Containers** instalada, execute **Dev Containers: Reopen in Container**. O VS Code inicia o serviço `notebook` e instala as extensões Python e Jupyter no contêiner.
+Copie a URL com o token exibida no terminal. No VS Code, abra o notebook, selecione **Servidor Jupyter existente** e cole a URL. Use o kernel **Python 3 - PQC IoT Simulator**. O terminal mantém o servidor ativo.
 
-Abra [Pesquisa_Retomada_Sessoes.ipynb](Pesquisa_Retomada_Sessoes.ipynb) e selecione o kernel **Python 3 - PQC IoT Simulator**. O ambiente já contém o simulador, o Mininet-WiFi e os três módulos TLS nativos.
+O notebook compara os custos de oferecer retomada com contexto disponível ou perdido. A chamada `rede.recovery.run_offers()` mede os três caminhos TLS e calcula o limiar de aceitação com médias por bloco. A validação independente de disponibilidade usa os lotes informados em `validation_batches`; por padrão, uma leitura por conexão. Os demais lotes fornecem estimativas condicionais. Todos enviam somente os certificados folha, mantendo a CA raiz confiável.
 
-O [Tutorial_Execucao.ipynb](Tutorial_Execucao.ipynb) continua disponível para o uso geral do simulador.
+As observações originais do artigo são recalculadas em uma seção identificada. Uma execução nova gera suas próprias medições; tempos e bytes IPv4 não são constantes. As diferenças devem permanecer visíveis na comparação.
+
+Também é possível usar **Dev Containers: Reopen in Container** e selecionar o mesmo kernel. O [Tutorial_Execucao.ipynb](Tutorial_Execucao.ipynb) continua disponível para o uso geral do simulador.
 
 ## Configuração
 
